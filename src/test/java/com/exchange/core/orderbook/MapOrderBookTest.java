@@ -1,19 +1,25 @@
 package com.exchange.core.orderbook;
 
 
+import com.exchange.core.model.Execution;
 import com.exchange.core.model.MarketData;
 import com.exchange.core.model.Order;
 import com.exchange.core.model.enums.Side;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class MapOrderBookTest {
     private OrderBook orderBook;
 
     @BeforeEach
     void beforeEach(){
-        orderBook = new MapOrderBook(1);
+        orderBook = new MapOrderBook(1, new SimpleGlobalCounter(), execution -> {});
     }
 
     @Test
@@ -58,7 +64,20 @@ public class MapOrderBookTest {
 
     @Test
     void match2OrdersTest(){
-        //TOD: add execution report generation into orderbook
+        List<Execution> execList = new ArrayList<>();
+        orderBook = new MapOrderBook(1, new SimpleGlobalCounter(), execList::add);
+
+        Order bid = buildOrder(), ask = buildOrder();
+        ask.setSide(Side.SELL);
+        ask.setQuantity(1);
+        orderBook.addOrder(bid);
+        orderBook.addOrder(ask);
+        Assertions.assertEquals(2, execList.size(), "2 executions should be available");
+        Order ask2 = buildOrder();
+        ask2.setSide(Side.SELL);
+        ask2.setQuantity(1);
+        orderBook.addOrder(ask2);
+        Assertions.assertEquals(4, execList.size(), "4 executions should be available");
     }
 
     private Order buildOrder(){

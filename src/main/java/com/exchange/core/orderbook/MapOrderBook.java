@@ -1,5 +1,6 @@
 package com.exchange.core.orderbook;
 
+import com.exchange.core.model.Execution;
 import com.exchange.core.model.MarketData;
 import com.exchange.core.model.Order;
 import com.exchange.core.model.enums.Side;
@@ -11,52 +12,54 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 public class MapOrderBook implements OrderBook {
     private int securityId;
+    private GlobalCounter globalCounter;
+    private Consumer<Execution> execReportConsumer;
 
-    public MapOrderBook(int securityId){
+    public MapOrderBook(int securityId, GlobalCounter globalCounter, Consumer<Execution> execReportConsumer){
         this.securityId = securityId;
+        this.globalCounter = globalCounter;
+        this.execReportConsumer = execReportConsumer;
     }
-
-    /**
-     * since we have OrderBook per instrument, make sure you have one maxOrderId/executionId counter across all instruments
-     */
-    private long maxOrderId;
-    private long maxExecutionId;
 
     Map<Integer, List<Order>> bidsMap = new TreeMap<>();
     Map<Integer, List<Order>> asksMap = new TreeMap<>(Comparator.reverseOrder());
     Map<Long, Order> orderMap = new HashMap<>();
-    List<Exception> executionReportList = new ArrayList<>();
 
     @Override
-    public void match(Order order) {
+    public void match(Order taker) {
         List<Order> orders;
-        if (order.getSide() == Side.BUY){
-            orders = asksMap.get(order.getPrice());
+        if (taker.getSide() == Side.BUY){
+            orders = asksMap.get(taker.getPrice());
         } else {
-            orders = bidsMap.get(order.getPrice());
+            orders = bidsMap.get(taker.getPrice());
         }
         if (orders != null){
             Iterator<Order> iterator = orders.iterator();
             while (iterator.hasNext()){
                 // match order & decrease quantity
-                Order ord = iterator.next();
-                int quantity = Math.abs(order.getQuantity() - ord.getQuantity());
-                order.setQuantity(order.getQuantity() - quantity);
-                ord.setQuantity(ord.getQuantity() - quantity);
-                if (ord.getQuantity() == 0){
+                Order maker = iterator.next();
+                int quantity = Math.abs(taker.getQuantity() - maker.getQuantity());
+                taker.setQuantity(taker.getQuantity() - quantity);
+                maker.setQuantity(maker.getQuantity() - quantity);
+                if (maker.getQuantity() == 0){
                     iterator.remove();
-                    orderMap.remove(ord.getOrderId());
+                    orderMap.remove(maker.getOrderId());
                 }
+                Execution execTaker = new Execution(taker.getOrderId(), maker.getOrderId(), false, securityId, quantity, taker.getPrice());
+                Execution execMaker = new Execution(maker.getOrderId(), taker.getOrderId(), true, securityId, quantity, maker.getPrice());
+                execReportConsumer.accept(execTaker);
+                execReportConsumer.accept(execMaker);
             }
         }
     }
 
     @Override
     public void addOrder(Order order) {
-        order.setOrderId(++maxOrderId);
+        order.setOrderId(globalCounter.getNextOrderId());
         match(order);
         if (order.getQuantity() > 0){
             (order.getSide() == Side.BUY ? bidsMap : asksMap).merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v)->{

@@ -2,21 +2,17 @@
 
 ### matching engine architecture
 we have 2 implementation of order book:
-* naive `MapOrderBook`
-* advanced `ArrayOrderBook`
-
-take a look at others ppl orderbook
-take a look here https://github.com/exchange-core/exchange-core
---order pooling
---moving order into off-heap with unsafe (https://mechanical-sympathy.blogspot.com/2012/10/compact-off-heap-structurestuples-in.html)
-=> try several gc (g1, cms, shenandoah, z1) with this example
---each order execution should generate 2 trades (for order owner & for his counterparty)
-
-final step: write simple matching-engine on aeron cluster:
-* docs => https://github.com/real-logic/aeron/wiki/Cluster-Tutorial
-* with aeron archive doing persistence
-* with client as simple http order api, which receive messages from clients, and then act as client to cluster, send order to ME (cluster) and receive messages from it
-* checkout message lost in case of failed leader (https://github.com/real-logic/aeron/wiki/Cluster-Tutorial#55-failed-nodes-and-leader-election). This answer suggest that we should have app logic to check ack from cluster and in case of leader change, and message lost, client won't receive ack for these few messages, and have to re-send messages to cluster https://stackoverflow.com/questions/73370605/what-are-the-aeron-cluster-delivery-guarantees
+* naive `MapOrderBook` - here we are using default JDK implementations like `TreeMap/HashMap` to store internal state of orderbook like bids/asks remaining orders by orderId. Since these JDK implementations are not designed for low latency, they won't perform well under high load due to: gc problems or primitive unboxing/auto-boxing. So this orderbook implementation is good for educational purpose, but completely useless for real-world apps.
+* advanced `ArrayOrderBook` - this is close to real-world orderbook implementation, without any of JDK implementations:
+    * use pure array to store bids/asks
+    * use low-latency Map to store orders by ID
+    * use object pooling for order object
+* real-world app - build on top of advanced orderbook replicated system:
+    * use aeron cluster for multi-node zero-downtime 
+    * use aeron archive for persistence
+    * https://github.com/real-logic/aeron/wiki/Cluster-Tutorial
+    * with client as simple http order api, which receive messages from clients, and then act as client to cluster, send order to ME (cluster) and receive messages from it
+    * checkout message lost in case of failed leader (https://github.com/real-logic/aeron/wiki/Cluster-Tutorial#55-failed-nodes-and-leader-election). This answer suggest that we should have app logic to check ack from cluster and in case of leader change, and message lost, client won't receive ack for these few messages, and have to re-send messages to cluster https://stackoverflow.com/questions/73370605/what-are-the-aeron-cluster-delivery-guarantees
 
 ### matching engine architecture
 exchange components (based of https://www.youtube.com/watch?v=b1e4t2k2KJY):
