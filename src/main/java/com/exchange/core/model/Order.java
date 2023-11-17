@@ -1,16 +1,20 @@
 package com.exchange.core.model;
 
-import com.exchange.core.model.enums.Side;
+import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
-public class Order {
+public class Order extends Message {
+    private String symbol;
     private long orderId;
     private String clOrdId;
-    private Side side;
-    private int securityId;
-    private int quantity;
-    private int quantityScale;
-    private int price;
-    private int priceScale;
+    private OrderSide side;
+    private OrderType type;
+    private BigDecimal orderQty;
+    private BigDecimal leavesQty;
+    private BigDecimal quoteOrderQty;
+    private BigDecimal price;
 }

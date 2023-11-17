@@ -1,38 +1,49 @@
 package com.exchange.core.orderbook;
 
+import com.exchange.core.config.AppConstants;
 import com.exchange.core.model.Execution;
 import com.exchange.core.model.MarketData;
+import com.exchange.core.model.Message;
 import com.exchange.core.model.Order;
-import com.exchange.core.model.enums.Side;
+import com.exchange.core.model.enums.OrderSide;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.function.Consumer;
+import java.math.BigDecimal;
+import java.util.*;
 
 public class MapOrderBook implements OrderBook {
-    private int securityId;
-    private GlobalCounter globalCounter;
-    private Consumer<Execution> execReportConsumer;
+    private final Map<BigDecimal, List<Order>> bidsMap;
+    private final Map<BigDecimal, List<Order>> asksMap;
+    private final String symbol;
+    private final Queue<Message> outbound;
 
-    public MapOrderBook(int securityId, GlobalCounter globalCounter, Consumer<Execution> execReportConsumer){
-        this.securityId = securityId;
-        this.globalCounter = globalCounter;
-        this.execReportConsumer = execReportConsumer;
+    public MapOrderBook(String symbol, Queue<Message> outbound){
+        this.symbol = symbol;
+        this.outbound = outbound;
+        bidsMap = new TreeMap<>();
+        asksMap = new TreeMap<>(Comparator.reverseOrder());
     }
 
-    Map<Integer, List<Order>> bidsMap = new TreeMap<>();
-    Map<Integer, List<Order>> asksMap = new TreeMap<>(Comparator.reverseOrder());
-    Map<Long, Order> orderMap = new HashMap<>();
-
     @Override
-    public void match(Order taker) {
+    public void addOrder(Order order) {
+        order.setLeavesQty(order.getOrderQty());
+        match(order);
+        if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0){
+            addToOrderBook(order);
+        }
+    }
+
+    private void addToOrderBook(Order order){
+        Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bidsMap : asksMap;
+        book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v)->{
+            o.addAll(v);
+            return o;
+        });
+        outbound.add(buildMarketData());
+    }
+
+    private void match(Order taker) {
         List<Order> orders;
-        if (taker.getSide() == Side.BUY){
+        if (taker.getSide() == OrderSide.BUY){
             orders = asksMap.get(taker.getPrice());
         } else {
             orders = bidsMap.get(taker.getPrice());
@@ -57,46 +68,35 @@ public class MapOrderBook implements OrderBook {
         }
     }
 
-    @Override
-    public void addOrder(Order order) {
-        order.setOrderId(globalCounter.getNextOrderId());
-        match(order);
-        if (order.getQuantity() > 0){
-            (order.getSide() == Side.BUY ? bidsMap : asksMap).merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v)->{
-                o.addAll(v);
-                return o;
-            });
-            orderMap.put(order.getOrderId(), order);
+    private MarketData buildMarketData() {
+        int depth = Math.max(bidsMap.size(), asksMap.size());
+        if (depth > AppConstants.DEFAULT_DEPTH){
+            depth = AppConstants.DEFAULT_DEPTH;
         }
-    }
-
-    @Override
-    public MarketData getOrderBook() {
         MarketData md = new MarketData();
-        int[][] bids = new int[bidsMap.size()][];
-        int[][] asks = new int[asksMap.size()][];
+        md.setDepth(depth);
+        md.setSymbol(symbol);
+        md.setTransactTime(System.currentTimeMillis());
+
+        BigDecimal[][] bids = new BigDecimal[depth][];
+        BigDecimal[][] asks = new BigDecimal[depth][];
         int bidIndex = 0, asksIndex = 0;
-        for(Map.Entry<Integer, List<Order>> e: bidsMap.entrySet()){
-            int cumulativeQuantity = 0;
+        for(Map.Entry<BigDecimal, List<Order>> e: bidsMap.entrySet()){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             for(Order order: e.getValue()){
-                cumulativeQuantity += order.getQuantity();
+                cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
             }
-            bids[bidIndex++] = new int[]{e.getKey(), cumulativeQuantity};
+            bids[bidIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
         }
-        for(Map.Entry<Integer, List<Order>> e: asksMap.entrySet()){
-            int cumulativeQuantity = 0;
+        for(Map.Entry<BigDecimal, List<Order>> e: asksMap.entrySet()){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             for(Order order: e.getValue()){
-                cumulativeQuantity += order.getQuantity();
+                cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
             }
-            asks[asksIndex++] = new int[]{e.getKey(), cumulativeQuantity};
+            asks[asksIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
         }
         md.setBids(bids);
         md.setAsks(asks);
         return md;
-    }
-
-    @Override
-    public Order getOrderById(long orderId) {
-        return orderMap.get(orderId);
     }
 }

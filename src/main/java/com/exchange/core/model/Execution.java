@@ -3,7 +3,7 @@ package com.exchange.core.model;
 import lombok.Data;
 
 @Data
-public class Execution {
+public class Execution extends Message {
     private long id;
     private long orderId;
     private long matchedOrderId;
