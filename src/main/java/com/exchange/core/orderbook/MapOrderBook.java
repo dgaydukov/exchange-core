@@ -1,11 +1,12 @@
 package com.exchange.core.orderbook;
 
 import com.exchange.core.config.AppConstants;
-import com.exchange.core.model.Execution;
+import com.exchange.core.model.ExecReport;
 import com.exchange.core.model.MarketData;
 import com.exchange.core.model.Message;
 import com.exchange.core.model.Order;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -14,10 +15,13 @@ public class MapOrderBook implements OrderBook {
     private final Map<BigDecimal, List<Order>> bidsMap;
     private final Map<BigDecimal, List<Order>> asksMap;
     private final String symbol;
+    private final GlobalCounter counter;
     private final Queue<Message> outbound;
 
-    public MapOrderBook(String symbol, Queue<Message> outbound){
+
+    public MapOrderBook(String symbol, GlobalCounter counter, Queue<Message> outbound){
         this.symbol = symbol;
+        this.counter = counter;
         this.outbound = outbound;
         bidsMap = new TreeMap<>();
         asksMap = new TreeMap<>(Comparator.reverseOrder());
@@ -25,20 +29,24 @@ public class MapOrderBook implements OrderBook {
 
     @Override
     public void addOrder(Order order) {
+        order.setOrderId(counter.getNextOrderId());
         order.setLeavesQty(order.getOrderQty());
+        sendNewExecReport(order);
         match(order);
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0){
-            addToOrderBook(order);
+            Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bidsMap : asksMap;
+            book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v)->{
+                o.addAll(v);
+                return o;
+            });
         }
+        outbound.add(buildMarketData());
     }
 
-    private void addToOrderBook(Order order){
-        Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bidsMap : asksMap;
-        book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v)->{
-            o.addAll(v);
-            return o;
-        });
-        outbound.add(buildMarketData());
+    private void sendNewExecReport(Order order){
+        ExecReport exec = orderToExecReport(order);
+        exec.setStatus(OrderStatus.NEW);
+        outbound.add(exec);
     }
 
     private void match(Order taker) {
@@ -53,19 +61,43 @@ public class MapOrderBook implements OrderBook {
             while (iterator.hasNext()){
                 // match order & decrease quantity
                 Order maker = iterator.next();
-                int quantity = Math.abs(taker.getQuantity() - maker.getQuantity());
-                taker.setQuantity(taker.getQuantity() - quantity);
-                maker.setQuantity(maker.getQuantity() - quantity);
-                if (maker.getQuantity() == 0){
-                    iterator.remove();
-                    orderMap.remove(maker.getOrderId());
+                BigDecimal min = taker.getLeavesQty().min(maker.getLeavesQty());
+                taker.setLeavesQty(taker.getLeavesQty().subtract(min));
+                maker.setLeavesQty(maker.getLeavesQty().subtract(min));
+
+                ExecReport execTaker = orderToExecReport(taker);
+                execTaker.setExecId(counter.getNextExecutionId());
+                execTaker.setIsTaker(true);
+                execTaker.setCounterOrderId(maker.getOrderId());
+                execTaker.setStatus(OrderStatus.PARTIALLY_FILLED);
+                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                    execTaker.setStatus(OrderStatus.FILLED);
                 }
-                Execution execTaker = new Execution(taker.getOrderId(), maker.getOrderId(), false, securityId, quantity, taker.getPrice());
-                Execution execMaker = new Execution(maker.getOrderId(), taker.getOrderId(), true, securityId, quantity, maker.getPrice());
-                execReportConsumer.accept(execTaker);
-                execReportConsumer.accept(execMaker);
+                ExecReport execMaker = orderToExecReport(maker);
+                execMaker.setExecId(counter.getNextExecutionId());
+                execMaker.setIsTaker(false);
+                execMaker.setCounterOrderId(taker.getOrderId());
+                execMaker.setStatus(OrderStatus.PARTIALLY_FILLED);
+                if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                    execMaker.setStatus(OrderStatus.FILLED);
+                    // remove maker order from orderbook
+                    iterator.remove();
+                }
+
+                outbound.add(execTaker);
+                outbound.add(execMaker);
             }
         }
+    }
+
+    private ExecReport orderToExecReport(Order order){
+        ExecReport exec = new ExecReport();
+        exec.setOrderId(order.getOrderId());
+        exec.setSymbol(order.getSymbol());
+        exec.setPrice(order.getPrice());
+        exec.setOrderQty(order.getOrderQty());
+        exec.setLeavesQty(order.getLeavesQty());
+        return exec;
     }
 
     private MarketData buildMarketData() {

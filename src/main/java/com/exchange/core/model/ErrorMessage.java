@@ -3,7 +3,7 @@ package com.exchange.core.model;
 import lombok.Data;
 
 @Data
-public class ErrorMessage extends Message{
+public class ErrorMessage implements Message{
     private String error;
     private Object payload;
 

@@ -7,7 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class Order extends Message {
+public class Order implements Message {
     private String symbol;
     private long orderId;
     private String clOrdId;

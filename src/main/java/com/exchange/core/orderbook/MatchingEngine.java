@@ -11,22 +11,22 @@ public class MatchingEngine {
     private final Map<String, OrderBook> orderBooks;
     private final Queue<Message> inbound;
     private final Queue<Message> outbound;
-    private long orderId;
 
     public MatchingEngine(List<String> symbols, Queue<Message> inbound, Queue<Message> outbound) {
+        final GlobalCounter counter = new SimpleGlobalCounter();
         orderBooks = new HashMap<>();
-        symbols.forEach(s -> orderBooks.put(s, new MapOrderBook(outbound)));
+        symbols.forEach(symbol -> orderBooks.put(symbol, new MapOrderBook(symbol, counter, outbound)));
         this.inbound = inbound;
         this.outbound = outbound;
-        this.start();
     }
 
-    private void start(){
+    public void start(){
         System.out.println("Starting matching thread");
         new Thread(this::run, "MatchingThread").start();
     }
 
     private void run() {
+        WaitStrategy wait = new SleepWaitStrategy();
         while (true) {
             Message msg = inbound.poll();
             try {
@@ -34,13 +34,13 @@ public class MatchingEngine {
             } catch (Exception ex) {
                 outbound.add(new ErrorMessage(ex.getMessage()));
             }
+            wait.idle();
         }
     }
 
     private void process(Message msg){
         if (msg != null){
             if (msg instanceof Order order){
-                order.setOrderId(++orderId);
                 final String symbol = order.getSymbol();
                 if (symbol == null){
                     throw new AppException("Symbol not found for oder: msg=" + msg);

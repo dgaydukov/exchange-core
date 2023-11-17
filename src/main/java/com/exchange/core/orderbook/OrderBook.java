@@ -1,6 +1,5 @@
 package com.exchange.core.orderbook;
 
-import com.exchange.core.model.MarketData;
 import com.exchange.core.model.Order;
 
 public interface OrderBook {
