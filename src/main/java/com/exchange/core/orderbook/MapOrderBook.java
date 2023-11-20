@@ -1,12 +1,12 @@
 package com.exchange.core.orderbook;
 
+import com.exchange.core.account.AccountRepository;
+import com.exchange.core.account.Position;
 import com.exchange.core.config.AppConstants;
-import com.exchange.core.model.ExecReport;
-import com.exchange.core.model.MarketData;
-import com.exchange.core.model.Message;
-import com.exchange.core.model.Order;
+import com.exchange.core.model.*;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
+import com.exchange.core.model.enums.OrderType;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -14,21 +14,27 @@ import java.util.*;
 public class MapOrderBook implements OrderBook {
     private final Map<BigDecimal, List<Order>> bidsMap;
     private final Map<BigDecimal, List<Order>> asksMap;
-    private final String symbol;
+    private final SymbolConfigMessage symbolConfig;
     private final GlobalCounter counter;
     private final Queue<Message> outbound;
+    private final AccountRepository accountRepository;
 
 
-    public MapOrderBook(String symbol, GlobalCounter counter, Queue<Message> outbound){
-        this.symbol = symbol;
+    public MapOrderBook(SymbolConfigMessage symbol, GlobalCounter counter, Queue<Message> outbound, AccountRepository accountRepository){
+        this.symbolConfig = symbol;
         this.counter = counter;
         this.outbound = outbound;
         bidsMap = new TreeMap<>();
         asksMap = new TreeMap<>(Comparator.reverseOrder());
+        this.accountRepository = accountRepository;
     }
 
     @Override
     public void addOrder(Order order) {
+        if (!validateBalance(order)){
+            outbound.add(new ErrorMessage("Balance insufficient: order=" + order));
+            return;
+        }
         order.setOrderId(counter.getNextOrderId());
         order.setLeavesQty(order.getOrderQty());
         sendNewExecReport(order);
@@ -41,6 +47,20 @@ public class MapOrderBook implements OrderBook {
             });
         }
         outbound.add(buildMarketData());
+    }
+
+    private boolean validateBalance(Order order){
+        String symbol = order.getSide() == OrderSide.BUY ? symbolConfig.getQuote() : symbolConfig.getBase();
+        Position position = accountRepository.getAccPosition(order.getAccount(), symbol);
+        BigDecimal amount;
+        if (order.getType() == OrderType.LIMIT){
+            amount = order.getOrderQty().multiply(order.getPrice());
+        } else if (order.getSide() == OrderSide.BUY){
+            amount = order.getQuoteOrderQty();
+        } else {
+            amount = order.getOrderQty();
+        }
+        return position.getBalance().compareTo(amount) > 0;
     }
 
     private void sendNewExecReport(Order order){
@@ -107,7 +127,7 @@ public class MapOrderBook implements OrderBook {
         }
         MarketData md = new MarketData();
         md.setDepth(depth);
-        md.setSymbol(symbol);
+        md.setSymbol(symbolConfig.getSymbol());
         md.setTransactTime(System.currentTimeMillis());
 
         BigDecimal[][] bids = new BigDecimal[depth][];

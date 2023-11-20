@@ -1,29 +1,30 @@
 package com.exchange.core.account;
 
-import java.math.BigDecimal;
+import com.exchange.core.model.AccountBalance;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class AccountRepository {
-    private final Map<Integer, User> users;
+    private final Map<Integer, Account> accounts;
 
     public AccountRepository() {
-        users = new HashMap<>();
+        accounts = new HashMap<>();
     }
 
-    public void addBalance(int userId, String asset, BigDecimal qty) {
-        User user = users.compute(userId, (k, v) -> {
-            if (v == null) {
-                v = new User();
-                v.setUserId(userId);
-            }
-            return v;
-        });
-        user.getBalances().compute(asset, (k, v) -> {
-            if (v == null) {
+    public Account getAccount(int accountId) {
+        return accounts.compute(accountId, (k, v) -> v == null ? new Account(accountId) : v);
+    }
 
-            }
-            return v;
-        });
+    public Position getAccPosition(int accountId, String asset){
+        Account account = getAccount(accountId);
+        return account.getPosition(asset);
+    }
+
+    public void addBalance(AccountBalance ab) {
+        System.out.println("Add balance: " + ab);
+        Account account = getAccount(ab.getAccountId());
+        Position position = account.getPosition(ab.getAsset());
+        position.add(ab.getAmount());
     }
 }

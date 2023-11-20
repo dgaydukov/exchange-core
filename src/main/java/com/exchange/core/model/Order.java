@@ -11,6 +11,7 @@ public class Order implements Message {
     private String symbol;
     private long orderId;
     private String clOrdId;
+    private int account;
     private OrderSide side;
     private OrderType type;
     private BigDecimal orderQty;
