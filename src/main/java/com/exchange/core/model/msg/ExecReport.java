@@ -1,6 +1,7 @@
-package com.exchange.core.model;
+package com.exchange.core.model.msg;
 
 import com.exchange.core.model.enums.OrderStatus;
+import com.exchange.core.model.msg.Message;
 import lombok.Data;
 
 import java.math.BigDecimal;

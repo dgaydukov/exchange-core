@@ -1,4 +1,4 @@
-package com.exchange.core.model;
+package com.exchange.core.model.msg;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Data
 public class AccountBalance implements Message {
-    private int accountId;
+    private int account;
     private String asset;
     private BigDecimal amount;
 }

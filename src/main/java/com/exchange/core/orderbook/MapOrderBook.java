@@ -3,17 +3,17 @@ package com.exchange.core.orderbook;
 import com.exchange.core.account.AccountRepository;
 import com.exchange.core.account.Position;
 import com.exchange.core.config.AppConstants;
-import com.exchange.core.model.*;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.enums.OrderType;
+import com.exchange.core.model.msg.*;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 public class MapOrderBook implements OrderBook {
-    private final Map<BigDecimal, List<Order>> bidsMap;
-    private final Map<BigDecimal, List<Order>> asksMap;
+    private final NavigableMap<BigDecimal, List<Order>> bidsMap;
+    private final NavigableMap<BigDecimal, List<Order>> asksMap;
     private final SymbolConfigMessage symbolConfig;
     private final GlobalCounter counter;
     private final Queue<Message> outbound;
@@ -69,43 +69,53 @@ public class MapOrderBook implements OrderBook {
         outbound.add(exec);
     }
 
+    /**
+     * LIMIT BUY => we match all sells with price equals or below
+     */
     private void match(Order taker) {
-        List<Order> orders;
+        Map<BigDecimal, List<Order>> counterMap;
         if (taker.getSide() == OrderSide.BUY){
-            orders = asksMap.get(taker.getPrice());
+            counterMap = asksMap.headMap(taker.getPrice());
         } else {
-            orders = bidsMap.get(taker.getPrice());
+            counterMap = bidsMap.headMap(taker.getPrice());
         }
-        if (orders != null){
-            Iterator<Order> iterator = orders.iterator();
-            while (iterator.hasNext()){
-                // match order & decrease quantity
-                Order maker = iterator.next();
-                BigDecimal min = taker.getLeavesQty().min(maker.getLeavesQty());
-                taker.setLeavesQty(taker.getLeavesQty().subtract(min));
-                maker.setLeavesQty(maker.getLeavesQty().subtract(min));
+        Iterator<BigDecimal> mapIterator = counterMap.keySet().iterator();
+        while(mapIterator.hasNext()){
+            List<Order> orders = counterMap.get(mapIterator.next());
+            if (orders != null){
+                Iterator<Order> iterator = orders.iterator();
+                while (iterator.hasNext()){
+                    // match order & decrease quantity
+                    Order maker = iterator.next();
+                    BigDecimal min = taker.getLeavesQty().min(maker.getLeavesQty());
+                    taker.setLeavesQty(taker.getLeavesQty().subtract(min));
+                    maker.setLeavesQty(maker.getLeavesQty().subtract(min));
 
-                ExecReport execTaker = orderToExecReport(taker);
-                execTaker.setExecId(counter.getNextExecutionId());
-                execTaker.setIsTaker(true);
-                execTaker.setCounterOrderId(maker.getOrderId());
-                execTaker.setStatus(OrderStatus.PARTIALLY_FILLED);
-                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-                    execTaker.setStatus(OrderStatus.FILLED);
-                }
-                ExecReport execMaker = orderToExecReport(maker);
-                execMaker.setExecId(counter.getNextExecutionId());
-                execMaker.setIsTaker(false);
-                execMaker.setCounterOrderId(taker.getOrderId());
-                execMaker.setStatus(OrderStatus.PARTIALLY_FILLED);
-                if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-                    execMaker.setStatus(OrderStatus.FILLED);
-                    // remove maker order from orderbook
-                    iterator.remove();
-                }
+                    ExecReport execTaker = orderToExecReport(taker);
+                    execTaker.setExecId(counter.getNextExecutionId());
+                    execTaker.setIsTaker(true);
+                    execTaker.setCounterOrderId(maker.getOrderId());
+                    execTaker.setStatus(OrderStatus.PARTIALLY_FILLED);
+                    if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                        execTaker.setStatus(OrderStatus.FILLED);
+                    }
+                    ExecReport execMaker = orderToExecReport(maker);
+                    execMaker.setExecId(counter.getNextExecutionId());
+                    execMaker.setIsTaker(false);
+                    execMaker.setCounterOrderId(taker.getOrderId());
+                    execMaker.setStatus(OrderStatus.PARTIALLY_FILLED);
+                    if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                        execMaker.setStatus(OrderStatus.FILLED);
+                        // remove maker order from orderbook
+                        iterator.remove();
+                    }
 
-                outbound.add(execTaker);
-                outbound.add(execMaker);
+                    outbound.add(execTaker);
+                    outbound.add(execMaker);
+                }
+                if (orders.size() == 0){
+                    mapIterator.remove();
+                }
             }
         }
     }

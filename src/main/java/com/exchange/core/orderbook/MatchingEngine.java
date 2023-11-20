@@ -2,7 +2,7 @@ package com.exchange.core.orderbook;
 
 import com.exchange.core.account.AccountRepository;
 import com.exchange.core.exceptions.AppException;
-import com.exchange.core.model.*;
+import com.exchange.core.model.msg.*;
 
 import java.util.*;
 
@@ -30,39 +30,39 @@ public class MatchingEngine {
         WaitStrategy wait = new SleepWaitStrategy();
         while (true) {
             Message msg = inbound.poll();
-            try {
-                process(msg);
-            } catch (Exception ex) {
-                outbound.add(new ErrorMessage(ex.getMessage()));
+            if (msg != null) {
+                System.out.println("inbound => " + msg);
+                try {
+                    process(msg);
+                } catch (Exception ex) {
+                    outbound.add(new ErrorMessage(ex.getMessage()));
+                }
             }
             wait.idle();
         }
     }
 
     private void addOrderBook(SymbolConfigMessage msg) {
-        System.out.println("Add OrderBook: " + msg);
         orderBooks.put(msg.getSymbol(), new MapOrderBook(msg, counter, outbound, accountRepository));
     }
 
     private void process(Message msg) {
-        if (msg != null) {
-            if (msg instanceof SymbolConfigMessage symbol) {
-                addOrderBook(symbol);
-            } else if (msg instanceof Order order) {
-                final String symbol = order.getSymbol();
-                if (symbol == null) {
-                    throw new AppException("Symbol not found for oder: msg=" + msg);
-                }
-                OrderBook ob = orderBooks.get(order.getSymbol());
-                if (ob == null) {
-                    throw new AppException("OrderBook not found for oder: msg=" + msg);
-                }
-                ob.addOrder(order);
-            } else if (msg instanceof AccountBalance ab) {
-                accountRepository.addBalance(ab);
-            } else {
-                throw new AppException("Undefined message: msg=" + msg);
+        if (msg instanceof SymbolConfigMessage symbol) {
+            addOrderBook(symbol);
+        } else if (msg instanceof Order order) {
+            final String symbol = order.getSymbol();
+            if (symbol == null) {
+                throw new AppException("Symbol not found for oder: msg=" + msg);
             }
+            OrderBook ob = orderBooks.get(order.getSymbol());
+            if (ob == null) {
+                throw new AppException("OrderBook not found for oder: msg=" + msg);
+            }
+            ob.addOrder(order);
+        } else if (msg instanceof AccountBalance ab) {
+            accountRepository.addBalance(ab);
+        } else {
+            throw new AppException("Undefined message: msg=" + msg);
         }
     }
 }

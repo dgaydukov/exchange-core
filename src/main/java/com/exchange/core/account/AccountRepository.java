@@ -1,6 +1,6 @@
 package com.exchange.core.account;
 
-import com.exchange.core.model.AccountBalance;
+import com.exchange.core.model.msg.AccountBalance;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +22,7 @@ public class AccountRepository {
     }
 
     public void addBalance(AccountBalance ab) {
-        System.out.println("Add balance: " + ab);
-        Account account = getAccount(ab.getAccountId());
+        Account account = getAccount(ab.getAccount());
         Position position = account.getPosition(ab.getAsset());
         position.add(ab.getAmount());
     }
