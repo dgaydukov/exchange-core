@@ -1,4 +1,4 @@
-package com.exchange.core.orderbook;
+package com.exchange.core.orderbook.map;
 
 import com.exchange.core.account.AccountRepository;
 import com.exchange.core.account.Position;
@@ -7,13 +7,15 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
+import com.exchange.core.orderbook.GlobalCounter;
+import com.exchange.core.orderbook.OrderBook;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 public class MapOrderBook implements OrderBook {
-    private final NavigableMap<BigDecimal, List<Order>> bidsMap;
-    private final NavigableMap<BigDecimal, List<Order>> asksMap;
+    private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>();
+    private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>(Comparator.reverseOrder());
     private final SymbolConfigMessage symbolConfig;
     private final GlobalCounter counter;
     private final Queue<Message> outbound;
@@ -21,8 +23,6 @@ public class MapOrderBook implements OrderBook {
 
 
     public MapOrderBook(SymbolConfigMessage symbol, GlobalCounter counter, Queue<Message> outbound, AccountRepository accountRepository) {
-        bidsMap = new TreeMap<>();
-        asksMap = new TreeMap<>(Comparator.reverseOrder());
         this.symbolConfig = symbol;
         this.counter = counter;
         this.outbound = outbound;
@@ -40,7 +40,7 @@ public class MapOrderBook implements OrderBook {
         sendNewExecReport(order);
         match(order);
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-            Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bidsMap : asksMap;
+            Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
             book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
                 o.addAll(v);
                 return o;
@@ -75,9 +75,9 @@ public class MapOrderBook implements OrderBook {
     private void match(Order taker) {
         Map<BigDecimal, List<Order>> counterMap;
         if (taker.getSide() == OrderSide.BUY) {
-            counterMap = asksMap.headMap(taker.getPrice());
+            counterMap = asks.headMap(taker.getPrice());
         } else {
-            counterMap = bidsMap.headMap(taker.getPrice());
+            counterMap = bids.headMap(taker.getPrice());
         }
         Iterator<BigDecimal> mapIterator = counterMap.keySet().iterator();
         while (mapIterator.hasNext()) {
@@ -160,7 +160,7 @@ public class MapOrderBook implements OrderBook {
     }
 
     private MarketData buildMarketData() {
-        int depth = Math.max(bidsMap.size(), asksMap.size());
+        int depth = Math.max(bids.size(), asks.size());
         if (depth > AppConstants.DEFAULT_DEPTH) {
             depth = AppConstants.DEFAULT_DEPTH;
         }
@@ -172,14 +172,14 @@ public class MapOrderBook implements OrderBook {
         BigDecimal[][] bids = new BigDecimal[depth][];
         BigDecimal[][] asks = new BigDecimal[depth][];
         int bidIndex = 0, asksIndex = 0;
-        for (Map.Entry<BigDecimal, List<Order>> e : bidsMap.entrySet()) {
+        for (Map.Entry<BigDecimal, List<Order>> e : this.bids.entrySet()) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             for (Order order : e.getValue()) {
                 cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
             }
             bids[bidIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
         }
-        for (Map.Entry<BigDecimal, List<Order>> e : asksMap.entrySet()) {
+        for (Map.Entry<BigDecimal, List<Order>> e : this.asks.entrySet()) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             for (Order order : e.getValue()) {
                 cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
