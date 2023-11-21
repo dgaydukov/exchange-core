@@ -84,7 +84,6 @@ public class MapOrderBook implements OrderBook {
         });
     }
 
-
     private MarketData buildMarketData() {
         int depth = Math.max(bids.size(), asks.size());
         if (depth > AppConstants.DEFAULT_DEPTH) {

@@ -1,12 +1,8 @@
 package com.exchange.core.orderbook.array;
 
-import com.exchange.core.account.AccountRepository;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.enums.OrderSide;
-import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
-import com.exchange.core.model.msg.SymbolConfigMessage;
-import com.exchange.core.orderbook.GlobalCounter;
 import com.exchange.core.orderbook.OrderBook;
 import com.exchange.core.orderbook.post.PostOrderCheck;
 import com.exchange.core.orderbook.pre.PreOrderCheck;

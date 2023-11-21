@@ -1,6 +1,7 @@
 package com.exchange.core.orderbook;
 
 import com.exchange.core.account.AccountRepository;
+import com.exchange.core.account.AccountRepositoryImpl;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.orderbook.map.MapOrderBook;
@@ -19,7 +20,7 @@ public class MatchingEngine {
     private final GlobalCounter counter;
 
     public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
-        accountRepository = new AccountRepository();
+        accountRepository = new AccountRepositoryImpl();
         counter = new SimpleGlobalCounter();
         orderBooks = new HashMap<>();
         this.inbound = inbound;

@@ -60,10 +60,10 @@ public class PostOrderCheckImpl implements PostOrderCheck{
 
     @Override
     public void settleTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradeAmount) {
-        Position takerBasePosition = accountRepository.getAccPosition(taker.getAccount(), symbolConfig.getBase());
-        Position makerBasePosition = accountRepository.getAccPosition(maker.getAccount(), symbolConfig.getBase());
-        Position takerQuotePosition = accountRepository.getAccPosition(taker.getAccount(), symbolConfig.getQuote());
-        Position makerQuotePosition = accountRepository.getAccPosition(maker.getAccount(), symbolConfig.getQuote());
+        Position takerBasePosition = accountRepository.getAccountPosition(taker.getAccount(), symbolConfig.getBase());
+        Position makerBasePosition = accountRepository.getAccountPosition(maker.getAccount(), symbolConfig.getBase());
+        Position takerQuotePosition = accountRepository.getAccountPosition(taker.getAccount(), symbolConfig.getQuote());
+        Position makerQuotePosition = accountRepository.getAccountPosition(maker.getAccount(), symbolConfig.getQuote());
 
         if (taker.getSide() == OrderSide.BUY) {
             takerQuotePosition.freeLocked(tradeAmount);

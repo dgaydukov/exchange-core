@@ -43,7 +43,7 @@ public class PreOrderCheckImpl implements PreOrderCheck{
 
     private boolean checkBalance(Order order) {
         String symbol = order.getSide() == OrderSide.BUY ? symbolConfig.getQuote() : symbolConfig.getBase();
-        Position position = accountRepository.getAccPosition(order.getAccount(), symbol);
+        Position position = accountRepository.getAccountPosition(order.getAccount(), symbol);
         BigDecimal amount;
         if (order.getType() == OrderType.LIMIT) {
             amount = order.getOrderQty().multiply(order.getPrice());
