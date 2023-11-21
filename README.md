@@ -44,7 +44,7 @@ exchange components (based of https://www.youtube.com/watch?v=b1e4t2k2KJY):
 ### derivative exchange
 This exchange will include following items:
 * dated futures
-* perpetual futures aka perpetual swap
+* [perpetual futures aka perpetual swap](https://github.com/dgaydukov/exchange-core/blob/master/src/main/java/com/exchange/core/futures/RiskEngine.java) - only part that implemented as part of this project
 * options
 * auctions
 * swaps (interest rate swap, like swap between fixed & floating income for defi or on perpetual 8 hour payment)

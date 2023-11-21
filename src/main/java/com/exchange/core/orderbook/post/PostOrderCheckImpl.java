@@ -31,6 +31,13 @@ public class PostOrderCheckImpl implements PostOrderCheck{
     }
 
     @Override
+    public void sendExecReportCancel(Order order) {
+        ExecReport exec = orderToExecReport(order);
+        exec.setStatus(OrderStatus.CANCELLED);
+        outbound.add(exec);
+    }
+
+    @Override
     public void sendExecReportTrade(Order taker, Order maker) {
         ExecReport execTaker = orderToExecReport(taker);
         execTaker.setExecId(counter.getNextExecutionId());

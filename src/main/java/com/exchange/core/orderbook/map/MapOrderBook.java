@@ -2,6 +2,7 @@ package com.exchange.core.orderbook.map;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.orderbook.OrderBook;
 import com.exchange.core.orderbook.post.PostOrderCheck;
@@ -17,7 +18,6 @@ public class MapOrderBook implements OrderBook {
     private final PreOrderCheck preOrderCheck;
     private final PostOrderCheck postOrderCheck;
 
-
     public MapOrderBook(String symbol, PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
         this.symbol = symbol;
         this.preOrderCheck = preOrderCheck;
@@ -32,12 +32,16 @@ public class MapOrderBook implements OrderBook {
         preOrderCheck.updateNewOrder(order);
         postOrderCheck.sendExecReportNew(order);
         match(order);
+        // if order not fully matched we should either add to orderbook or cancel if it's market order
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-            addToOrderBook(order);
+            if (order.getType() == OrderType.MARKET){
+                postOrderCheck.sendExecReportCancel(order);
+            } else {
+                addToOrderBook(order);
+            }
         }
         postOrderCheck.sendMarketData(buildMarketData());
     }
-
 
     /**
      * LIMIT BUY => we match all sells with price equals or below
