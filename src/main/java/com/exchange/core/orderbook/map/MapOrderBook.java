@@ -1,14 +1,11 @@
 package com.exchange.core.orderbook.map;
 
-import com.exchange.core.account.AccountRepository;
-import com.exchange.core.account.Position;
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.model.enums.OrderSide;
-import com.exchange.core.model.enums.OrderStatus;
-import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.orderbook.GlobalCounter;
 import com.exchange.core.orderbook.OrderBook;
+import com.exchange.core.orderbook.post.PostOrderCheck;
+import com.exchange.core.orderbook.pre.PreOrderCheck;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -16,58 +13,31 @@ import java.util.*;
 public class MapOrderBook implements OrderBook {
     private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>();
     private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>(Comparator.reverseOrder());
-    private final SymbolConfigMessage symbolConfig;
-    private final GlobalCounter counter;
-    private final Queue<Message> outbound;
-    private final AccountRepository accountRepository;
+    private final String symbol;
+    private final PreOrderCheck preOrderCheck;
+    private final PostOrderCheck postOrderCheck;
 
 
-    public MapOrderBook(SymbolConfigMessage symbol, GlobalCounter counter, Queue<Message> outbound, AccountRepository accountRepository) {
-        this.symbolConfig = symbol;
-        this.counter = counter;
-        this.outbound = outbound;
-        this.accountRepository = accountRepository;
+    public MapOrderBook(String symbol, PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+        this.symbol = symbol;
+        this.preOrderCheck = preOrderCheck;
+        this.postOrderCheck = postOrderCheck;
     }
 
     @Override
     public void addOrder(Order order) {
-        if (!validateBalance(order)) {
-            outbound.add(new ErrorMessage("Balance insufficient: order=" + order));
+        if (!preOrderCheck.validateOrder(order)) {
             return;
         }
-        order.setOrderId(counter.getNextOrderId());
-        order.setLeavesQty(order.getOrderQty());
-        sendNewExecReport(order);
+        preOrderCheck.updateNewOrder(order);
+        postOrderCheck.sendExecReportNew(order);
         match(order);
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-            Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
-            book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
-                o.addAll(v);
-                return o;
-            });
+            addToOrderBook(order);
         }
-        outbound.add(buildMarketData());
+        postOrderCheck.sendMarketData(buildMarketData());
     }
 
-    private boolean validateBalance(Order order) {
-        String symbol = order.getSide() == OrderSide.BUY ? symbolConfig.getQuote() : symbolConfig.getBase();
-        Position position = accountRepository.getAccPosition(order.getAccount(), symbol);
-        BigDecimal amount;
-        if (order.getType() == OrderType.LIMIT) {
-            amount = order.getOrderQty().multiply(order.getPrice());
-        } else if (order.getSide() == OrderSide.BUY) {
-            amount = order.getQuoteOrderQty();
-        } else {
-            amount = order.getOrderQty();
-        }
-        return position.getBalance().compareTo(amount) > 0;
-    }
-
-    private void sendNewExecReport(Order order) {
-        ExecReport exec = orderToExecReport(order);
-        exec.setStatus(OrderStatus.NEW);
-        outbound.add(exec);
-    }
 
     /**
      * LIMIT BUY => we match all sells with price equals or below
@@ -79,85 +49,41 @@ public class MapOrderBook implements OrderBook {
         } else {
             counterMap = bids.headMap(taker.getPrice());
         }
-        Iterator<BigDecimal> mapIterator = counterMap.keySet().iterator();
-        while (mapIterator.hasNext()) {
-            final BigDecimal tradePrice = mapIterator.next();
-            List<Order> orders = counterMap.get(tradePrice);
+        Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
+        while (iterator.hasNext()) {
+            final BigDecimal makerPrice = iterator.next();
+            List<Order> orders = counterMap.get(makerPrice);
             if (orders != null) {
-                Iterator<Order> iterator = orders.iterator();
-                while (iterator.hasNext()) {
-                    // match order & decrease quantity
-                    Order maker = iterator.next();
+                Iterator<Order> ordIterator = orders.iterator();
+                while (ordIterator.hasNext()) {
+                    Order maker = ordIterator.next();
                     BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
-                    BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
+                    BigDecimal tradeAmount = tradeQty.multiply(makerPrice);
                     taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
                     maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
 
-                    settleTrade(taker, maker, tradeQty, tradeAmount);
-                    sendExecReport(taker, maker);
+                    postOrderCheck.settleTrade(taker, maker, tradeQty, tradeAmount);
+                    postOrderCheck.sendExecReportTrade(taker, maker);
 
                     if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-                        // remove maker order from orderbook
-                        iterator.remove();
+                        ordIterator.remove();
                     }
                 }
                 if (orders.size() == 0) {
-                    mapIterator.remove();
+                    iterator.remove();
                 }
             }
         }
     }
 
-    private void settleTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradeAmount) {
-        Position takerBasePosition = accountRepository.getAccPosition(taker.getAccount(), symbolConfig.getBase());
-        Position makerBasePosition = accountRepository.getAccPosition(maker.getAccount(), symbolConfig.getBase());
-        Position takerQuotePosition = accountRepository.getAccPosition(taker.getAccount(), symbolConfig.getQuote());
-        Position makerQuotePosition = accountRepository.getAccPosition(maker.getAccount(), symbolConfig.getQuote());
-
-        if (taker.getSide() == OrderSide.BUY) {
-            takerQuotePosition.freeLocked(tradeAmount);
-            takerBasePosition.add(tradeQty);
-            makerBasePosition.freeLocked(tradeQty);
-            makerQuotePosition.add(tradeAmount);
-        } else {
-            takerBasePosition.freeLocked(tradeQty);
-            takerQuotePosition.add(tradeAmount);
-            makerBasePosition.freeLocked(tradeAmount);
-            makerQuotePosition.add(tradeQty);
-        }
+    private void addToOrderBook(Order order){
+        Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
+        book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
+            o.addAll(v);
+            return o;
+        });
     }
 
-    private void sendExecReport(Order taker, Order maker) {
-        ExecReport execTaker = orderToExecReport(taker);
-        execTaker.setExecId(counter.getNextExecutionId());
-        execTaker.setIsTaker(true);
-        execTaker.setCounterOrderId(maker.getOrderId());
-        execTaker.setStatus(OrderStatus.PARTIALLY_FILLED);
-        if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-            execTaker.setStatus(OrderStatus.FILLED);
-        }
-        ExecReport execMaker = orderToExecReport(maker);
-        execMaker.setExecId(counter.getNextExecutionId());
-        execMaker.setIsTaker(false);
-        execMaker.setCounterOrderId(taker.getOrderId());
-        execMaker.setStatus(OrderStatus.PARTIALLY_FILLED);
-        if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-            execMaker.setStatus(OrderStatus.FILLED);
-        }
-
-        outbound.add(execTaker);
-        outbound.add(execMaker);
-    }
-
-    private ExecReport orderToExecReport(Order order) {
-        ExecReport exec = new ExecReport();
-        exec.setOrderId(order.getOrderId());
-        exec.setSymbol(order.getSymbol());
-        exec.setPrice(order.getPrice());
-        exec.setOrderQty(order.getOrderQty());
-        exec.setLeavesQty(order.getLeavesQty());
-        return exec;
-    }
 
     private MarketData buildMarketData() {
         int depth = Math.max(bids.size(), asks.size());
@@ -166,7 +92,7 @@ public class MapOrderBook implements OrderBook {
         }
         MarketData md = new MarketData();
         md.setDepth(depth);
-        md.setSymbol(symbolConfig.getSymbol());
+        md.setSymbol(symbol);
         md.setTransactTime(System.currentTimeMillis());
 
         BigDecimal[][] bids = new BigDecimal[depth][];

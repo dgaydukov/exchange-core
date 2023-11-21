@@ -4,6 +4,10 @@ import com.exchange.core.account.AccountRepository;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.orderbook.map.MapOrderBook;
+import com.exchange.core.orderbook.post.PostOrderCheck;
+import com.exchange.core.orderbook.post.PostOrderCheckImpl;
+import com.exchange.core.orderbook.pre.PreOrderCheck;
+import com.exchange.core.orderbook.pre.PreOrderCheckImpl;
 
 import java.util.*;
 
@@ -44,7 +48,10 @@ public class MatchingEngine {
     }
 
     private void addOrderBook(SymbolConfigMessage msg) {
-        orderBooks.put(msg.getSymbol(), new MapOrderBook(msg, counter, outbound, accountRepository));
+        PreOrderCheck preOrderCheck = new PreOrderCheckImpl(msg, counter, accountRepository, outbound);
+        PostOrderCheck postOrderCheck = new PostOrderCheckImpl(msg, counter, accountRepository, outbound);
+        final String symbol = msg.getSymbol();
+        orderBooks.put(symbol, new MapOrderBook(symbol, preOrderCheck, postOrderCheck));
     }
 
     private void process(Message msg) {

@@ -8,6 +8,8 @@ import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.SymbolConfigMessage;
 import com.exchange.core.orderbook.GlobalCounter;
 import com.exchange.core.orderbook.OrderBook;
+import com.exchange.core.orderbook.post.PostOrderCheck;
+import com.exchange.core.orderbook.pre.PreOrderCheck;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -18,23 +20,23 @@ public class ArrayOrderBook implements OrderBook {
     private final PriceLevel[] bids = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
     // sorted in ascending order => first ask is the lowest price
     private final PriceLevel[] asks = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
-    private final SymbolConfigMessage symbolConfig;
-    private final GlobalCounter counter;
-    private final Queue<Message> outbound;
-    private final AccountRepository accountRepository;
+    private final String symbol;
+    private final PreOrderCheck preOrderCheck;
+    private final PostOrderCheck postOrderCheck;
 
 
-    public ArrayOrderBook(SymbolConfigMessage symbol, GlobalCounter counter, Queue<Message> outbound, AccountRepository accountRepository) {
-        this.symbolConfig = symbol;
-        this.counter = counter;
-        this.outbound = outbound;
-        this.accountRepository = accountRepository;
+    public ArrayOrderBook(String symbol, PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+        this.symbol = symbol;
+        this.preOrderCheck = preOrderCheck;
+        this.postOrderCheck = postOrderCheck;
     }
 
     @Override
     public void addOrder(Order order) {
         match(order);
-        addToOrderBook(order);
+        if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            addToOrderBook(order);
+        }
     }
 
     private void match(Order taker) {
@@ -44,7 +46,7 @@ public class ArrayOrderBook implements OrderBook {
                 if (level == null || taker.getPrice().compareTo(level.getPrice()) > 0){
                     break;
                 }
-                matchLevel(level);
+                match(level);
             }
         } else{
             for(int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++){
@@ -52,17 +54,16 @@ public class ArrayOrderBook implements OrderBook {
                 if (level == null || taker.getPrice().compareTo(level.getPrice()) < 0){
                     break;
                 }
-                matchLevel(level);
+                match(level);
             }
         }
     }
 
-    private void matchLevel(PriceLevel level){
-        while (level.hasNext()){
-            Order maker = level.getNext();
-
+    private void match(Iterator<Order> iterator){
+        while (iterator.hasNext()){
+            Order maker = iterator.next();
             if(maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
-                level.removeNext();
+                iterator.remove();
             }
         }
     }
