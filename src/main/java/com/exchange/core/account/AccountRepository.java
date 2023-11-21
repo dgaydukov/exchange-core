@@ -3,6 +3,7 @@ package com.exchange.core.account;
 import com.exchange.core.model.msg.AccountBalance;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AccountRepository {
@@ -16,14 +17,17 @@ public class AccountRepository {
         return accounts.compute(accountId, (k, v) -> v == null ? new Account(accountId) : v);
     }
 
-    public Position getAccPosition(int accountId, String asset){
+    public Position getAccPosition(int accountId, String asset) {
         Account account = getAccount(accountId);
         return account.getPosition(asset);
     }
 
     public void addBalance(AccountBalance ab) {
-        Account account = getAccount(ab.getAccount());
-        Position position = account.getPosition(ab.getAsset());
+        Position position = getAccPosition(ab.getAccount(), ab.getAsset());
         position.add(ab.getAmount());
+    }
+
+    public List<Account> getAllAccounts() {
+        return accounts.values().stream().toList();
     }
 }

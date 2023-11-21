@@ -22,7 +22,7 @@ public class MatchingEngine {
     }
 
     public void start() {
-        System.out.println("Starting matching thread");
+        System.out.println("Starting matching engine...");
         new Thread(this::run, "MatchingThread").start();
     }
 
