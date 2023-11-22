@@ -6,6 +6,7 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.msg.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class MapOrderBook implements OrderBook {
@@ -19,6 +20,62 @@ public class MapOrderBook implements OrderBook {
 
     @Override
     public List<Trade> match(Order taker) {
+        return switch (taker.getType()) {
+            case MARKET -> matchMarket(taker);
+            case LIMIT -> matchLimit(taker);
+            default -> new ArrayList<>();
+        };
+    }
+
+    private List<Trade> matchMarket(Order taker) {
+        List<Trade> trades = new ArrayList<>();
+        Map<BigDecimal, List<Order>> counterMap = taker.getSide() == OrderSide.BUY ? asks : bids;
+        Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
+        while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            final BigDecimal tradePrice = iterator.next();
+            List<Order> orders = counterMap.get(tradePrice);
+            if (orders != null) {
+                Iterator<Order> ordIterator = orders.iterator();
+                while (ordIterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+                    Order maker = ordIterator.next();
+
+                    BigDecimal tradeQty, tradeAmount;
+                    if (taker.getSide() == OrderSide.BUY) {
+                        BigDecimal takerTradeAmount = taker.getLeavesQty();
+                        BigDecimal takerTradeQty = takerTradeAmount.divide(tradePrice, AppConstants.ROUNDING_SCALE, RoundingMode.DOWN);
+
+                        tradeQty = takerTradeQty.min(maker.getLeavesQty());
+                        tradeAmount = tradeQty.multiply(tradePrice);
+                        if (maker.getLeavesQty().compareTo(takerTradeQty) > 0){
+                            tradeAmount = takerTradeAmount;
+                        }
+
+                        taker.setLeavesQty(taker.getLeavesQty().subtract(tradeAmount));
+                        maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+                    } else {
+                        tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+                        tradeAmount = tradeQty.multiply(tradePrice);
+                        taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+                        maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+                    }
+
+
+                    trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+                    if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                        ordIterator.remove();
+                    }
+                }
+                if (orders.size() == 0) {
+                    iterator.remove();
+                }
+            }
+        }
+        return trades;
+    }
+
+
+    private List<Trade> matchLimit(Order taker) {
         List<Trade> trades = new ArrayList<>();
         Map<BigDecimal, List<Order>> counterMap;
         if (taker.getSide() == OrderSide.BUY) {
@@ -27,12 +84,12 @@ public class MapOrderBook implements OrderBook {
             counterMap = bids.headMap(taker.getPrice(), true);
         }
         Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
-        while (iterator.hasNext()) {
+        while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
             final BigDecimal tradePrice = iterator.next();
             List<Order> orders = counterMap.get(tradePrice);
             if (orders != null) {
                 Iterator<Order> ordIterator = orders.iterator();
-                while (ordIterator.hasNext()) {
+                while (ordIterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
                     Order maker = ordIterator.next();
                     BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
                     BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
@@ -54,7 +111,7 @@ public class MapOrderBook implements OrderBook {
     }
 
     @Override
-    public void add(Order order){
+    public void add(Order order) {
         Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
         book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
             o.addAll(v);

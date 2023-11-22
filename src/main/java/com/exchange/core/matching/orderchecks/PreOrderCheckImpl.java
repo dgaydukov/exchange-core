@@ -30,9 +30,12 @@ public class PreOrderCheckImpl implements PreOrderCheck{
 
     @Override
     public boolean validateOrder(Order order) {
-        Account account = accountRepository.getAccount(order.getAccount());
-        if (account == null){
+        if (!validateAccount(order)){
             outbound.add(new ErrorMessage("Account not found: account=" + order.getAccount()));
+            return false;
+        }
+        if (!validateMarketOrder(order)){
+            outbound.add(new ErrorMessage("Invalid market order: order=" + order));
             return false;
         }
         if (!validateBalance(order)){
@@ -46,6 +49,9 @@ public class PreOrderCheckImpl implements PreOrderCheck{
     public void updateNewOrder(Order order) {
         order.setOrderId(counter.getNextOrderId());
         order.setLeavesQty(order.getOrderQty());
+        if (order.getType() == OrderType.MARKET && order.getSide() == OrderSide.BUY){
+            order.setLeavesQty(order.getQuoteOrderQty());
+        }
     }
 
     @Override
@@ -55,10 +61,29 @@ public class PreOrderCheckImpl implements PreOrderCheck{
         position.lock(amount);
     }
 
+
+    private boolean validateAccount(Order order){
+        return accountRepository.getAccount(order.getAccount()) != null;
+    }
     private boolean validateBalance(Order order) {
         Position position = getUserPosition(order);
         BigDecimal amount = getTradeAmount(order);
         return position.getBalance().compareTo(amount) > 0;
+    }
+    private boolean validateMarketOrder(Order order) {
+        if (order.getType() == OrderType.MARKET){
+            if (order.getPrice() != null){
+                return false;
+            }
+            if (order.getSide() == OrderSide.BUY){
+                if (order.getQuoteOrderQty() == null){
+                    return false;
+                }
+            } else if (order.getOrderQty() == null){
+                return false;
+            }
+        }
+        return true;
     }
 
     private Position getUserPosition(Order order){
