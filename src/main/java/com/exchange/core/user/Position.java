@@ -21,8 +21,12 @@ public class Position {
         this.locked = BigDecimal.ZERO;
     }
 
-    public BigDecimal getAvailableBalance() {
-        return balance.subtract(locked);
+    public BigDecimal getTotalBalance() {
+        return balance.add(locked);
+    }
+
+    public void add(BigDecimal amount) {
+        this.balance = balance.add(amount);
     }
 
     public void lock(BigDecimal amount) {
@@ -46,16 +50,5 @@ public class Position {
             throw new AppException("Failed to free more than locked: amount=" + amount + ", locked=" + locked);
         }
         locked = locked.subtract(amount);
-    }
-
-    public void add(BigDecimal amount) {
-        this.balance = balance.add(amount);
-    }
-
-    public void subtract(BigDecimal amount) {
-        if (amount.compareTo(balance) > 0) {
-            throw new AppException("Failed to subtract more than available: amount=" + amount + ", balance=" + balance);
-        }
-        balance = balance.subtract(amount);
     }
 }

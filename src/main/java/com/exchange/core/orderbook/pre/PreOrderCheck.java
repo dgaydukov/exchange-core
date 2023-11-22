@@ -6,4 +6,6 @@ public interface PreOrderCheck {
     boolean validateOrder(Order order);
 
     void updateNewOrder(Order order);
+
+    void lockBalance(Order order);
 }

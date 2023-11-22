@@ -42,10 +42,15 @@ public class PreOrderCheckImpl implements PreOrderCheck{
         order.setLeavesQty(order.getOrderQty());
     }
 
+    @Override
+    public void lockBalance(Order order) {
+        Position position = accountRepository.getAccountPosition(order.getAccount(), order.getSymbol());
+    }
+
     private boolean checkBalance(Order order) {
         InstrumentConfig inst = instrumentRepository.getInstrument(order.getSymbol());
-        String symbol = order.getSide() == OrderSide.BUY ? inst.getQuote() : inst.getBase();
-        Position position = accountRepository.getAccountPosition(order.getAccount(), symbol);
+        String asset = order.getSide() == OrderSide.BUY ? inst.getQuote() : inst.getBase();
+        Position position = accountRepository.getAccountPosition(order.getAccount(), asset);
         BigDecimal amount;
         if (order.getType() == OrderType.LIMIT) {
             amount = order.getOrderQty().multiply(order.getPrice());
