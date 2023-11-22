@@ -1,5 +1,7 @@
-package com.exchange.core.account;
+package com.exchange.core.repository;
 
+import com.exchange.core.user.Account;
+import com.exchange.core.user.Position;
 import com.exchange.core.model.msg.AccountBalance;
 
 import java.util.HashMap;

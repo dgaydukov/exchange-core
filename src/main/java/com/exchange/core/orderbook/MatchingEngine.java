@@ -1,7 +1,7 @@
 package com.exchange.core.orderbook;
 
-import com.exchange.core.account.AccountRepository;
-import com.exchange.core.account.AccountRepositoryImpl;
+import com.exchange.core.repository.AccountRepository;
+import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.orderbook.map.MapOrderBook;
@@ -9,20 +9,27 @@ import com.exchange.core.orderbook.post.PostOrderCheck;
 import com.exchange.core.orderbook.post.PostOrderCheckImpl;
 import com.exchange.core.orderbook.pre.PreOrderCheck;
 import com.exchange.core.orderbook.pre.PreOrderCheckImpl;
+import com.exchange.core.repository.InstrumentRepository;
+import com.exchange.core.repository.InstrumentRepositoryImp;
 
 import java.util.*;
 
 public class MatchingEngine {
     private final Map<String, OrderBook> orderBooks;
+    private final AccountRepository accountRepository;
+    private final InstrumentRepository instrumentRepository;
+    private final PreOrderCheck preOrderCheck;
+    private final PostOrderCheck postOrderCheck;
     private final Queue<Message> inbound;
     private final Queue<Message> outbound;
-    private final AccountRepository accountRepository;
-    private final GlobalCounter counter;
 
     public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
-        accountRepository = new AccountRepositoryImpl();
-        counter = new SimpleGlobalCounter();
         orderBooks = new HashMap<>();
+        accountRepository = new AccountRepositoryImpl();
+        instrumentRepository = new InstrumentRepositoryImp();
+        GlobalCounter counter = new SimpleGlobalCounter();
+        preOrderCheck = new PreOrderCheckImpl(counter, accountRepository, instrumentRepository, outbound);
+        postOrderCheck = new PostOrderCheckImpl(counter, accountRepository, instrumentRepository, outbound);
         this.inbound = inbound;
         this.outbound = outbound;
     }
@@ -48,30 +55,40 @@ public class MatchingEngine {
         }
     }
 
-    private void addOrderBook(SymbolConfigMessage msg) {
-        PreOrderCheck preOrderCheck = new PreOrderCheckImpl(msg, counter, accountRepository, outbound);
-        PostOrderCheck postOrderCheck = new PostOrderCheckImpl(msg, counter, accountRepository, outbound);
+    private void process(Message msg) {
+        if (msg instanceof InstrumentConfig symbol) {
+            addInstrument(symbol);
+        } else if (msg instanceof Order order) {
+            addOrder(order);
+        } else if (msg instanceof AccountBalance ab) {
+            addBalance(ab);
+        } else {
+            throw new AppException("Undefined message: msg=" + msg);
+        }
+    }
+
+    private void addInstrument(InstrumentConfig msg) {
+        instrumentRepository.add(msg);
         final String symbol = msg.getSymbol();
         orderBooks.put(symbol, new MapOrderBook(symbol, preOrderCheck, postOrderCheck));
     }
 
-    private void process(Message msg) {
-        if (msg instanceof SymbolConfigMessage symbol) {
-            addOrderBook(symbol);
-        } else if (msg instanceof Order order) {
-            final String symbol = order.getSymbol();
-            if (symbol == null) {
-                throw new AppException("Symbol not found for oder: msg=" + msg);
-            }
-            OrderBook ob = orderBooks.get(order.getSymbol());
-            if (ob == null) {
-                throw new AppException("OrderBook not found for oder: msg=" + msg);
-            }
-            ob.addOrder(order);
-        } else if (msg instanceof AccountBalance ab) {
-            accountRepository.addBalance(ab);
-        } else {
-            throw new AppException("Undefined message: msg=" + msg);
+    private void addOrder(Order order) {
+        final String symbol = order.getSymbol();
+        if (symbol == null) {
+            throw new AppException("Symbol not found for oder: msg=" + order);
         }
+        OrderBook ob = orderBooks.get(order.getSymbol());
+        if (ob == null) {
+            throw new AppException("OrderBook not found for oder: msg=" + order);
+        }
+        ob.addOrder(order);
+    }
+
+    private void addBalance(AccountBalance ab) {
+        if (!instrumentRepository.getAssets().contains(ab.getAsset())) {
+            throw new AppException("Asset not found: msg=" + ab);
+        }
+        accountRepository.addBalance(ab);
     }
 }

@@ -3,7 +3,7 @@ package com.exchange.core;
 import com.exchange.core.model.msg.AccountBalance;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
-import com.exchange.core.model.msg.SymbolConfigMessage;
+import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.orderbook.MatchingEngine;
@@ -19,7 +19,7 @@ public class App {
         final String BASE = "BTC";
         final String QUOTE = "USDT";
         final String SYMBOL = BASE+"/"+QUOTE;
-        SymbolConfigMessage symbolMsg = new SymbolConfigMessage();
+        InstrumentConfig symbolMsg = new InstrumentConfig();
         symbolMsg.setBase(BASE);
         symbolMsg.setQuote(QUOTE);
         symbolMsg.setSymbol(SYMBOL);

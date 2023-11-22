@@ -1,7 +1,6 @@
 package com.exchange.core.model.msg;
 
 import com.exchange.core.model.enums.OrderStatus;
-import com.exchange.core.model.msg.Message;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,5 +15,7 @@ public class ExecReport implements Message {
     private BigDecimal orderQty;
     private BigDecimal leavesQty;
     private BigDecimal price;
+    private BigDecimal lastQty;
+    private BigDecimal lastPx;
     private OrderStatus status;
 }

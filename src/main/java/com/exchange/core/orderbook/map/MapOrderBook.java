@@ -37,7 +37,7 @@ public class MapOrderBook implements OrderBook {
             if (order.getType() == OrderType.MARKET){
                 postOrderCheck.sendExecReportCancel(order);
             } else {
-                addToOrderBook(order);
+                add(order);
             }
         }
         postOrderCheck.sendMarketData(buildMarketData());
@@ -55,19 +55,19 @@ public class MapOrderBook implements OrderBook {
         }
         Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
         while (iterator.hasNext()) {
-            final BigDecimal makerPrice = iterator.next();
-            List<Order> orders = counterMap.get(makerPrice);
+            final BigDecimal tradePrice = iterator.next();
+            List<Order> orders = counterMap.get(tradePrice);
             if (orders != null) {
                 Iterator<Order> ordIterator = orders.iterator();
                 while (ordIterator.hasNext()) {
                     Order maker = ordIterator.next();
                     BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
-                    BigDecimal tradeAmount = tradeQty.multiply(makerPrice);
+                    BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
                     taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
                     maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
 
                     postOrderCheck.settleTrade(taker, maker, tradeQty, tradeAmount);
-                    postOrderCheck.sendExecReportTrade(taker, maker);
+                    postOrderCheck.sendExecReportTrade(taker, maker, tradeQty, tradePrice);
 
                     if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                         ordIterator.remove();
@@ -80,7 +80,7 @@ public class MapOrderBook implements OrderBook {
         }
     }
 
-    private void addToOrderBook(Order order){
+    private void add(Order order){
         Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
         book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
             o.addAll(v);

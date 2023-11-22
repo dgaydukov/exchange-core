@@ -1,28 +1,29 @@
 package com.exchange.core.orderbook.pre;
 
-import com.exchange.core.account.AccountRepository;
-import com.exchange.core.account.Position;
+import com.exchange.core.repository.AccountRepository;
+import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.ErrorMessage;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
-import com.exchange.core.model.msg.SymbolConfigMessage;
+import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.orderbook.GlobalCounter;
+import com.exchange.core.repository.InstrumentRepository;
 
 import java.math.BigDecimal;
 import java.util.Queue;
 
 public class PreOrderCheckImpl implements PreOrderCheck{
-    private final SymbolConfigMessage symbolConfig;
     private final GlobalCounter counter;
     private final AccountRepository accountRepository;
+    private final InstrumentRepository instrumentRepository;
     private final Queue<Message> outbound;
 
-    public PreOrderCheckImpl(SymbolConfigMessage symbolConfig, GlobalCounter counter, AccountRepository accountRepository, Queue<Message> outbound){
-        this.symbolConfig = symbolConfig;
+    public PreOrderCheckImpl(GlobalCounter counter, AccountRepository accountRepository, InstrumentRepository instrumentRepository, Queue<Message> outbound){
         this.counter = counter;
         this.accountRepository = accountRepository;
+        this.instrumentRepository = instrumentRepository;
         this.outbound = outbound;
     }
 
@@ -42,7 +43,8 @@ public class PreOrderCheckImpl implements PreOrderCheck{
     }
 
     private boolean checkBalance(Order order) {
-        String symbol = order.getSide() == OrderSide.BUY ? symbolConfig.getQuote() : symbolConfig.getBase();
+        InstrumentConfig inst = instrumentRepository.getInstrument(order.getSymbol());
+        String symbol = order.getSide() == OrderSide.BUY ? inst.getQuote() : inst.getBase();
         Position position = accountRepository.getAccountPosition(order.getAccount(), symbol);
         BigDecimal amount;
         if (order.getType() == OrderType.LIMIT) {

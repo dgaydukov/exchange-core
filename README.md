@@ -1,5 +1,11 @@
 # Building exchange in java
 
+2 typs of test:
+* unit tests - where we test only source code
+* integration test - where we actually run the app, send incoming messages & listen for outcoming
+
+todo: add binance project to github with explanation why binance doesn't recomend to use third-party libraries (risk error)
+
 ### 2 types of orderbook
 * MapOrderBook - orderbook based on `java.utils.TreeMap` where all book manipulation (adding/removing order to orderbook) is done inside TreeMap and hidden from us. It's easier, but less efficent.
 * ArrayOrderBook - advanced version of order book, compared to `MapOrderBook` order book, here we can achieve faster performance by directly manipulating the underlying array. In `TreeMap` there is also underlying array and each time we insert/remove, it's sorted internally/implicitly. But here we do adding/removing from orderbook explicitly

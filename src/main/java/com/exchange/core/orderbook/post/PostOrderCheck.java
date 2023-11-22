@@ -10,7 +10,7 @@ public interface PostOrderCheck {
 
     void sendExecReportCancel(Order order);
 
-    void sendExecReportTrade(Order taker, Order maker);
+    void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice);
 
     void sendMarketData(MarketData marketData);
 

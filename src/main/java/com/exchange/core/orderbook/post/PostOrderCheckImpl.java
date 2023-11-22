@@ -1,25 +1,26 @@
 package com.exchange.core.orderbook.post;
 
-import com.exchange.core.account.AccountRepository;
-import com.exchange.core.account.Position;
+import com.exchange.core.repository.AccountRepository;
+import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.orderbook.GlobalCounter;
+import com.exchange.core.repository.InstrumentRepository;
 
 import java.math.BigDecimal;
 import java.util.Queue;
 
 public class PostOrderCheckImpl implements PostOrderCheck{
-    private final SymbolConfigMessage symbolConfig;
     private final GlobalCounter counter;
     private final AccountRepository accountRepository;
+    private final InstrumentRepository instrumentRepository;
     private final Queue<Message> outbound;
 
-    public PostOrderCheckImpl(SymbolConfigMessage symbolConfig, GlobalCounter counter, AccountRepository accountRepository, Queue<Message> outbound){
-        this.symbolConfig = symbolConfig;
+    public PostOrderCheckImpl(GlobalCounter counter, AccountRepository accountRepository, InstrumentRepository instrumentRepository, Queue<Message> outbound){
         this.counter = counter;
         this.accountRepository = accountRepository;
+        this.instrumentRepository = instrumentRepository;
         this.outbound = outbound;
     }
 
@@ -38,7 +39,7 @@ public class PostOrderCheckImpl implements PostOrderCheck{
     }
 
     @Override
-    public void sendExecReportTrade(Order taker, Order maker) {
+    public void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice) {
         ExecReport execTaker = orderToExecReport(taker);
         execTaker.setExecId(counter.getNextExecutionId());
         execTaker.setIsTaker(true);
@@ -47,6 +48,8 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
             execTaker.setStatus(OrderStatus.FILLED);
         }
+        execTaker.setLastQty(tradeQty);
+        execTaker.setLastPx(tradePrice);
         ExecReport execMaker = orderToExecReport(maker);
         execMaker.setExecId(counter.getNextExecutionId());
         execMaker.setIsTaker(false);
@@ -55,6 +58,8 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
             execMaker.setStatus(OrderStatus.FILLED);
         }
+        execMaker.setLastQty(tradeQty);
+        execMaker.setLastPx(tradePrice);
 
         outbound.add(execTaker);
         outbound.add(execMaker);
@@ -67,10 +72,11 @@ public class PostOrderCheckImpl implements PostOrderCheck{
 
     @Override
     public void settleTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradeAmount) {
-        Position takerBasePosition = accountRepository.getAccountPosition(taker.getAccount(), symbolConfig.getBase());
-        Position makerBasePosition = accountRepository.getAccountPosition(maker.getAccount(), symbolConfig.getBase());
-        Position takerQuotePosition = accountRepository.getAccountPosition(taker.getAccount(), symbolConfig.getQuote());
-        Position makerQuotePosition = accountRepository.getAccountPosition(maker.getAccount(), symbolConfig.getQuote());
+        InstrumentConfig inst = instrumentRepository.getInstrument(taker.getSymbol());
+        Position takerBasePosition = accountRepository.getAccountPosition(taker.getAccount(), inst.getBase());
+        Position makerBasePosition = accountRepository.getAccountPosition(maker.getAccount(), inst.getBase());
+        Position takerQuotePosition = accountRepository.getAccountPosition(taker.getAccount(), inst.getQuote());
+        Position makerQuotePosition = accountRepository.getAccountPosition(maker.getAccount(), inst.getQuote());
 
         if (taker.getSide() == OrderSide.BUY) {
             takerQuotePosition.freeLocked(tradeAmount);

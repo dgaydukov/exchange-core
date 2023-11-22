@@ -1,4 +1,4 @@
-package com.exchange.core.account;
+package com.exchange.core.user;
 
 import lombok.Data;
 

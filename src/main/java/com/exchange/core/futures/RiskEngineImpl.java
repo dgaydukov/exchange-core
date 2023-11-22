@@ -1,7 +1,7 @@
 package com.exchange.core.futures;
 
-import com.exchange.core.account.Account;
-import com.exchange.core.account.AccountRepository;
+import com.exchange.core.user.Account;
+import com.exchange.core.repository.AccountRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
