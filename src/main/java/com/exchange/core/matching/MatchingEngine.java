@@ -12,10 +12,10 @@ import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.matching.postcheck.PostOrderCheck;
-import com.exchange.core.matching.postcheck.PostOrderCheckImpl;
-import com.exchange.core.matching.precheck.PreOrderCheck;
-import com.exchange.core.matching.precheck.PreOrderCheckImpl;
+import com.exchange.core.matching.orderchecks.PostOrderCheck;
+import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
+import com.exchange.core.matching.orderchecks.PreOrderCheck;
+import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
 
