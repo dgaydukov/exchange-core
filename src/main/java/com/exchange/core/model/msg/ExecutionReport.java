@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class ExecReport implements Message {
+public class ExecutionReport implements Message {
     private String symbol;
     private long execId;
     private long orderId;

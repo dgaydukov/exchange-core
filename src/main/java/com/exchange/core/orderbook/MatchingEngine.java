@@ -60,7 +60,7 @@ public class MatchingEngine {
             addInstrument(symbol);
         } else if (msg instanceof Order order) {
             addOrder(order);
-        } else if (msg instanceof AccountBalance ab) {
+        } else if (msg instanceof UserBalance ab) {
             addBalance(ab);
         } else {
             throw new AppException("Undefined message: msg=" + msg);
@@ -85,7 +85,7 @@ public class MatchingEngine {
         ob.addOrder(order);
     }
 
-    private void addBalance(AccountBalance ab) {
+    private void addBalance(UserBalance ab) {
         if (!instrumentRepository.getAssets().contains(ab.getAsset())) {
             throw new AppException("Asset not found: msg=" + ab);
         }

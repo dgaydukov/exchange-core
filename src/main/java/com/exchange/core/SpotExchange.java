@@ -1,6 +1,6 @@
 package com.exchange.core;
 
-import com.exchange.core.model.msg.AccountBalance;
+import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.InstrumentConfig;
@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class App {
+public class SpotExchange {
     public static void main(String[] args) {
         final String BASE = "BTC";
         final String QUOTE = "USDT";
@@ -46,16 +46,16 @@ public class App {
         inbound.add(symbolMsg);
 
         // adding 2 users
-        AccountBalance user1 = new AccountBalance();
-        user1.setAccount(1);
-        user1.setAsset(QUOTE);
-        user1.setAmount(new BigDecimal("1000"));
-        inbound.add(user1);
-        AccountBalance user2 = new AccountBalance();
-        user2.setAccount(2);
-        user2.setAsset(BASE);
-        user2.setAmount(new BigDecimal("10"));
-        inbound.add(user2);
+        UserBalance userBalance1 = new UserBalance();
+        userBalance1.setAccount(1);
+        userBalance1.setAsset(QUOTE);
+        userBalance1.setAmount(new BigDecimal("1000"));
+        inbound.add(userBalance1);
+        UserBalance userBalance2 = new UserBalance();
+        userBalance2.setAccount(2);
+        userBalance2.setAsset(BASE);
+        userBalance2.setAmount(new BigDecimal("10"));
+        inbound.add(userBalance2);
 
         // adding 2 orders
         Order buy = new Order();
@@ -64,7 +64,7 @@ public class App {
         buy.setSide(OrderSide.BUY);
         buy.setPrice(new BigDecimal("100"));
         buy.setOrderQty(new BigDecimal("5.5"));
-        buy.setAccount(user1.getAccount());
+        buy.setAccount(userBalance1.getAccount());
         inbound.add(buy);
         Order sell = new Order();
         sell.setSymbol(SYMBOL);
@@ -72,7 +72,7 @@ public class App {
         sell.setSide(OrderSide.SELL);
         sell.setPrice(new BigDecimal("100"));
         sell.setOrderQty(new BigDecimal("3"));
-        sell.setAccount(user2.getAccount());
+        sell.setAccount(userBalance2.getAccount());
         inbound.add(sell);
     }
 }

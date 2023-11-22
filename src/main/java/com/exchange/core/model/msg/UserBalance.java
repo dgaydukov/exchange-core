@@ -5,7 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class AccountBalance implements Message {
+public class UserBalance implements Message {
     private int account;
     private String asset;
     private BigDecimal amount;

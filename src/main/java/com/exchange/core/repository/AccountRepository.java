@@ -2,7 +2,7 @@ package com.exchange.core.repository;
 
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import com.exchange.core.model.msg.AccountBalance;
+import com.exchange.core.model.msg.UserBalance;
 
 import java.util.List;
 
@@ -10,5 +10,5 @@ public interface AccountRepository {
     Account getAccount(int accountId);
     List<Account> getAllAccounts();
     Position getAccountPosition(int accountId, String asset);
-    void addBalance(AccountBalance msg);
+    void addBalance(UserBalance msg);
 }

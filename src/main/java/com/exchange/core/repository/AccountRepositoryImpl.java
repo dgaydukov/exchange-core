@@ -2,13 +2,13 @@ package com.exchange.core.repository;
 
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import com.exchange.core.model.msg.AccountBalance;
+import com.exchange.core.model.msg.UserBalance;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AccountRepositoryImpl implements AccountRepository{
+public class AccountRepositoryImpl implements AccountRepository {
     private final Map<Integer, Account> accounts;
 
     public AccountRepositoryImpl() {
@@ -17,7 +17,7 @@ public class AccountRepositoryImpl implements AccountRepository{
 
     @Override
     public Account getAccount(int accountId) {
-        return accounts.compute(accountId, (k, v) -> v == null ? new Account(accountId) : v);
+        return accounts.get(accountId);
     }
 
     @Override
@@ -27,11 +27,20 @@ public class AccountRepositoryImpl implements AccountRepository{
 
     @Override
     public Position getAccountPosition(int accountId, String asset) {
-        return getAccount(accountId).getPosition(asset);
+        Account account = getAccount(accountId);
+        if (account == null) {
+            return null;
+        }
+        return account.getPosition(asset);
     }
 
     @Override
-    public void addBalance(AccountBalance ab) {
-        getAccountPosition(ab.getAccount(), ab.getAsset()).add(ab.getAmount());
+    public void addBalance(UserBalance ub) {
+        final int accountId = ub.getAccount();
+        Account account = getAccount(accountId);
+        if (account == null) {
+            accounts.put(accountId, new Account(accountId));
+        }
+        getAccountPosition(accountId, ub.getAsset()).add(ub.getAmount());
     }
 }

@@ -26,14 +26,14 @@ public class PostOrderCheckImpl implements PostOrderCheck{
 
     @Override
     public void sendExecReportNew(Order order) {
-        ExecReport exec = orderToExecReport(order);
+        ExecutionReport exec = orderToExecReport(order);
         exec.setStatus(OrderStatus.NEW);
         outbound.add(exec);
     }
 
     @Override
     public void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice) {
-        ExecReport execTaker = orderToExecReport(taker);
+        ExecutionReport execTaker = orderToExecReport(taker);
         execTaker.setExecId(counter.getNextExecutionId());
         execTaker.setIsTaker(true);
         execTaker.setCounterOrderId(maker.getOrderId());
@@ -43,7 +43,7 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         }
         execTaker.setLastQty(tradeQty);
         execTaker.setLastPx(tradePrice);
-        ExecReport execMaker = orderToExecReport(maker);
+        ExecutionReport execMaker = orderToExecReport(maker);
         execMaker.setExecId(counter.getNextExecutionId());
         execMaker.setIsTaker(false);
         execMaker.setCounterOrderId(taker.getOrderId());
@@ -92,13 +92,13 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         Position position = accountRepository.getAccountPosition(order.getAccount(), asset);
         position.freeLocked(order.getLeavesQty());
         // send cancellation execution report
-        ExecReport exec = orderToExecReport(order);
+        ExecutionReport exec = orderToExecReport(order);
         exec.setStatus(OrderStatus.CANCELLED);
         outbound.add(exec);
     }
 
-    private ExecReport orderToExecReport(Order order) {
-        ExecReport exec = new ExecReport();
+    private ExecutionReport orderToExecReport(Order order) {
+        ExecutionReport exec = new ExecutionReport();
         exec.setOrderId(order.getOrderId());
         exec.setSymbol(order.getSymbol());
         exec.setPrice(order.getPrice());
