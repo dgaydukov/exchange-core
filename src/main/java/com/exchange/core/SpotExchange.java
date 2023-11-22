@@ -6,9 +6,9 @@ import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
-import com.exchange.core.match.MatchingEngine;
-import com.exchange.core.match.waitstrategy.SleepWaitStrategy;
-import com.exchange.core.match.waitstrategy.WaitStrategy;
+import com.exchange.core.matching.MatchingEngine;
+import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
+import com.exchange.core.matching.waitstrategy.WaitStrategy;
 
 import java.math.BigDecimal;
 import java.util.LinkedList;

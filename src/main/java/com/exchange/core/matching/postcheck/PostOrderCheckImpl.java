@@ -1,6 +1,6 @@
-package com.exchange.core.match.postcheck;
+package com.exchange.core.matching.postcheck;
 
-import com.exchange.core.match.counter.GlobalCounter;
+import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;

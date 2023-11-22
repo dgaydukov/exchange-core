@@ -1,8 +1,8 @@
-package com.exchange.core.match.orderbook.array;
+package com.exchange.core.matching.orderbook.array;
 
 import com.exchange.core.exceptions.AppException;
-import com.exchange.core.match.postcheck.PostOrderCheck;
-import com.exchange.core.match.precheck.PreOrderCheck;
+import com.exchange.core.matching.postcheck.PostOrderCheck;
+import com.exchange.core.matching.precheck.PreOrderCheck;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.msg.Order;
 

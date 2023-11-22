@@ -1,4 +1,4 @@
-package com.exchange.core.match.precheck;
+package com.exchange.core.matching.precheck;
 
 import com.exchange.core.model.msg.Order;
 

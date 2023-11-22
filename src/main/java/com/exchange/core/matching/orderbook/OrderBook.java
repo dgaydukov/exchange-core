@@ -1,4 +1,4 @@
-package com.exchange.core.match.orderbook;
+package com.exchange.core.matching.orderbook;
 
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.msg.MarketData;

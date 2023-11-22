@@ -1,6 +1,6 @@
-package com.exchange.core.match.precheck;
+package com.exchange.core.matching.precheck;
 
-import com.exchange.core.match.counter.GlobalCounter;
+import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;

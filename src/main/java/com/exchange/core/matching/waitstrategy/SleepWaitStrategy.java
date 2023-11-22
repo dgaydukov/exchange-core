@@ -1,4 +1,4 @@
-package com.exchange.core.match.waitstrategy;
+package com.exchange.core.matching.waitstrategy;
 
 public class SleepWaitStrategy implements WaitStrategy{
     @Override

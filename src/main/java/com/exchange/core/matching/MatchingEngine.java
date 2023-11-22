@@ -1,21 +1,21 @@
-package com.exchange.core.match;
+package com.exchange.core.matching;
 
-import com.exchange.core.match.counter.GlobalCounter;
-import com.exchange.core.match.counter.SimpleGlobalCounter;
-import com.exchange.core.match.orderbook.MapOrderBook;
-import com.exchange.core.match.orderbook.OrderBook;
-import com.exchange.core.match.waitstrategy.SleepWaitStrategy;
-import com.exchange.core.match.waitstrategy.WaitStrategy;
+import com.exchange.core.matching.counter.GlobalCounter;
+import com.exchange.core.matching.counter.SimpleGlobalCounter;
+import com.exchange.core.matching.orderbook.MapOrderBook;
+import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
+import com.exchange.core.matching.waitstrategy.WaitStrategy;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.match.postcheck.PostOrderCheck;
-import com.exchange.core.match.postcheck.PostOrderCheckImpl;
-import com.exchange.core.match.precheck.PreOrderCheck;
-import com.exchange.core.match.precheck.PreOrderCheckImpl;
+import com.exchange.core.matching.postcheck.PostOrderCheck;
+import com.exchange.core.matching.postcheck.PostOrderCheckImpl;
+import com.exchange.core.matching.precheck.PreOrderCheck;
+import com.exchange.core.matching.precheck.PreOrderCheckImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
 

@@ -1,4 +1,4 @@
-package com.exchange.core.match.orderbook.array;
+package com.exchange.core.matching.orderbook.array;
 
 import com.exchange.core.model.msg.Order;
 import lombok.Getter;

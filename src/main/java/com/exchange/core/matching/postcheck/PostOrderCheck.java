@@ -1,4 +1,4 @@
-package com.exchange.core.match.postcheck;
+package com.exchange.core.matching.postcheck;
 
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;

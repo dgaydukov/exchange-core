@@ -1,10 +1,9 @@
-package com.exchange.core.match.orderbook;
+package com.exchange.core.matching.orderbook;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.match.orderbook.OrderBook;
 
 import java.math.BigDecimal;
 import java.util.*;

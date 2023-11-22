@@ -1,4 +1,4 @@
-package com.exchange.core.match.counter;
+package com.exchange.core.matching.counter;
 
 /**
  * Since we are building single-threaded matching, where all orders from all pairs would be handled by single thread simple counters would do the job.
