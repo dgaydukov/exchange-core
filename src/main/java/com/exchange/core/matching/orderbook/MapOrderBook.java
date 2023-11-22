@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 public class MapOrderBook implements OrderBook {
-    private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>();
-    private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>(Comparator.reverseOrder());
+    private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>(Comparator.reverseOrder());
+    private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>();
     private final String symbol;
 
     public MapOrderBook(String symbol) {
@@ -22,9 +22,9 @@ public class MapOrderBook implements OrderBook {
         List<Trade> trades = new ArrayList<>();
         Map<BigDecimal, List<Order>> counterMap;
         if (taker.getSide() == OrderSide.BUY) {
-            counterMap = asks.headMap(taker.getPrice());
+            counterMap = asks.headMap(taker.getPrice(), true);
         } else {
-            counterMap = bids.headMap(taker.getPrice());
+            counterMap = bids.headMap(taker.getPrice(), true);
         }
         Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
         while (iterator.hasNext()) {
@@ -64,17 +64,16 @@ public class MapOrderBook implements OrderBook {
 
     @Override
     public MarketData buildMarketData() {
-        int depth = Math.max(bids.size(), asks.size());
-        if (depth > AppConstants.DEFAULT_DEPTH) {
-            depth = AppConstants.DEFAULT_DEPTH;
-        }
+        int bidSize = Math.min(bids.size(), AppConstants.DEFAULT_DEPTH);
+        int askSize = Math.min(asks.size(), AppConstants.DEFAULT_DEPTH);
+        int depth = Math.max(bidSize, askSize);
         MarketData md = new MarketData();
         md.setDepth(depth);
         md.setSymbol(symbol);
         md.setTransactTime(System.currentTimeMillis());
 
-        BigDecimal[][] bids = new BigDecimal[depth][];
-        BigDecimal[][] asks = new BigDecimal[depth][];
+        BigDecimal[][] bids = new BigDecimal[bidSize][];
+        BigDecimal[][] asks = new BigDecimal[askSize][];
         int bidIndex = 0, asksIndex = 0;
         for (Map.Entry<BigDecimal, List<Order>> e : this.bids.entrySet()) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
