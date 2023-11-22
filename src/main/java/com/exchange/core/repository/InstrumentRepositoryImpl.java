@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InstrumentRepositoryImp implements InstrumentRepository {
+public class InstrumentRepositoryImpl implements InstrumentRepository {
     private final Map<String, InstrumentConfig> instruments = new HashMap<>();
 
     @Override

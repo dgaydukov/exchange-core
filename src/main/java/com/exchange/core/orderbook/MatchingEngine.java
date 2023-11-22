@@ -10,7 +10,7 @@ import com.exchange.core.orderbook.post.PostOrderCheckImpl;
 import com.exchange.core.orderbook.pre.PreOrderCheck;
 import com.exchange.core.orderbook.pre.PreOrderCheckImpl;
 import com.exchange.core.repository.InstrumentRepository;
-import com.exchange.core.repository.InstrumentRepositoryImp;
+import com.exchange.core.repository.InstrumentRepositoryImpl;
 
 import java.util.*;
 
@@ -26,7 +26,7 @@ public class MatchingEngine {
     public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
         orderBooks = new HashMap<>();
         accountRepository = new AccountRepositoryImpl();
-        instrumentRepository = new InstrumentRepositoryImp();
+        instrumentRepository = new InstrumentRepositoryImpl();
         GlobalCounter counter = new SimpleGlobalCounter();
         preOrderCheck = new PreOrderCheckImpl(counter, accountRepository, instrumentRepository, outbound);
         postOrderCheck = new PostOrderCheckImpl(counter, accountRepository, instrumentRepository, outbound);
