@@ -44,13 +44,23 @@ public class PreOrderCheckImpl implements PreOrderCheck{
 
     @Override
     public void lockBalance(Order order) {
-        Position position = accountRepository.getAccountPosition(order.getAccount(), order.getSymbol());
+        Position position = getUserPosition(order);
+        BigDecimal amount = getTradeAmount(order);
+        position.lock(amount);
     }
 
     private boolean checkBalance(Order order) {
+        Position position = getUserPosition(order);
+        BigDecimal amount = getTradeAmount(order);
+        return position.getBalance().compareTo(amount) > 0;
+    }
+
+    private Position getUserPosition(Order order){
         InstrumentConfig inst = instrumentRepository.getInstrument(order.getSymbol());
         String asset = order.getSide() == OrderSide.BUY ? inst.getQuote() : inst.getBase();
-        Position position = accountRepository.getAccountPosition(order.getAccount(), asset);
+        return accountRepository.getAccountPosition(order.getAccount(), asset);
+    }
+    private BigDecimal getTradeAmount(Order order){
         BigDecimal amount;
         if (order.getType() == OrderType.LIMIT) {
             amount = order.getOrderQty().multiply(order.getPrice());
@@ -59,6 +69,6 @@ public class PreOrderCheckImpl implements PreOrderCheck{
         } else {
             amount = order.getOrderQty();
         }
-        return position.getBalance().compareTo(amount) > 0;
+        return amount;
     }
 }

@@ -30,12 +30,13 @@ public class MapOrderBook implements OrderBook {
             return;
         }
         preOrderCheck.updateNewOrder(order);
+        preOrderCheck.lockBalance(order);
         postOrderCheck.sendExecReportNew(order);
         match(order);
         // if order not fully matched we should either add to orderbook or cancel if it's market order
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
             if (order.getType() == OrderType.MARKET){
-                postOrderCheck.sendExecReportCancel(order);
+                postOrderCheck.cancelOrder(order);
             } else {
                 add(order);
             }

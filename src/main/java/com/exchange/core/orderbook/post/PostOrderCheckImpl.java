@@ -32,13 +32,6 @@ public class PostOrderCheckImpl implements PostOrderCheck{
     }
 
     @Override
-    public void sendExecReportCancel(Order order) {
-        ExecReport exec = orderToExecReport(order);
-        exec.setStatus(OrderStatus.CANCELLED);
-        outbound.add(exec);
-    }
-
-    @Override
     public void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice) {
         ExecReport execTaker = orderToExecReport(taker);
         execTaker.setExecId(counter.getNextExecutionId());
@@ -89,6 +82,19 @@ public class PostOrderCheckImpl implements PostOrderCheck{
             makerBasePosition.freeLocked(tradeAmount);
             makerQuotePosition.add(tradeQty);
         }
+    }
+
+    @Override
+    public void cancelOrder(Order order) {
+        // free locked balance
+        InstrumentConfig inst = instrumentRepository.getInstrument(order.getSymbol());
+        String asset = order.getSide() == OrderSide.BUY ? inst.getBase() : inst.getQuote();
+        Position position = accountRepository.getAccountPosition(order.getAccount(), asset);
+        position.freeLocked(order.getLeavesQty());
+        // send cancellation execution report
+        ExecReport exec = orderToExecReport(order);
+        exec.setStatus(OrderStatus.CANCELLED);
+        outbound.add(exec);
     }
 
     private ExecReport orderToExecReport(Order order) {
