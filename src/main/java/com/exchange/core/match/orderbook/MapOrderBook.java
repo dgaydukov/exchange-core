@@ -1,12 +1,10 @@
-package com.exchange.core.orderbook.map;
+package com.exchange.core.match.orderbook;
 
 import com.exchange.core.config.AppConstants;
+import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
-import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.orderbook.OrderBook;
-import com.exchange.core.orderbook.post.PostOrderCheck;
-import com.exchange.core.orderbook.pre.PreOrderCheck;
+import com.exchange.core.match.orderbook.OrderBook;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -15,39 +13,14 @@ public class MapOrderBook implements OrderBook {
     private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>();
     private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>(Comparator.reverseOrder());
     private final String symbol;
-    private final PreOrderCheck preOrderCheck;
-    private final PostOrderCheck postOrderCheck;
 
-    public MapOrderBook(String symbol, PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+    public MapOrderBook(String symbol) {
         this.symbol = symbol;
-        this.preOrderCheck = preOrderCheck;
-        this.postOrderCheck = postOrderCheck;
     }
 
     @Override
-    public void addOrder(Order order) {
-        if (!preOrderCheck.validateOrder(order)) {
-            return;
-        }
-        preOrderCheck.updateNewOrder(order);
-        preOrderCheck.lockBalance(order);
-        postOrderCheck.sendExecReportNew(order);
-        match(order);
-        // if order not fully matched we should either add to orderbook or cancel if it's market order
-        if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-            if (order.getType() == OrderType.MARKET){
-                postOrderCheck.cancelOrder(order);
-            } else {
-                add(order);
-            }
-        }
-        postOrderCheck.sendMarketData(buildMarketData());
-    }
-
-    /**
-     * LIMIT BUY => we match all sells with price equals or below
-     */
-    private void match(Order taker) {
+    public List<Trade> match(Order taker) {
+        List<Trade> trades = new ArrayList<>();
         Map<BigDecimal, List<Order>> counterMap;
         if (taker.getSide() == OrderSide.BUY) {
             counterMap = asks.headMap(taker.getPrice());
@@ -67,8 +40,7 @@ public class MapOrderBook implements OrderBook {
                     taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
                     maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
 
-                    postOrderCheck.settleTrade(taker, maker, tradeQty, tradeAmount);
-                    postOrderCheck.sendExecReportTrade(taker, maker, tradeQty, tradePrice);
+                    trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
 
                     if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                         ordIterator.remove();
@@ -79,9 +51,11 @@ public class MapOrderBook implements OrderBook {
                 }
             }
         }
+        return trades;
     }
 
-    private void add(Order order){
+    @Override
+    public void add(Order order){
         Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
         book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
             o.addAll(v);
@@ -89,7 +63,8 @@ public class MapOrderBook implements OrderBook {
         });
     }
 
-    private MarketData buildMarketData() {
+    @Override
+    public MarketData buildMarketData() {
         int depth = Math.max(bids.size(), asks.size());
         if (depth > AppConstants.DEFAULT_DEPTH) {
             depth = AppConstants.DEFAULT_DEPTH;

@@ -1,6 +1,8 @@
-package com.exchange.core.orderbook.pre;
+package com.exchange.core.match.precheck;
 
+import com.exchange.core.match.counter.GlobalCounter;
 import com.exchange.core.repository.AccountRepository;
+import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
@@ -8,7 +10,6 @@ import com.exchange.core.model.msg.ErrorMessage;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.InstrumentConfig;
-import com.exchange.core.orderbook.GlobalCounter;
 import com.exchange.core.repository.InstrumentRepository;
 
 import java.math.BigDecimal;
@@ -29,7 +30,12 @@ public class PreOrderCheckImpl implements PreOrderCheck{
 
     @Override
     public boolean validateOrder(Order order) {
-        if (!checkBalance(order)){
+        Account account = accountRepository.getAccount(order.getAccount());
+        if (account == null){
+            outbound.add(new ErrorMessage("Account not found: account=" + order.getAccount()));
+            return false;
+        }
+        if (!validateBalance(order)){
             outbound.add(new ErrorMessage("Balance insufficient: order=" + order));
             return false;
         }
@@ -49,7 +55,7 @@ public class PreOrderCheckImpl implements PreOrderCheck{
         position.lock(amount);
     }
 
-    private boolean checkBalance(Order order) {
+    private boolean validateBalance(Order order) {
         Position position = getUserPosition(order);
         BigDecimal amount = getTradeAmount(order);
         return position.getBalance().compareTo(amount) > 0;

@@ -1,17 +1,25 @@
-package com.exchange.core.orderbook;
+package com.exchange.core.match;
 
+import com.exchange.core.match.counter.GlobalCounter;
+import com.exchange.core.match.counter.SimpleGlobalCounter;
+import com.exchange.core.match.orderbook.MapOrderBook;
+import com.exchange.core.match.orderbook.OrderBook;
+import com.exchange.core.match.waitstrategy.SleepWaitStrategy;
+import com.exchange.core.match.waitstrategy.WaitStrategy;
+import com.exchange.core.model.Trade;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.orderbook.map.MapOrderBook;
-import com.exchange.core.orderbook.post.PostOrderCheck;
-import com.exchange.core.orderbook.post.PostOrderCheckImpl;
-import com.exchange.core.orderbook.pre.PreOrderCheck;
-import com.exchange.core.orderbook.pre.PreOrderCheckImpl;
+import com.exchange.core.match.postcheck.PostOrderCheck;
+import com.exchange.core.match.postcheck.PostOrderCheckImpl;
+import com.exchange.core.match.precheck.PreOrderCheck;
+import com.exchange.core.match.precheck.PreOrderCheckImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class MatchingEngine {
@@ -70,7 +78,7 @@ public class MatchingEngine {
     private void addInstrument(InstrumentConfig msg) {
         instrumentRepository.add(msg);
         final String symbol = msg.getSymbol();
-        orderBooks.put(symbol, new MapOrderBook(symbol, preOrderCheck, postOrderCheck));
+        orderBooks.put(symbol, new MapOrderBook(symbol));
     }
 
     private void addOrder(Order order) {
@@ -82,7 +90,35 @@ public class MatchingEngine {
         if (ob == null) {
             throw new AppException("OrderBook not found for oder: msg=" + order);
         }
-        ob.addOrder(order);
+        handleOrder(ob, order);
+    }
+
+    private void handleOrder(OrderBook ob, Order order) {
+        if (!preOrderCheck.validateOrder(order)) {
+            return;
+        }
+        preOrderCheck.updateNewOrder(order);
+        preOrderCheck.lockBalance(order);
+        postOrderCheck.sendExecReportNew(order);
+        List<Trade> trades = ob.match(order);
+        trades.forEach(trade -> {
+            Order taker = trade.getTaker();
+            Order maker = trade.getMaker();
+            BigDecimal tradeQty = trade.getTradeQty();
+            BigDecimal tradePrice = trade.getTradePrice();
+            BigDecimal tradeAmount = trade.getTradeAmount();
+            postOrderCheck.settleTrade(taker, maker, tradeQty, tradeAmount);
+            postOrderCheck.sendExecReportTrade(taker, maker, tradeQty, tradePrice);
+        });
+        // if order not fully matched we should either add to orderbook or cancel if it's market order
+        if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            if (order.getType() == OrderType.MARKET) {
+                postOrderCheck.cancelOrder(order);
+            } else {
+                ob.add(order);
+            }
+        }
+        postOrderCheck.sendMarketData(ob.buildMarketData());
     }
 
     private void addBalance(UserBalance ab) {

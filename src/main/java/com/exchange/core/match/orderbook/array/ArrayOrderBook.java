@@ -1,16 +1,15 @@
-package com.exchange.core.orderbook.array;
+package com.exchange.core.match.orderbook.array;
 
 import com.exchange.core.exceptions.AppException;
+import com.exchange.core.match.postcheck.PostOrderCheck;
+import com.exchange.core.match.precheck.PreOrderCheck;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.msg.Order;
-import com.exchange.core.orderbook.OrderBook;
-import com.exchange.core.orderbook.post.PostOrderCheck;
-import com.exchange.core.orderbook.pre.PreOrderCheck;
 
 import java.math.BigDecimal;
 import java.util.*;
 
-public class ArrayOrderBook implements OrderBook {
+public class ArrayOrderBook {
     private final int DEFAULT_PRICE_LEVEL_SIZE = 1024;
     // sorted in descending order => first bid is the highest price
     private final PriceLevel[] bids = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
@@ -27,7 +26,6 @@ public class ArrayOrderBook implements OrderBook {
         this.postOrderCheck = postOrderCheck;
     }
 
-    @Override
     public void addOrder(Order order) {
         match(order);
         if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {

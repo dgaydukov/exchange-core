@@ -1,11 +1,11 @@
-package com.exchange.core.orderbook.post;
+package com.exchange.core.match.postcheck;
 
+import com.exchange.core.match.counter.GlobalCounter;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.*;
-import com.exchange.core.orderbook.GlobalCounter;
 import com.exchange.core.repository.InstrumentRepository;
 
 import java.math.BigDecimal;
@@ -60,7 +60,7 @@ public class PostOrderCheckImpl implements PostOrderCheck{
 
     @Override
     public void sendMarketData(MarketData marketData) {
-
+        outbound.add(marketData);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.exchange.core.orderbook;
+package com.exchange.core.match.counter;
 
 /**
  * since we have OrderBook per instrument, make sure you have one maxOrderId/executionId counter across all instruments
