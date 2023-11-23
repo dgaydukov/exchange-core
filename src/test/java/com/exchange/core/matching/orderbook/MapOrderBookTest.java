@@ -298,7 +298,7 @@ public class MapOrderBookTest {
         ob.add(buy80);
     }
 
-    public Order getLimitBuy(){
+    private Order getLimitBuy(){
         Order order = new Order();
         order.setSymbol(SYMBOL);
         order.setType(OrderType.LIMIT);

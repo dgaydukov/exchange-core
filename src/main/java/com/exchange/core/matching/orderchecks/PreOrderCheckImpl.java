@@ -67,7 +67,7 @@ public class PreOrderCheckImpl implements PreOrderCheck{
     private boolean validateBalance(Order order) {
         Position position = getUserPosition(order);
         BigDecimal amount = getTradeAmount(order);
-        return position.getBalance().compareTo(amount) > 0;
+        return position.getBalance().compareTo(amount) >= 0;
     }
     private boolean validateMarketOrder(Order order) {
         if (order.getType() == OrderType.MARKET){

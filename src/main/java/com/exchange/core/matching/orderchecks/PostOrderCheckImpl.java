@@ -34,7 +34,6 @@ public class PostOrderCheckImpl implements PostOrderCheck{
     @Override
     public void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice) {
         ExecutionReport execTaker = orderToExecReport(taker);
-        execTaker.setExecId(counter.getNextExecutionId());
         execTaker.setIsTaker(true);
         execTaker.setCounterOrderId(maker.getOrderId());
         execTaker.setStatus(OrderStatus.PARTIALLY_FILLED);
@@ -44,7 +43,6 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         execTaker.setLastQty(tradeQty);
         execTaker.setLastPx(tradePrice);
         ExecutionReport execMaker = orderToExecReport(maker);
-        execMaker.setExecId(counter.getNextExecutionId());
         execMaker.setIsTaker(false);
         execMaker.setCounterOrderId(taker.getOrderId());
         execMaker.setStatus(OrderStatus.PARTIALLY_FILLED);
@@ -99,6 +97,7 @@ public class PostOrderCheckImpl implements PostOrderCheck{
 
     private ExecutionReport orderToExecReport(Order order) {
         ExecutionReport exec = new ExecutionReport();
+        exec.setExecId(counter.getNextExecutionId());
         exec.setOrderId(order.getOrderId());
         exec.setSymbol(order.getSymbol());
         exec.setPrice(order.getPrice());
