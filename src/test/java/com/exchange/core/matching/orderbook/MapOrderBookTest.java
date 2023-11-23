@@ -8,6 +8,7 @@ import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.matchers.Or;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,9 +17,13 @@ import java.util.List;
 public class MapOrderBookTest {
     private final String SYMBOL = "BTC/USDT";
 
+    private OrderBook getNewOrderBook(){
+        return new MapOrderBook(SYMBOL);
+    }
+
     @Test
     public void addOrderTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
         MarketData md = ob.buildMarketData();
         Assertions.assertNotNull(md);
         Assertions.assertEquals(SYMBOL, md.getSymbol(), "symbols mismatch");
@@ -36,7 +41,7 @@ public class MapOrderBookTest {
 
     @Test
     public void bidsMarketDataTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
 
         Order buy = getLimitBuy();
         ob.add(buy);
@@ -67,7 +72,7 @@ public class MapOrderBookTest {
 
     @Test
     public void asksMarketDataTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
 
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
@@ -102,7 +107,7 @@ public class MapOrderBookTest {
 
     @Test
     public void samePriceMatchingTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
         Order buy = getLimitBuy();
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
@@ -123,7 +128,7 @@ public class MapOrderBookTest {
 
     @Test
     public void limitBuyOrderTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -144,7 +149,7 @@ public class MapOrderBookTest {
 
     @Test
     public void limitBuyLessOrderTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -161,7 +166,7 @@ public class MapOrderBookTest {
 
     @Test
     public void marketBuyOrderTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -186,7 +191,7 @@ public class MapOrderBookTest {
     }
     @Test
     public void marketBuyFloatingPointErrorTest(){
-        OrderBook ob = new MapOrderBook(SYMBOL);
+        OrderBook ob = getNewOrderBook();
 
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
@@ -210,6 +215,60 @@ public class MapOrderBookTest {
         Assertions.assertEquals(new BigDecimal("0"), trade.getTaker().getLeavesQty(), "taker leavesQty should be 0");
     }
 
+    @Test
+    public void limitSellOrderTest(){
+        OrderBook ob = getNewOrderBook();
+        add3BuyOrders(ob);
+
+        Order sell = getLimitBuy();
+        sell.setSide(OrderSide.SELL);
+        sell.setPrice(new BigDecimal("85"));
+        sell.setLeavesQty(new BigDecimal("30"));
+        List<Trade> trades = ob.match(sell);
+        Assertions.assertEquals(2, trades.size(), "should be 2 trades");
+        Trade trade1 = trades.get(0);
+        Assertions.assertEquals(new BigDecimal("10"), trade1.getTradeQty(), "tradeQty should be 10");
+        Assertions.assertEquals(new BigDecimal("100"), trade1.getTradePrice(), "tradePrice should be 100");
+        Assertions.assertEquals(new BigDecimal("1000"), trade1.getTradeAmount(), "tradeAmount should be 1000");
+        Assertions.assertEquals(new BigDecimal("0"), trade1.getMaker().getLeavesQty(), "maker leavesQty should be 0");
+        Trade trade2 = trades.get(1);
+        Assertions.assertEquals(new BigDecimal("10"), trade2.getTradeQty(), "tradeQty should be 10");
+        Assertions.assertEquals(new BigDecimal("90"), trade2.getTradePrice(), "tradePrice should be 90");
+        Assertions.assertEquals(new BigDecimal("900"), trade2.getTradeAmount(), "tradeAmount should be 900");
+        Assertions.assertEquals(new BigDecimal("0"), trade2.getMaker().getLeavesQty(), "maker leavesQty should be 0");
+        Assertions.assertEquals(new BigDecimal("10"), trade2.getTaker().getLeavesQty(), "taker leavesQty should be 10");
+    }
+
+    @Test
+    public void marketSellOrderTest(){
+        OrderBook ob = getNewOrderBook();
+        add3BuyOrders(ob);
+
+        Order sell = getLimitBuy();
+        sell.setType(OrderType.MARKET);
+        sell.setSide(OrderSide.SELL);
+        sell.setLeavesQty(new BigDecimal("40"));
+        List<Trade> trades = ob.match(sell);
+        Assertions.assertEquals(3, trades.size(), "should be 3 trades");
+        Trade trade1 = trades.get(0);
+        Assertions.assertEquals(new BigDecimal("10"), trade1.getTradeQty(), "tradeQty should be 10");
+        Assertions.assertEquals(new BigDecimal("100"), trade1.getTradePrice(), "tradePrice should be 100");
+        Assertions.assertEquals(new BigDecimal("1000"), trade1.getTradeAmount(), "tradeAmount should be 1000");
+        Assertions.assertEquals(new BigDecimal("0"), trade1.getMaker().getLeavesQty(), "maker leavesQty should be 0");
+        Trade trade2 = trades.get(1);
+        Assertions.assertEquals(new BigDecimal("10"), trade2.getTradeQty(), "tradeQty should be 10");
+        Assertions.assertEquals(new BigDecimal("90"), trade2.getTradePrice(), "tradePrice should be 90");
+        Assertions.assertEquals(new BigDecimal("900"), trade2.getTradeAmount(), "tradeAmount should be 900");
+        Assertions.assertEquals(new BigDecimal("0"), trade2.getMaker().getLeavesQty(), "maker leavesQty should be 0");
+        Trade trade3 = trades.get(2);
+        Assertions.assertEquals(new BigDecimal("10"), trade3.getTradeQty(), "tradeQty should be 10");
+        Assertions.assertEquals(new BigDecimal("80"), trade3.getTradePrice(), "tradePrice should be 80");
+        Assertions.assertEquals(new BigDecimal("800"), trade3.getTradeAmount(), "tradeAmount should be 800");
+        Assertions.assertEquals(new BigDecimal("0"), trade3.getMaker().getLeavesQty(), "maker leavesQty should be 0");
+        Assertions.assertEquals(new BigDecimal("10"), trade3.getTaker().getLeavesQty(), "maker leavesQty should be 10");
+
+    }
+
     private void add3SellOrders(OrderBook ob){
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
@@ -224,6 +283,19 @@ public class MapOrderBookTest {
         sell200.setSide(OrderSide.SELL);
         sell200.setPrice(new BigDecimal("200"));
         ob.add(sell200);
+    }
+
+    private void add3BuyOrders(OrderBook ob){
+        Order buy100 = getLimitBuy();
+        ob.add(buy100);
+
+        Order buy90 = getLimitBuy();
+        buy90.setPrice(new BigDecimal("90"));
+        ob.add(buy90);
+
+        Order buy80 = getLimitBuy();
+        buy80.setPrice(new BigDecimal("80"));
+        ob.add(buy80);
     }
 
     public Order getLimitBuy(){

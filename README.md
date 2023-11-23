@@ -1,10 +1,14 @@
 # Building exchange in java
 
-2 typs of test:
-* unit tests - where we test only source code
-* integration test - where we actually run the app, send incoming messages & listen for outcoming
-
 todo: add binance project to github with explanation why binance doesn't recomend to use third-party libraries (risk error)
+
+### Test coverage
+Test coverage is the most important thing in any app, so here we covered our core part a lot with both unit testing & integration testing.
+There are 2 types of tests in this project:
+* unit tests - where we test only source code. All code except `MatchingEngine` covered by unit tests.
+* integration test - where we actually run the app, send incoming messages & listen for outgoing. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
+
+
 
 ### 2 types of orderbook
 * MapOrderBook - orderbook based on `java.utils.TreeMap` where all book manipulation (adding/removing order to orderbook) is done inside TreeMap and hidden from us. It's easier, but less efficent.
