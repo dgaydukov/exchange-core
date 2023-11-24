@@ -3,6 +3,7 @@ package com.exchange.core.matching.orderchecks;
 import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.InstrumentRepository;
@@ -86,13 +87,24 @@ public class PostOrderCheckImpl implements PostOrderCheck{
     public void cancelOrder(Order order) {
         // free locked balance
         InstrumentConfig inst = instrumentRepository.getInstrument(order.getSymbol());
-        String asset = order.getSide() == OrderSide.BUY ? inst.getBase() : inst.getQuote();
+        String asset = order.getSide() == OrderSide.BUY ? inst.getQuote() : inst.getBase();
         Position position = accountRepository.getAccountPosition(order.getAccount(), asset);
-        position.freeLocked(order.getLeavesQty());
+        BigDecimal amount = getTradeAmount(order);
+        position.unlock(amount);
         // send cancellation execution report
         ExecutionReport exec = orderToExecReport(order);
         exec.setStatus(OrderStatus.CANCELLED);
         outbound.add(exec);
+    }
+
+    private BigDecimal getTradeAmount(Order order){
+        BigDecimal amount;
+        if (order.getType() == OrderType.LIMIT) {
+            amount = order.getLeavesQty().multiply(order.getPrice());
+        } else {
+            amount = order.getLeavesQty();
+        }
+        return amount;
     }
 
     private ExecutionReport orderToExecReport(Order order) {
