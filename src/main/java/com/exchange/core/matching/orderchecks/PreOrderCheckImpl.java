@@ -91,14 +91,14 @@ public class PreOrderCheckImpl implements PreOrderCheck{
         return accountRepository.getAccountPosition(order.getAccount(), asset);
     }
     private BigDecimal getTradeAmount(Order order){
-        BigDecimal amount;
-        if (order.getType() == OrderType.LIMIT) {
-            amount = order.getOrderQty().multiply(order.getPrice());
-        } else if (order.getSide() == OrderSide.BUY) {
-            amount = order.getQuoteOrderQty();
+        if (order.getSide() == OrderSide.BUY){
+            if (order.getType() == OrderType.LIMIT) {
+                return order.getOrderQty().multiply(order.getPrice());
+            } else {
+                return order.getQuoteOrderQty();
+            }
         } else {
-            amount = order.getOrderQty();
+            return order.getOrderQty();
         }
-        return amount;
     }
 }

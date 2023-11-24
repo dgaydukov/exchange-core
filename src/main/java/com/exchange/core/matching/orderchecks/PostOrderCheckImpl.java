@@ -78,8 +78,8 @@ public class PostOrderCheckImpl implements PostOrderCheck{
         } else {
             takerBasePosition.freeLocked(tradeQty);
             takerQuotePosition.add(tradeAmount);
-            makerBasePosition.freeLocked(tradeAmount);
-            makerQuotePosition.add(tradeQty);
+            makerQuotePosition.freeLocked(tradeAmount);
+            makerBasePosition.add(tradeQty);
         }
     }
 
