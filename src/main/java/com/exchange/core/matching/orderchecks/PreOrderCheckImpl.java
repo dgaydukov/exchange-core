@@ -30,15 +30,15 @@ public class PreOrderCheckImpl implements PreOrderCheck{
     @Override
     public boolean validateOrder(Order order) {
         if (!validateAccount(order)){
-            outbound.add(new ErrorMessage("Account not found: account=" + order.getAccount()));
+            outbound.add(new ErrorMessage("Account not found", order));
             return false;
         }
         if (!validateMarketOrder(order)){
-            outbound.add(new ErrorMessage("Invalid market order: order=" + order));
+            outbound.add(new ErrorMessage("Invalid market order", order));
             return false;
         }
         if (!validateBalance(order)){
-            outbound.add(new ErrorMessage("Balance insufficient: order=" + order));
+            outbound.add(new ErrorMessage("Balance insufficient", order));
             return false;
         }
         return true;

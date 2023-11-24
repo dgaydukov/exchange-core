@@ -15,6 +15,8 @@ import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.mockito.Mockito.*;
 
@@ -113,14 +115,32 @@ public class PostOrderCheckTest {
 
         BigDecimal tradeQty = new BigDecimal("5");
         BigDecimal tradeAmount = new BigDecimal("500");
-        Order orderTaker = MockData.getLimitBuy();
-        orderTaker.setLeavesQty(orderTaker.getOrderQty());
-        Order orderMaker = MockData.getLimitBuy();
-        orderMaker.setSide(OrderSide.SELL);
-        orderMaker.setOrderQty(tradeQty);
-        orderMaker.setLeavesQty(orderMaker.getOrderQty());
-
-        postCheck.settleTrade(orderTaker, orderMaker, tradeQty, tradeAmount);
+        Order takerBuy = MockData.getLimitBuy();
+        takerBuy.setAccount(1);
+        takerBuy.setLeavesQty(takerBuy.getOrderQty());
+        Order makerSell = MockData.getLimitBuy();
+        makerSell.setAccount(2);
+        makerSell.setSide(OrderSide.SELL);
+        makerSell.setOrderQty(tradeQty);
+        makerSell.setLeavesQty(makerSell.getOrderQty());
+        InstrumentConfig config = MockData.getInstrument();
+        when(instrumentRepository.getInstrument(takerBuy.getSymbol())).thenReturn(config);
+        Position takerBasePosition = new Position(config.getQuote());
+        Position takerQuotePosition = new Position(config.getQuote(), new BigDecimal("700"));
+        Position makerBasePosition = new Position(config.getBase(), new BigDecimal("10"));
+        Position makerQuotePosition = new Position(config.getQuote());
+        takerQuotePosition.lock(tradeAmount);
+        makerBasePosition.lock(tradeQty);
+        when(accountRepository.getAccountPosition(takerBuy.getAccount(), config.getBase())).thenReturn(takerBasePosition);
+        when(accountRepository.getAccountPosition(takerBuy.getAccount(), config.getQuote())).thenReturn(takerQuotePosition);
+        when(accountRepository.getAccountPosition(makerSell.getAccount(), config.getBase())).thenReturn(makerBasePosition);
+        when(accountRepository.getAccountPosition(makerSell.getAccount(), config.getQuote())).thenReturn(makerQuotePosition);
+        postCheck.settleTrade(takerBuy, makerSell, tradeQty, tradeAmount);
+        // taker buy 5 BTC for 500 USDT, and exchange those funds
+        Assertions.assertEquals(new BigDecimal("5"), takerBasePosition.getBalance(), "taker base should be 5");
+        Assertions.assertEquals(new BigDecimal("200"), takerQuotePosition.getBalance(), "taker base should be 200");
+        Assertions.assertEquals(new BigDecimal("5"), makerBasePosition.getBalance(), "maker base should be 5");
+        Assertions.assertEquals(new BigDecimal("500"), makerQuotePosition.getBalance(), "maker quote should be 500");
     }
 
     @Test

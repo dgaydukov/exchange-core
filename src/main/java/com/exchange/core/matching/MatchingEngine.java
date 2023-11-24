@@ -59,7 +59,7 @@ public class MatchingEngine {
                 try {
                     process(msg);
                 } catch (Exception ex) {
-                    outbound.add(new ErrorMessage(ex.getMessage()));
+                    outbound.add(new ErrorMessage(ex.getMessage(), msg));
                 }
             }
             wait.idle();
@@ -87,11 +87,11 @@ public class MatchingEngine {
     private void addOrder(Order order) {
         final String symbol = order.getSymbol();
         if (symbol == null) {
-            throw new AppException("Symbol not found for oder: msg=" + order);
+            throw new AppException("Symbol of new order can't be null");
         }
-        OrderBook ob = orderBooks.get(order.getSymbol());
+        OrderBook ob = orderBooks.get(symbol);
         if (ob == null) {
-            throw new AppException("OrderBook not found for oder: msg=" + order);
+            throw new AppException("OrderBook not found for symbol=" + symbol);
         }
         handleOrder(ob, order);
     }
