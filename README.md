@@ -54,6 +54,7 @@ Test coverage is the most important thing in any app, so here we covered our cor
 There are 2 types of tests in this project:
 * unit tests - where we test only source code. All code except `MatchingEngine` covered by unit tests.
 * integration test - where we actually run the app, send incoming messages & listen for outgoing. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
+* Since we have 2 orderbooks - and both implement same interface and are expected to behave the same way, I've created [parametrized test](https://github.com/dgaydukov/exchange-core/blob/master/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java#L26) where I run all the tests at the same time for 2 orderbooks, using Junit `@ParameterizedTest` annotation
 
 ### Aeron - internal communication bus
 * aeron + busy loop is faster then unix select (https://en.wikipedia.org/wiki/Select_(Unix))
