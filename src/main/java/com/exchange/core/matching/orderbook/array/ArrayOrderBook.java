@@ -1,46 +1,41 @@
 package com.exchange.core.matching.orderbook.array;
 
+import com.exchange.core.config.AppConstants;
 import com.exchange.core.exceptions.AppException;
-import com.exchange.core.matching.orderchecks.PostOrderCheck;
-import com.exchange.core.matching.orderchecks.PreOrderCheck;
+import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-public class ArrayOrderBook {
+public class ArrayOrderBook implements OrderBook {
     private final int DEFAULT_PRICE_LEVEL_SIZE = 1024;
     // sorted in descending order => first bid is the highest price
     private final PriceLevel[] bids = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
     // sorted in ascending order => first ask is the lowest price
     private final PriceLevel[] asks = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
     private final String symbol;
-    private final PreOrderCheck preOrderCheck;
-    private final PostOrderCheck postOrderCheck;
 
 
-    public ArrayOrderBook(String symbol, PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+    public ArrayOrderBook(String symbol) {
         this.symbol = symbol;
-        this.preOrderCheck = preOrderCheck;
-        this.postOrderCheck = postOrderCheck;
     }
 
-    public void addOrder(Order order) {
-        match(order);
-        if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-            addToOrderBook(order);
-        }
-    }
-
-    private void match(Order taker) {
+    @Override
+    public List<Trade> match(Order taker) {
+        List<Trade> trades = new ArrayList<>();
         if (taker.getSide() == OrderSide.BUY){
             for(int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++){
                 PriceLevel level = asks[i];
                 if (level == null || taker.getPrice().compareTo(level.getPrice()) > 0){
                     break;
                 }
-                match(level);
+                matchLimit(taker, level, trades);
             }
         } else{
             for(int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++){
@@ -48,21 +43,33 @@ public class ArrayOrderBook {
                 if (level == null || taker.getPrice().compareTo(level.getPrice()) < 0){
                     break;
                 }
-                match(level);
+                matchLimit(taker, level, trades);
             }
         }
+        return trades;
     }
 
-    private void match(Iterator<Order> iterator){
+
+    private void matchLimit(Order taker, PriceLevel level, List<Trade> trades){
+        final BigDecimal tradePrice = level.getPrice();
+        Iterator<Order> iterator = level.getOrders().iterator();
         while (iterator.hasNext()){
             Order maker = iterator.next();
-            if(maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
+            BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+            BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
+            taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+            maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+            trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+
+            if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                 iterator.remove();
             }
         }
     }
 
-    private void addToOrderBook(Order order) {
+    @Override
+    public void add(Order order) {
         if (order.getSide() == OrderSide.BUY) {
             for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
                 PriceLevel level = bids[i];
@@ -75,18 +82,7 @@ public class ArrayOrderBook {
                     break;
                 }
                 if (order.getPrice().compareTo(level.getPrice()) > 0) {
-                    // move remaining array one index left
-                    for (int j = DEFAULT_PRICE_LEVEL_SIZE; j >= i; j--) {
-                        if (bids[j] != null){
-                            // array price level overflow
-                            throw new AppException("price level overflow");
-                        }
-                        if (j == i){
-                            bids[j] = new PriceLevel(order);
-                        } else {
-                            bids[j] = bids[j+1];
-                        }
-                    }
+                    moveLeft(i, new PriceLevel(order), bids);
                     break;
                 }
             }
@@ -102,21 +98,66 @@ public class ArrayOrderBook {
                     break;
                 }
                 if (order.getPrice().compareTo(level.getPrice()) < 0) {
-                    // move remaining array one index left
-                    for (int j = DEFAULT_PRICE_LEVEL_SIZE; j >= i; j--) {
-                        if (asks[j] != null){
-                            // array price level overflow
-                            throw new AppException("price level overflow");
-                        }
-                        if (j == i){
-                            asks[j] = new PriceLevel(order);
-                        } else {
-                            asks[j] = asks[j+1];
-                        }
-                    }
+                    moveLeft(i, new PriceLevel(order), asks);
                     break;
                 }
             }
         }
+    }
+
+    private void moveLeft(int index, PriceLevel level, PriceLevel[] arr){
+        int len = arr.length;
+        if (arr[len-1] != null){
+            throw new AppException("PriceLevel Overflow. Fail to move left");
+        }
+        for(int i = len-2; i >= index; i--){
+            arr[i+1] = arr[i];
+        }
+        arr[index] = level;
+    }
+
+    @Override
+    public MarketData buildMarketData() {
+        // find number & bids & asks
+        int bidSize = 0, askSize = 0;
+        for (int i = 0; i < bids.length; i++){
+            if (bids[i] == null)
+                break;
+            bidSize++;
+        }
+        for (int i = 0; i < asks.length; i++){
+            if (asks[i] == null)
+                break;
+            askSize++;
+        }
+        bidSize = Math.min(bidSize, AppConstants.DEFAULT_DEPTH);
+        askSize = Math.min(askSize, AppConstants.DEFAULT_DEPTH);
+        int depth = Math.max(bidSize, askSize);
+        MarketData md = new MarketData();
+        md.setDepth(depth);
+        md.setSymbol(symbol);
+        md.setTransactTime(System.currentTimeMillis());
+
+        BigDecimal[][] bids = new BigDecimal[bidSize][];
+        BigDecimal[][] asks = new BigDecimal[askSize][];
+        for (int i = 0; i < bidSize; i++) {
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            PriceLevel level = this.bids[i];
+            for (Order order: level.getOrders()){
+                cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
+            }
+            bids[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+        }
+        for (int i = 0; i < askSize; i++) {
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            PriceLevel level = this.asks[i];
+            for (Order order: level.getOrders()){
+                cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
+            }
+            asks[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+        }
+        md.setBids(bids);
+        md.setAsks(asks);
+        return md;
     }
 }

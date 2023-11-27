@@ -1,6 +1,7 @@
 package com.exchange.core.matching.orderbook;
 
 import com.exchange.core.config.AppConstants;
+import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
@@ -22,7 +23,8 @@ public class MapOrderBookTest {
 
     private static Stream<Arguments> getOrderBooks() {
         return Stream.of(
-                Arguments.of(new MapOrderBook(SYMBOL))
+                //Arguments.of(new MapOrderBook(SYMBOL)),
+                Arguments.of(new ArrayOrderBook(SYMBOL))
         );
     }
 

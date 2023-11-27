@@ -1,40 +1,32 @@
 package com.exchange.core.matching.orderbook.array;
 
+import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
-public class PriceLevel implements Iterator<Order> {
+public class PriceLevel {
     @Getter
     private BigDecimal price;
-    private Queue<Order> orders;
+    private List<Order> orders;
+    private int index;
 
     public PriceLevel(Order order){
         price = order.getPrice();
-        orders = new LinkedList<>();
+        orders = new ArrayList<>();
         addOrder(order);
     }
 
     public void addOrder(Order order){
+        if (price.compareTo(order.getPrice()) != 0){
+            throw new AppException("Fail to add order: price mismatch");
+        }
         orders.add(order);
     }
 
-    @Override
-    public boolean hasNext(){
-        return orders.size() > 0;
-    }
-
-    @Override
-    public Order next(){
-        return orders.peek();
-    }
-
-    @Override
-    public void remove(){
-        orders.poll();
+    public List<Order> getOrders(){
+        return orders;
     }
 }
