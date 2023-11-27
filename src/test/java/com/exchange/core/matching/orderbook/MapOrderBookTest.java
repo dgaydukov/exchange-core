@@ -7,23 +7,28 @@ import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.mockito.internal.matchers.Or;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class MapOrderBookTest {
-    private final String SYMBOL = "BTC/USDT";
+    private final static String SYMBOL = "BTC/USDT";
 
-    private OrderBook getNewOrderBook(){
-        return new MapOrderBook(SYMBOL);
+
+    private static Stream<Arguments> getOrderBooks() {
+        return Stream.of(
+                Arguments.of(new MapOrderBook(SYMBOL))
+        );
     }
 
-    @Test
-    public void addOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void addOrderTest(OrderBook ob) {
         MarketData md = ob.buildMarketData();
         Assertions.assertNotNull(md);
         Assertions.assertEquals(SYMBOL, md.getSymbol(), "symbols mismatch");
@@ -39,10 +44,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(0, md.getAsks().length, "asks should be 0");
     }
 
-    @Test
-    public void bidsMarketDataTest(){
-        OrderBook ob = getNewOrderBook();
-
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void bidsMarketDataTest(OrderBook ob) {
         Order buy = getLimitBuy();
         ob.add(buy);
         Order buy90 = getLimitBuy();
@@ -70,10 +74,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(0, md.getAsks().length, "asks should be 0");
     }
 
-    @Test
-    public void asksMarketDataTest(){
-        OrderBook ob = getNewOrderBook();
-
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void asksMarketDataTest(OrderBook ob) {
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
         ob.add(sell);
@@ -105,9 +108,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(0, md.getBids().length, "bids should be 0");
     }
 
-    @Test
-    public void samePriceMatchingTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void samePriceMatchingTest(OrderBook ob) {
         Order buy = getLimitBuy();
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
@@ -126,9 +129,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(new BigDecimal("1000"), trade.getTradeAmount(), "tradeAmount should be 1000");
     }
 
-    @Test
-    public void limitBuyOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void limitBuyOrderTest(OrderBook ob) {
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -147,9 +150,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(new BigDecimal("20"), trade2.getTaker().getLeavesQty(), "leavesQty should be 20");
     }
 
-    @Test
-    public void limitBuyLessOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void limitBuyLessOrderTest(OrderBook ob) {
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -164,9 +167,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(new BigDecimal("0"), trade.getTaker().getLeavesQty(), "leavesQty should be 0");
     }
 
-    @Test
-    public void marketBuyOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void marketBuyOrderTest(OrderBook ob) {
         add3SellOrders(ob);
 
         Order buy = getLimitBuy();
@@ -189,10 +192,10 @@ public class MapOrderBookTest {
         Assertions.assertTrue(trade3.getTaker().getLeavesQty().compareTo(new BigDecimal("0")) == 0, "taker leavesQty should be 0");
         Assertions.assertTrue(trade3.getMaker().getLeavesQty().compareTo(new BigDecimal("7.5")) == 0, "maker leavesQty should be 7.5");
     }
-    @Test
-    public void marketBuyFloatingPointErrorTest(){
-        OrderBook ob = getNewOrderBook();
 
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void marketBuyFloatingPointErrorTest(OrderBook ob) {
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
         sell.setPrice(new BigDecimal("219"));
@@ -207,17 +210,17 @@ public class MapOrderBookTest {
         Assertions.assertEquals(1, trades.size(), "should be 1 trade");
         Trade trade = trades.get(0);
         BigDecimal tradeQty = buyTradeAmount.divide(sell.getPrice(), AppConstants.ROUNDING_SCALE, RoundingMode.DOWN);
-        Assertions.assertEquals(tradeQty, trade.getTradeQty(), "tradeQty should be "+tradeQty);
-        Assertions.assertEquals(sell.getPrice(), trade.getTradePrice(), "tradePrice should be "+sell.getPrice());
-        Assertions.assertEquals(buyTradeAmount, trade.getTradeAmount(), "tradeAmount should be "+buyTradeAmount);
+        Assertions.assertEquals(tradeQty, trade.getTradeQty(), "tradeQty should be " + tradeQty);
+        Assertions.assertEquals(sell.getPrice(), trade.getTradePrice(), "tradePrice should be " + sell.getPrice());
+        Assertions.assertEquals(buyTradeAmount, trade.getTradeAmount(), "tradeAmount should be " + buyTradeAmount);
         BigDecimal makerLeavesQty = new BigDecimal("1").subtract(tradeQty);
-        Assertions.assertEquals(makerLeavesQty, trade.getMaker().getLeavesQty(), "taker leavesQty should be "+makerLeavesQty);
+        Assertions.assertEquals(makerLeavesQty, trade.getMaker().getLeavesQty(), "taker leavesQty should be " + makerLeavesQty);
         Assertions.assertEquals(new BigDecimal("0"), trade.getTaker().getLeavesQty(), "taker leavesQty should be 0");
     }
 
-    @Test
-    public void limitSellOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void limitSellOrderTest(OrderBook ob) {
         add3BuyOrders(ob);
 
         Order sell = getLimitBuy();
@@ -239,9 +242,9 @@ public class MapOrderBookTest {
         Assertions.assertEquals(new BigDecimal("10"), trade2.getTaker().getLeavesQty(), "taker leavesQty should be 10");
     }
 
-    @Test
-    public void marketSellOrderTest(){
-        OrderBook ob = getNewOrderBook();
+    @ParameterizedTest
+    @MethodSource("getOrderBooks")
+    public void marketSellOrderTest(OrderBook ob) {
         add3BuyOrders(ob);
 
         Order sell = getLimitBuy();
@@ -269,7 +272,7 @@ public class MapOrderBookTest {
 
     }
 
-    private void add3SellOrders(OrderBook ob){
+    private void add3SellOrders(OrderBook ob) {
         Order sell = getLimitBuy();
         sell.setSide(OrderSide.SELL);
         ob.add(sell);
@@ -285,7 +288,7 @@ public class MapOrderBookTest {
         ob.add(sell200);
     }
 
-    private void add3BuyOrders(OrderBook ob){
+    private void add3BuyOrders(OrderBook ob) {
         Order buy100 = getLimitBuy();
         ob.add(buy100);
 
@@ -298,7 +301,7 @@ public class MapOrderBookTest {
         ob.add(buy80);
     }
 
-    private Order getLimitBuy(){
+    private Order getLimitBuy() {
         Order order = new Order();
         order.setSymbol(SYMBOL);
         order.setType(OrderType.LIMIT);
