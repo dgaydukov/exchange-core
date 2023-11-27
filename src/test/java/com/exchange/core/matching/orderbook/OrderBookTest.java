@@ -17,13 +17,13 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class MapOrderBookTest {
+public class OrderBookTest {
     private final static String SYMBOL = "BTC/USDT";
 
 
     private static Stream<Arguments> getOrderBooks() {
         return Stream.of(
-                //Arguments.of(new MapOrderBook(SYMBOL)),
+                Arguments.of(new MapOrderBook(SYMBOL)),
                 Arguments.of(new ArrayOrderBook(SYMBOL))
         );
     }
@@ -176,6 +176,7 @@ public class MapOrderBookTest {
 
         Order buy = getLimitBuy();
         buy.setType(OrderType.MARKET);
+        buy.setPrice(null);
         buy.setLeavesQty(new BigDecimal("3000"));
         List<Trade> trades = ob.match(buy);
         Assertions.assertEquals(3, trades.size(), "should be 3 trades");
@@ -206,6 +207,7 @@ public class MapOrderBookTest {
 
         Order buy = getLimitBuy();
         buy.setType(OrderType.MARKET);
+        buy.setPrice(null);
         BigDecimal buyTradeAmount = new BigDecimal("111");
         buy.setLeavesQty(buyTradeAmount);
         List<Trade> trades = ob.match(buy);
@@ -251,6 +253,7 @@ public class MapOrderBookTest {
 
         Order sell = getLimitBuy();
         sell.setType(OrderType.MARKET);
+        sell.setPrice(null);
         sell.setSide(OrderSide.SELL);
         sell.setLeavesQty(new BigDecimal("40"));
         List<Trade> trades = ob.match(sell);
