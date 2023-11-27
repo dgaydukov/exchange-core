@@ -7,9 +7,10 @@ import com.exchange.core.model.msg.Order;
 import java.util.List;
 
 public interface OrderBook {
-    List<Trade> match(Order order);
 
-    void add(Order order);
+  List<Trade> match(Order order);
 
-    MarketData buildMarketData();
+  void add(Order order);
+
+  MarketData buildMarketData();
 }

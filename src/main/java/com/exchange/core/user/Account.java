@@ -7,15 +7,16 @@ import java.util.Map;
 
 @Data
 public class Account {
-    private int accountId;
-    private Map<String, Position> positions;
 
-    public Account(int accountId) {
-        this.accountId = accountId;
-        positions = new HashMap<>();
-    }
+  private int accountId;
+  private Map<String, Position> positions;
 
-    public Position getPosition(String asset) {
-        return positions.compute(asset, (k, v) -> v == null ? new Position(asset) : v);
-    }
+  public Account(int accountId) {
+    this.accountId = accountId;
+    positions = new HashMap<>();
+  }
+
+  public Position getPosition(String asset) {
+    return positions.compute(asset, (k, v) -> v == null ? new Position(asset) : v);
+  }
 }

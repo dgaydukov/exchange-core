@@ -9,9 +9,10 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 public class Trade {
-    private Order taker;
-    private Order maker;
-    private BigDecimal tradeQty;
-    private BigDecimal tradePrice;
-    private BigDecimal tradeAmount;
+
+  private Order taker;
+  private Order maker;
+  private BigDecimal tradeQty;
+  private BigDecimal tradePrice;
+  private BigDecimal tradeAmount;
 }

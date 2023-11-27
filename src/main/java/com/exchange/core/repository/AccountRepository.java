@@ -7,8 +7,12 @@ import com.exchange.core.model.msg.UserBalance;
 import java.util.List;
 
 public interface AccountRepository {
-    Account getAccount(int accountId);
-    List<Account> getAllAccounts();
-    Position getAccountPosition(int accountId, String asset);
-    void addBalance(UserBalance msg);
+
+  Account getAccount(int accountId);
+
+  List<Account> getAllAccounts();
+
+  Position getAccountPosition(int accountId, String asset);
+
+  void addBalance(UserBalance msg);
 }

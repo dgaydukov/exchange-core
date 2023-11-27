@@ -6,13 +6,14 @@ import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 
 public interface PostOrderCheck {
-    void sendExecReportNew(Order order);
 
-    void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice);
+  void sendExecReportNew(Order order);
 
-    void sendMarketData(MarketData marketData);
+  void sendExecReportTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradePrice);
 
-    void settleTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradeAmount);
+  void sendMarketData(MarketData marketData);
 
-    void cancelOrder(Order order);
+  void settleTrade(Order taker, Order maker, BigDecimal tradeQty, BigDecimal tradeAmount);
+
+  void cancelOrder(Order order);
 }

@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 
 @Data
 public class UserBalance implements Message {
-    private int account;
-    private String asset;
-    private BigDecimal amount;
+
+  private int account;
+  private String asset;
+  private BigDecimal amount;
 }

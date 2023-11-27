@@ -8,14 +8,15 @@ import java.math.BigDecimal;
 
 @Data
 public class Order implements Message {
-    private String symbol;
-    private long orderId;
-    private String clOrdId;
-    private int account;
-    private OrderSide side;
-    private OrderType type;
-    private BigDecimal orderQty;
-    private BigDecimal leavesQty;
-    private BigDecimal quoteOrderQty;
-    private BigDecimal price;
+
+  private String symbol;
+  private long orderId;
+  private String clOrdId;
+  private int account;
+  private OrderSide side;
+  private OrderType type;
+  private BigDecimal orderQty;
+  private BigDecimal leavesQty;
+  private BigDecimal quoteOrderQty;
+  private BigDecimal price;
 }

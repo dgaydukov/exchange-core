@@ -9,29 +9,30 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 public class AccountRepositoryTest {
-    @Test
-    public void addBalanceTest(){
-        UserBalance user = new UserBalance();
-        user.setAccount(1);
-        user.setAsset("BTC");
-        user.setAmount(new BigDecimal("100"));
 
-        AccountRepository repository = new AccountRepositoryImpl();
-        Assertions.assertNull(repository.getAccount(user.getAccount()));
-        Assertions.assertNull(repository.getAccountPosition(user.getAccount(), user.getAsset()));
-        Assertions.assertNotNull(repository.getAllAccounts());
-        Assertions.assertEquals(0, repository.getAllAccounts().size());
+  @Test
+  public void addBalanceTest() {
+    UserBalance user = new UserBalance();
+    user.setAccount(1);
+    user.setAsset("BTC");
+    user.setAmount(new BigDecimal("100"));
 
-        repository.addBalance(user);
+    AccountRepository repository = new AccountRepositoryImpl();
+    Assertions.assertNull(repository.getAccount(user.getAccount()));
+    Assertions.assertNull(repository.getAccountPosition(user.getAccount(), user.getAsset()));
+    Assertions.assertNotNull(repository.getAllAccounts());
+    Assertions.assertEquals(0, repository.getAllAccounts().size());
 
-        Account account = repository.getAccount(user.getAccount());
-        Assertions.assertNotNull(account);
-        Assertions.assertEquals(user.getAccount(), account.getAccountId());
+    repository.addBalance(user);
 
-        Position position = repository.getAccountPosition(user.getAccount(), user.getAsset());
-        Assertions.assertNotNull(position);
-        Assertions.assertEquals(user.getAmount(), position.getBalance());
+    Account account = repository.getAccount(user.getAccount());
+    Assertions.assertNotNull(account);
+    Assertions.assertEquals(user.getAccount(), account.getAccountId());
 
-        Assertions.assertEquals(1, repository.getAllAccounts().size());
-    }
+    Position position = repository.getAccountPosition(user.getAccount(), user.getAsset());
+    Assertions.assertNotNull(position);
+    Assertions.assertEquals(user.getAmount(), position.getBalance());
+
+    Assertions.assertEquals(1, repository.getAllAccounts().size());
+  }
 }
