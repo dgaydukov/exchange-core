@@ -18,10 +18,16 @@ public class InstrumentRepositoryTest {
     InstrumentRepository repo = new InstrumentRepositoryImpl();
     Assertions.assertNull(repo.getInstrument(config.getSymbol()));
     Assertions.assertNotNull(repo.getAssets());
+    Assertions.assertNotNull(repo.getInstruments());
     Assertions.assertEquals(0, repo.getAssets().size());
     repo.add(config);
     Assertions.assertEquals(config, repo.getInstrument(config.getSymbol()));
     Assertions.assertEquals(2, repo.getAssets().size());
     Assertions.assertEquals(List.of(config.getBase(), config.getQuote()), repo.getAssets());
+    Assertions.assertEquals(1, repo.getInstruments().size());
+    final String perpSymbol = "BTC/USDT[P]";
+    config.setSymbol(perpSymbol);
+    repo.add(config);
+    Assertions.assertEquals(2, repo.getInstruments().size());
   }
 }

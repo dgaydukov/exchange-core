@@ -10,5 +10,7 @@ public interface InstrumentRepository {
 
   InstrumentConfig getInstrument(String symbol);
 
+  List<InstrumentConfig> getInstruments();
+
   List<String> getAssets();
 }

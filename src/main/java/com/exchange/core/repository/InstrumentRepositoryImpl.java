@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class InstrumentRepositoryImpl implements InstrumentRepository {
 
@@ -29,5 +31,13 @@ public class InstrumentRepositoryImpl implements InstrumentRepository {
       assets.add(config.getQuote());
     });
     return assets;
+  }
+
+  @Override
+  public List<InstrumentConfig> getInstruments() {
+    return instruments.entrySet()
+        .stream()
+        .map(Entry::getValue)
+        .collect(Collectors.toList());
   }
 }

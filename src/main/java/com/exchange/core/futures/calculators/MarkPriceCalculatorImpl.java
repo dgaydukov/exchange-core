@@ -1,4 +1,4 @@
-package com.exchange.core.futures.model;
+package com.exchange.core.futures.calculators;
 
 import java.math.BigDecimal;
 import java.util.Random;
@@ -9,14 +9,16 @@ import java.util.Random;
  * then you use InterestRate and using formulas calculate markPrice
  * But for our example it's ideal solution, you can manage your markPrice to any value you want
  */
-public class MarkPrice {
+public class MarkPriceCalculatorImpl implements MarkPriceCalculator{
   private final Random random = new Random();
   private BigDecimal markPrice;
-  private int deviation;
-  public MarkPrice(BigDecimal markPrice, int deviation){
+  private final int deviation;
+  public MarkPriceCalculatorImpl(BigDecimal markPrice, int deviation){
     this.markPrice = markPrice;
     this.deviation = deviation;
   }
+
+  @Override
   public BigDecimal getMarkPrice(){
     BigDecimal movement = new BigDecimal(random.nextInt(deviation));
     markPrice = random.nextBoolean() ? markPrice.add(movement) : markPrice.subtract(movement);
