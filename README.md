@@ -10,7 +10,12 @@
 * [FIX Gateway](#fix-gateway)
 
 ### Project Description
-some description...
+This is the public part of my `private derivative matching-engine` project, and can serve 2 purposes:
+* educational - you can see what is matching engine and how it's supposed to work
+* backbone to your own matching-engine - you can take this project and work on top of it to create fully-operational exchange system
+Project consist of 2 parts:
+* spot matching-engine - fully-operational matching-engine for spot
+* perpetual engine - engine that can work with perpetual trading pair and liquidate positions if needed
 
 ### Matching engine architecture
 we have 2 implementation of order book:

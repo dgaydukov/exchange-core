@@ -1,4 +1,4 @@
-package com.exchange.core.futures;
+package com.exchange.core.futures.risk;
 
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.user.Account;
@@ -6,7 +6,7 @@ import com.exchange.core.user.Account;
 import java.math.BigDecimal;
 
 
-public class FundingEngine implements FuturesEngine {
+public class FundingEngine implements Engine {
 
   private final AccountRepository accountRepository;
 

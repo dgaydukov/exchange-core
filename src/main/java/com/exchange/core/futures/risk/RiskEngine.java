@@ -1,4 +1,4 @@
-package com.exchange.core.futures;
+package com.exchange.core.futures.risk;
 
 import java.math.BigDecimal;
 
