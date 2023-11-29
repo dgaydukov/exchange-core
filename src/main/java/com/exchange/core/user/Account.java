@@ -1,5 +1,6 @@
 package com.exchange.core.user;
 
+import com.exchange.core.futures.model.UserRisk;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -10,6 +11,7 @@ public class Account {
 
   private int accountId;
   private Map<String, Position> positions;
+  private UserRisk risk;
 
   public Account(int accountId) {
     this.accountId = accountId;

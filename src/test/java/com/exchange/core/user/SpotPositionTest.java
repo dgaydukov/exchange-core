@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-public class PositionTest {
+public class SpotPositionTest {
 
   final BigDecimal b200 = new BigDecimal("200");
   final BigDecimal b100 = new BigDecimal("100");
@@ -15,7 +15,7 @@ public class PositionTest {
   @Test
   public void notNullBalanceTest() {
     Position position = new Position("BTC");
-    Assertions.assertNotNull(position.getAsset());
+    Assertions.assertNotNull(position.getSymbol());
     Assertions.assertNotNull(position.getBalance());
     Assertions.assertNotNull(position.getLocked());
     Assertions.assertNotNull(position.getTotalBalance());

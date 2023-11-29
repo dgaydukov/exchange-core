@@ -1,23 +1,32 @@
 package com.exchange.core.user;
 
 import com.exchange.core.exceptions.AppException;
+import com.exchange.core.model.enums.PositionDirection;
+import com.exchange.core.model.enums.SecurityType;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class Position {
+public class Position{
 
-  private String asset;
+  // spot
+  private String symbol;
   private BigDecimal balance;
   private BigDecimal locked;
+  // perpetuals
+  private SecurityType type;
+  private BigDecimal amount;
+  private BigDecimal price;
+  private PositionDirection direction;
+  private BigDecimal unrealizedPnL;
 
   public Position(String asset) {
     this(asset, BigDecimal.ZERO);
   }
 
   public Position(String asset, BigDecimal balance) {
-    this.asset = asset;
+    this.symbol = asset;
     this.balance = balance;
     this.locked = BigDecimal.ZERO;
   }

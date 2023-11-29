@@ -2,39 +2,27 @@ package com.exchange.core.futures.risk;
 
 import com.exchange.core.futures.calculators.FundingRateCalculator;
 import com.exchange.core.futures.calculators.MarkPriceCalculator;
-import com.exchange.core.model.enums.SecurityType;
-import com.exchange.core.model.msg.InstrumentConfig;
-import com.exchange.core.repository.AccountRepository;
-import com.exchange.core.repository.InstrumentRepository;
-import com.exchange.core.user.Account;
+import com.exchange.core.futures.msg.FundingRateMessage;
+import com.exchange.core.model.msg.Message;
 
-import com.exchange.core.user.Position;
-import java.math.BigDecimal;
-import java.util.List;
+import java.util.Queue;
 
 
 public class FundingEngine implements Engine {
 
-  private final AccountRepository accountRepository;
-  private final InstrumentRepository instrumentRepository;
+  private final Queue<Message> inbound;
   private final FundingRateCalculator fundingRateCalculator;
   private final MarkPriceCalculator markPriceCalculator;
   private final int fundingIntervalInMinutes;
   private long nextFundingTime;
 
-  public FundingEngine(AccountRepository accountRepository, InstrumentRepository instrumentRepository,
-      FundingRateCalculator fundingRateCalculator, MarkPriceCalculator markPriceCalculator,
-      int fundingIntervalInMinutes) {
-    this.accountRepository = accountRepository;
-    this.instrumentRepository = instrumentRepository;
+  public FundingEngine(Queue<Message> inbound, FundingRateCalculator fundingRateCalculator,
+      MarkPriceCalculator markPriceCalculator, int fundingIntervalInMinutes) {
+    this.inbound = inbound;
     this.fundingRateCalculator = fundingRateCalculator;
     this.markPriceCalculator = markPriceCalculator;
     this.fundingIntervalInMinutes = fundingIntervalInMinutes;
     nextFundingTime = calculateNextFundingTime();
-  }
-
-  public BigDecimal getIndexPrice() {
-    return BigDecimal.ZERO;
   }
 
   @Override
@@ -44,28 +32,16 @@ public class FundingEngine implements Engine {
   }
 
   private void run() {
-    while(true){
-      if (System.currentTimeMillis() < nextFundingTime){
+    while (true) {
+      if (System.currentTimeMillis() < nextFundingTime) {
         sleep();
         continue;
       }
+      FundingRateMessage msg = new FundingRateMessage();
+      msg.setFundingRate(fundingRateCalculator.getFundingRate());
+      msg.setMarkPrice(markPriceCalculator.getMarkPrice());
+      inbound.add(msg);
       nextFundingTime = calculateNextFundingTime();
-      BigDecimal fundingRate = fundingRateCalculator.getFundingRate();
-      List<InstrumentConfig> instruments = instrumentRepository.getInstruments()
-          .stream()
-          .filter(config -> SecurityType.PERPETUAL_FUTURES.equals(config.getType()))
-          .toList();
-      for (Account account : accountRepository.getAllAccounts()) {
-        for (InstrumentConfig config: instruments){
-          Position position = account.getPosition(config.getSymbol());
-          if (position.getBalance().compareTo(BigDecimal.ZERO) == 0){
-            continue;
-          }
-          // positive fundingFee longs pays to shorts, and otherwise
-          BigDecimal notionalValue = position.getBalance().multiply(markPriceCalculator.getMarkPrice());
-
-        }
-      }
     }
   }
 
