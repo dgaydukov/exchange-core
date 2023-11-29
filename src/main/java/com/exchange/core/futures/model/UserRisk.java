@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class UserRisk {
-  private BigDecimal IM;
-  private BigDecimal ATB;
-  private BigDecimal TAM;
+  private BigDecimal initialMargin;
+  private BigDecimal availableTransferBalance;
+  private BigDecimal totalAccountMargin;
 }
