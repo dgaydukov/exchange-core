@@ -11,6 +11,7 @@ public class ExecutionReport implements Message {
   private String symbol;
   private long execId;
   private long orderId;
+  private String clOrdId;
   private long counterOrderId;
   private Boolean isTaker;
   private BigDecimal orderQty;

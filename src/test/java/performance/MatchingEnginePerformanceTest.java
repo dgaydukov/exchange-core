@@ -11,10 +11,12 @@ import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.UserBalance;
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
+import org.agrona.collections.Int2ObjectHashMap;
+import org.agrona.concurrent.ManyToManyConcurrentArrayQueue;
 import org.junit.jupiter.api.Test;
 
 public class MatchingEnginePerformanceTest {
@@ -25,11 +27,11 @@ public class MatchingEnginePerformanceTest {
   private final static Random random = new Random();
 
   @Test
-  public void mapOrderBookTest() {
+  public void mapOrderBookTest() throws InterruptedException {
     final int QUEUE_SIZE = 5_000;
 
-    Queue<Message> inbound = new ArrayBlockingQueue<>(QUEUE_SIZE * 2);
-    Queue<Message> outbound = new ArrayBlockingQueue<>(QUEUE_SIZE * 10);
+    Queue<Message> inbound = new ManyToManyConcurrentArrayQueue<>(QUEUE_SIZE*2);
+    Queue<Message> outbound = new ManyToManyConcurrentArrayQueue<>(QUEUE_SIZE*10);
     MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
     me.start();
 
@@ -59,38 +61,37 @@ public class MatchingEnginePerformanceTest {
       inbound.add(sellLimitUser2());
     }
 
-    try{
-      Thread.sleep(100);
-    } catch (InterruptedException ex){
 
-    }
-
-    while (outbound.size() > 0){
+    long count = 0, maxExecId = 0;
+    while (!outbound.isEmpty()){
       System.out.println(outbound.size());
+      count++;
       Message msg = outbound.poll();
       if (msg instanceof ExecutionReport exec) {
+        long execId = exec.getExecId();
+        if (execId > maxExecId){
+          maxExecId = execId;
+        }
       }
     }
 
-//    Message msg = outbound.poll();
-//    long maxExecId = 0;
-//    while (true) {
-//      if (msg instanceof ExecutionReport exec) {
-//        long execId = exec.getExecId();
-//        if(execId > maxExecId){
-//          maxExecId = execId;
-//        }
-//        if(exec.getStatus() == OrderStatus.NEW){
-//          long orderId = exec.getOrderId();
-//          if(orderId == 2 * QUEUE_SIZE){
-//            break;
-//          }
-//        }
-//      }
-//      msg = outbound.poll();
-//    }
+    Thread.sleep(100);
+    Message msg = outbound.poll();
+    while (msg != null){
+      System.out.println(outbound.size());
+      if (msg instanceof ExecutionReport exec) {
+
+      }
+      msg = outbound.poll();
+    }
+
     long timeTaken = System.currentTimeMillis() - start;
-    System.out.println("timeTaken=" + timeTaken + ", maxExecId="+1);
+    System.out.println("timeTaken=" + timeTaken);
+  }
+
+  @Test
+  public void latencyTest(){
+    Queue<Message> queue = new ManyToManyConcurrentArrayQueue<>(1000000);
   }
 
   private BigDecimal getPrice() {

@@ -118,6 +118,7 @@ public class PostOrderCheckImpl implements PostOrderCheck {
     ExecutionReport exec = new ExecutionReport();
     exec.setExecId(counter.getNextExecutionId());
     exec.setOrderId(order.getOrderId());
+    exec.setClOrdId(order.getClOrdId());
     exec.setSymbol(order.getSymbol());
     exec.setPrice(order.getPrice());
     exec.setOrderQty(order.getOrderQty());

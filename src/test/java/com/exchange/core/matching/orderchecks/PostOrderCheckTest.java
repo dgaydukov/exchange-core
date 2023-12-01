@@ -31,6 +31,7 @@ public class PostOrderCheckTest {
 
     Order order = MockData.getLimitBuy();
     order.setOrderId(99);
+    order.setClOrdId("myord1");
     final long execId = 100;
     when(counter.getNextExecutionId()).thenReturn(execId);
     postCheck.sendExecReportNew(order);
@@ -38,6 +39,7 @@ public class PostOrderCheckTest {
     verify(outbound).add(argument.capture());
     ExecutionReport exec = argument.getValue();
     Assertions.assertEquals(order.getSymbol(), exec.getSymbol(), "symbol mismatch");
+    Assertions.assertEquals(order.getClOrdId(), exec.getClOrdId(), "clOrdId mismatch");
     Assertions.assertEquals(execId, exec.getExecId(), "execId mismatch");
     Assertions.assertEquals(order.getOrderId(), exec.getOrderId(), "orderId mismatch");
     Assertions.assertEquals(order.getOrderQty(), exec.getOrderQty(), "orderQty mismatch");
