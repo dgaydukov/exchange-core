@@ -1,8 +1,6 @@
 package com.exchange.core.user;
 
 import com.exchange.core.exceptions.AppException;
-import com.exchange.core.model.enums.PositionDirection;
-import com.exchange.core.model.enums.SecurityType;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -10,16 +8,9 @@ import java.math.BigDecimal;
 @Data
 public class Position{
 
-  // spot
   private String symbol;
   private BigDecimal balance;
   private BigDecimal locked;
-  // perpetuals
-  private SecurityType type;
-  private BigDecimal amount;
-  private BigDecimal price;
-  private PositionDirection direction;
-  private BigDecimal unrealizedPnL;
 
   public Position(String asset) {
     this(asset, BigDecimal.ZERO);

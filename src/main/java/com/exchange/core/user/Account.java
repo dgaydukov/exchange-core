@@ -1,6 +1,5 @@
 package com.exchange.core.user;
 
-import com.exchange.core.futures.model.UserRisk;
 import java.math.BigDecimal;
 import lombok.Data;
 
@@ -12,7 +11,6 @@ public class Account {
 
   private int accountId;
   private Map<String, Position> positions;
-  private UserRisk risk;
   private BigDecimal leverage;
 
   public Account(int accountId) {
