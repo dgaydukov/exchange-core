@@ -40,10 +40,10 @@ Test coverage is the most important thing in any app, so here we covered our cor
 There are 2 types of tests in this project:
 * unit tests - where we test only source code. All code except `MatchingEngine` covered by unit tests.
 * integration test - where we actually run the app, send incoming messages & listen for outgoing. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
-* Since we have 2 orderbooks - and both implement same interface and are expected to behave the same way, I've created [parametrized test](https://github.com/dgaydukov/exchange-core/blob/master/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java#L26) where I run all the tests at the same time for 2 orderbooks, using Junit `@ParameterizedTest` annotation
+* Since we have 2 order books - and both implement same interface and are expected to behave the same way, I've created [parametrized test](https://github.com/dgaydukov/exchange-core/blob/master/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java#L26) where I run all the tests at the same time for 2 orderbooks, using Junit `@ParameterizedTest` annotation
 
 ### Exchange architecture
-example of Exchange components (based of https://www.youtube.com/watch?v=b1e4t2k2KJY):
+Example of exchange components (based on https://www.youtube.com/watch?v=b1e4t2k2KJY):
 * primary me with order book per instrument (add/cancel/replace) -  on average `cancel` requests take up to 40%
 * message bus (in-memory but can be used aeron) - use multicast so once event happen (like execution) all component can receive it at the same time and return to clients
   * drop copy (of some specific clients)
@@ -55,18 +55,18 @@ example of Exchange components (based of https://www.youtube.com/watch?v=b1e4t2k
 * multi-threading - new thread per order book - good, but centralization has benefits
 * state-machine recovery is a replay
 * speed, latency, throughput, determinism - basic principle of exchange
-  exchange should include 3 components:
-* matching engine (2 instances should be running, see [architecture](#matching-engine-architecture))
-* communication channel or bus - [aeron](#aeron---internal-communication-bus) should be used
-* external api - how clients can communicate with the system. Most top exchanges uses 3 level of communication
-  * http-api
-  * ws-api
-  * fix-api
-* real-world app - build on top of advanced order book replicated system:
+Exchange should include 3 components:
+  * matching engine (2 instances should be running, see [architecture](#matching-engine-architecture))
+  * communication channel or bus - [aeron](#aeron---internal-communication-bus) should be used
+  * external api - how clients can communicate with the system. Most top exchanges uses 3 level of communication
+    * http-api
+    * ws-api
+    * fix-api
+Real-world app - build on top of advanced order book replicated system:
   * use aeron cluster for multi-node zero-downtime
   * use aeron archive for persistence
   * https://github.com/real-logic/aeron/wiki/Cluster-Tutorial
-  * with client as simple http order api, which receive messages from clients, and than act as client to cluster, send order to ME (cluster) and receive messages from it
+  * with client as simple http order api, which receive messages from clients, and then act as client to cluster, send order to ME (cluster) and receive messages from it
   * checkout message lost in case of failed leader (https://github.com/real-logic/aeron/wiki/Cluster-Tutorial#55-failed-nodes-and-leader-election). This answer suggest that we should have app logic to check ack from cluster and in case of leader change, and message lost, client won't receive ack for these few messages, and have to re-send messages to cluster https://stackoverflow.com/questions/73370605/what-are-the-aeron-cluster-delivery-guarantees
 
 #### Aeron - internal communication bus
@@ -86,13 +86,10 @@ This exchange will include following items:
 * auctions
 
 #### FIX Gateway
-Logon details
 There are several ways to logon with fix:
 * [deribit](https://docs.deribit.com/#logon-a) - here we just take hash256 from secret key
-* [coinbase](https://docs.cloud.coinbase.com/exchange/docs/messages#logon-a) - here we take hmac of several fields like SendingTime/MsgType/MsgSeqNum/SenderCompID/TargetCompID/Password
-here we have interesting concept of api key = key+secret+passphrase. And third param provided by end-user and stored hashed in server. So to access api/fix all 3 need to be used.
-This ensure if credentials got leaked from exchange, attacker still not be able to login/sendRequests cause he doesn't know passphrase, which only user knows.
-* [etorox](https://etorox.com/etorox-fix-api/#FIX-Session-Level-Messages) - here we are using hmac to sign randomly generated payload
-* [cme](https://www.cmegroup.com/confluence/display/EPICSANDBOX/Session+Layer+-+Logon#SessionLayerLogon-Step2-CreateSignatureusingSecretKeyandCanonicalFIXMessage) - here we use hmac to sign whole body
+* [coinbase](https://docs.cloud.coinbase.com/exchange/docs/messages#logon-a) - here we take `HMAC` of several fields like SendingTime/MsgType/MsgSeqNum/SenderCompID/TargetCompID/Password. We have interesting concept of `apiKey = key+secret+passphrase`. And third param provided by end-user and stored hashed in server. So to access api/fix all 3 need to be used. This ensures if credentials got leaked from exchange, attacker still not be able to login/sendRequests because he doesn't know passphrase, which only user knows.
+* [etorox](https://etorox.com/etorox-fix-api/#FIX-Session-Level-Messages) - here we are using `HMAC` to sign randomly generated payload
+* [cme](https://www.cmegroup.com/confluence/display/EPICSANDBOX/Session+Layer+-+Logon#SessionLayerLogon-Step2-CreateSignatureusingSecretKeyandCanonicalFIXMessage) - here we use `HMAC` to sign whole body
 As you see there is no standard across the ecosystem, different exchanges uses different approach. The most consistent in my opinion is cme case, where you have body and sign it.
 Also best practice is to have key rotation logic, but it should be handled by different component, where basically you urge your clients to rotate keys every year, and if clients is not dot doing this, you disable such keys after expiration date.

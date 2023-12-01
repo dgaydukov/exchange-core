@@ -69,7 +69,7 @@ public class SpotExchange {
     inbound.add(buy);
     Order sell = new Order();
     sell.setSymbol(SYMBOL);
-    buy.setType(OrderType.LIMIT);
+    sell.setType(OrderType.LIMIT);
     sell.setSide(OrderSide.SELL);
     sell.setPrice(new BigDecimal("100"));
     sell.setOrderQty(new BigDecimal("3"));

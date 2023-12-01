@@ -26,7 +26,6 @@ public class MapOrderBook implements OrderBook {
     return switch (taker.getType()) {
       case MARKET -> matchMarket(taker);
       case LIMIT -> matchLimit(taker);
-      default -> new ArrayList<>();
     };
   }
 
