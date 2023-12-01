@@ -1,13 +1,21 @@
-package com.exchange.core.matching.orderbook;
+package com.exchange.core.performance;
 
+import com.exchange.core.matching.orderbook.MapOrderBook;
+import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
+import org.junit.jupiter.api.Test;
 
-public class OrderBookPerformanceTest {
+public class MatchingEnginePerformanceTest {
 
   private final static String SYMBOL = "BTC/USDT";
+
+  @Test
+  public void mapOrderBookTest(){
+    OrderBook ob = new MapOrderBook(SYMBOL);
+  }
 
 
 

@@ -4,11 +4,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <name>matching-engine</name>
+  <description>spot matching-engine with 2 order books</description>
+
   <groupId>com.exchange.core</groupId>
   <artifactId>orderbook</artifactId>
   <version>1.0-SNAPSHOT</version>
-
-  <name>exchange</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +24,8 @@
       <version>1.18.28</version>
       <scope>provided</scope>
     </dependency>
+
+<!-- testing dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
@@ -42,11 +45,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <build>
-    <pluginManagement>
-      <plugins>
-
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>

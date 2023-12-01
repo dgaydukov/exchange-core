@@ -14,7 +14,11 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class SpotExchange {
+/**
+ * This is example how to run matching-engine and communicate with it by sending messages to inbound queue
+ * and listening messages from outbound queue
+ */
+public class SpotExchangeApp {
 
   public static void main(String[] args) {
     final String BASE = "BTC";
@@ -43,10 +47,10 @@ public class SpotExchange {
     MatchingEngine me = new MatchingEngine(inbound, outbound);
     me.start();
 
-    // adding symbol
+    // adding instrument
     inbound.add(symbolMsg);
 
-    // adding 2 users
+    // adding 2 users with balances
     UserBalance userBalance1 = new UserBalance();
     userBalance1.setAccount(1);
     userBalance1.setAsset(QUOTE);

@@ -5,6 +5,7 @@ import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.matching.counter.SimpleGlobalCounter;
 import com.exchange.core.matching.orderbook.MapOrderBook;
 import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
 import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
@@ -12,6 +13,7 @@ import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
 import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
 import com.exchange.core.matching.waitstrategy.WaitStrategy;
 import com.exchange.core.model.Trade;
+import com.exchange.core.model.enums.OrderBookType;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.*;
 import com.exchange.core.repository.AccountRepository;
@@ -34,8 +36,13 @@ public class MatchingEngine {
   private final PostOrderCheck postOrderCheck;
   private final Queue<Message> inbound;
   private final Queue<Message> outbound;
+  private final OrderBookType orderBookType;
 
   public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
+    this(inbound, outbound, OrderBookType.MAP);
+  }
+
+  public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound, OrderBookType orderBookType) {
     orderBooks = new HashMap<>();
     accountRepository = new AccountRepositoryImpl();
     instrumentRepository = new InstrumentRepositoryImpl();
@@ -46,6 +53,7 @@ public class MatchingEngine {
         outbound);
     this.inbound = inbound;
     this.outbound = outbound;
+    this.orderBookType = orderBookType;
   }
 
   public void start() {
@@ -84,7 +92,14 @@ public class MatchingEngine {
   private void addInstrument(InstrumentConfig msg) {
     instrumentRepository.add(msg);
     final String symbol = msg.getSymbol();
-    orderBooks.put(symbol, new MapOrderBook(symbol));
+    orderBooks.put(symbol, createNewOrderBook(symbol));
+  }
+
+  private OrderBook createNewOrderBook(String symbol){
+    return switch (orderBookType){
+      case MAP -> new MapOrderBook(symbol);
+      case ARRAY -> new ArrayOrderBook(symbol);
+    };
   }
 
   private void addOrder(Order order) {
@@ -116,7 +131,7 @@ public class MatchingEngine {
       postOrderCheck.settleTrade(taker, maker, tradeQty, tradeAmount);
       postOrderCheck.sendExecReportTrade(taker, maker, tradeQty, tradePrice);
     });
-    // if order not fully matched we should either add to orderbook or cancel if it's market order
+    // if order not fully matched we should either add to order book or cancel if it's market order
     if (order.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       if (order.getType() == OrderType.MARKET) {
         postOrderCheck.cancelOrder(order);
