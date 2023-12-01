@@ -37,12 +37,13 @@ public class MatchingEngine {
   private final Queue<Message> inbound;
   private final Queue<Message> outbound;
   private final OrderBookType orderBookType;
+  private final boolean printInboundMsg;
 
   public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
-    this(inbound, outbound, OrderBookType.MAP);
+    this(inbound, outbound, OrderBookType.MAP, true);
   }
 
-  public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound, OrderBookType orderBookType) {
+  public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound, OrderBookType orderBookType, boolean printInboundMsg) {
     orderBooks = new HashMap<>();
     accountRepository = new AccountRepositoryImpl();
     instrumentRepository = new InstrumentRepositoryImpl();
@@ -54,6 +55,7 @@ public class MatchingEngine {
     this.inbound = inbound;
     this.outbound = outbound;
     this.orderBookType = orderBookType;
+    this.printInboundMsg = printInboundMsg;
   }
 
   public void start() {
@@ -66,7 +68,8 @@ public class MatchingEngine {
     while (true) {
       Message msg = inbound.poll();
       if (msg != null) {
-        System.out.println("inbound => " + msg);
+        if(printInboundMsg)
+          System.out.println("inbound => " + msg);
         try {
           process(msg);
         } catch (Exception ex) {
