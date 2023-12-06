@@ -11,12 +11,12 @@ import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.UserBalance;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.LinkedTransferQueue;
-import org.agrona.collections.Int2ObjectHashMap;
-import org.agrona.concurrent.ManyToManyConcurrentArrayQueue;
 import org.junit.jupiter.api.Test;
 
 public class MatchingEnginePerformanceTest {
@@ -27,11 +27,11 @@ public class MatchingEnginePerformanceTest {
   private final static Random random = new Random();
 
   @Test
-  public void mapOrderBookTest() throws InterruptedException {
+  public void tpsAndThroughputTest() {
     final int QUEUE_SIZE = 5_000;
 
-    Queue<Message> inbound = new ManyToManyConcurrentArrayQueue<>(QUEUE_SIZE*2);
-    Queue<Message> outbound = new ManyToManyConcurrentArrayQueue<>(QUEUE_SIZE*10);
+    Queue<Message> inbound = new LinkedBlockingQueue<>();
+    Queue<Message> outbound = new LinkedBlockingQueue<>();
     MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
     me.start();
 
@@ -55,43 +55,99 @@ public class MatchingEnginePerformanceTest {
     inbound.add(userBalance2);
 
     long start = System.currentTimeMillis();
-
+    String lastClOrdId = "";
     for (int i = 0; i < QUEUE_SIZE; i++) {
-      inbound.add(buyLimitUser1());
-      inbound.add(sellLimitUser2());
+      Order buy = buyLimitUser1();
+      buy.setClOrdId("buy_"+i);
+      inbound.add(buy);
+      Order sell = sellLimitUser2();
+      sell.setClOrdId("sell_"+i);
+      inbound.add(sell);
+      lastClOrdId = sell.getClOrdId();
     }
 
-
-    long count = 0, maxExecId = 0;
-    while (!outbound.isEmpty()){
-      System.out.println(outbound.size());
-      count++;
+    long count = 0;
+    while (true){
       Message msg = outbound.poll();
       if (msg instanceof ExecutionReport exec) {
-        long execId = exec.getExecId();
-        if (execId > maxExecId){
-          maxExecId = execId;
+        count++;
+        if (exec.getClOrdId().equals(lastClOrdId)){
+          break;
         }
       }
     }
 
-    Thread.sleep(100);
-    Message msg = outbound.poll();
-    while (msg != null){
-      System.out.println(outbound.size());
-      if (msg instanceof ExecutionReport exec) {
+    long timeTaken = System.currentTimeMillis() - start;
+    double tps = QUEUE_SIZE/(double)timeTaken*1000;
+    System.out.println("timeTaken=" + timeTaken+", TPS="+(long)tps+", outboundMessagesRead="+count);
+  }
 
+  @Test
+  public void latencyTest() {
+    final int QUEUE_SIZE = 5_000;
+
+    Queue<Message> inbound = new LinkedBlockingQueue<>();
+    Queue<Message> outbound = new LinkedBlockingQueue<>();
+    MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
+    me.start();
+
+    // adding instrument
+    InstrumentConfig symbolMsg = new InstrumentConfig();
+    symbolMsg.setBase(BASE);
+    symbolMsg.setQuote(QUOTE);
+    symbolMsg.setSymbol(SYMBOL);
+    inbound.add(symbolMsg);
+
+    // adding 2 users with balances
+    UserBalance userBalance1 = new UserBalance();
+    userBalance1.setAccount(1);
+    userBalance1.setAsset(QUOTE);
+    userBalance1.setAmount(new BigDecimal("10000000000"));
+    inbound.add(userBalance1);
+    UserBalance userBalance2 = new UserBalance();
+    userBalance2.setAccount(2);
+    userBalance2.setAsset(BASE);
+    userBalance2.setAmount(new BigDecimal("10000000000"));
+    inbound.add(userBalance2);
+
+    long start = System.currentTimeMillis();
+    Map<String, Long> latencyMap = new ConcurrentHashMap<>();
+    String lastClOrdId = "";
+    for (int i = 0; i < QUEUE_SIZE; i++) {
+      long timestamp = System.currentTimeMillis();
+      Order buy = buyLimitUser1();
+      buy.setClOrdId("buy_"+i);
+      inbound.add(buy);
+      Order sell = sellLimitUser2();
+      long sellTimestamp = System.currentTimeMillis();
+      sell.setClOrdId("sell_"+i);
+      inbound.add(sell);
+      lastClOrdId = sell.getClOrdId();
+      latencyMap.put(buy.getClOrdId(), timestamp);
+      latencyMap.put(sell.getClOrdId(), sellTimestamp);
+    }
+
+    while (true){
+      Message msg = outbound.poll();
+      if (msg instanceof ExecutionReport exec) {
+        if (exec.getStatus() == OrderStatus.NEW){
+          latencyMap.compute(exec.getClOrdId(), (k,v)-> System.currentTimeMillis() - v);
+        }
+        if (exec.getClOrdId().equals(lastClOrdId)){
+          break;
+        }
       }
-      msg = outbound.poll();
     }
 
     long timeTaken = System.currentTimeMillis() - start;
     System.out.println("timeTaken=" + timeTaken);
-  }
-
-  @Test
-  public void latencyTest(){
-    Queue<Message> queue = new ManyToManyConcurrentArrayQueue<>(1000000);
+    List<Long> latencyList = latencyMap.values()
+        .stream()
+        .sorted()
+        .toList();
+    System.out.println("latency for 50% is below " + latencyList.get((int)(latencyList.size()*.5)));
+    System.out.println("latency for 90% is below " + latencyList.get((int)(latencyList.size()*.9)));
+    System.out.println("latency for 99% is below " + latencyList.get((int)(latencyList.size()*.99)));
   }
 
   private BigDecimal getPrice() {
