@@ -194,6 +194,5 @@ public class PostOrderCheckTest {
     Assertions.assertEquals(order.getOrderQty(), exec.getOrderQty(), "orderQty mismatch");
     Assertions.assertEquals(order.getPrice(), exec.getPrice(), "price mismatch");
     Assertions.assertEquals(OrderStatus.CANCELLED, exec.getStatus(), "status should be cancelled");
-
   }
 }

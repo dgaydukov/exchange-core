@@ -3,6 +3,7 @@
 ### Content
 * [Description](#description)
 * [Matching engine architecture](#matching-engine-architecture)
+* [Snapshot](#snapshot)
 * [Test coverage](#test-coverage)
 * [Exchange architecture](#exchange-architecture)
   * [Aeron - internal communication bus](#aeron---internal-communication-bus)
@@ -34,6 +35,18 @@ Matching engine consist of following parts:
 Since order book is the core part - it's implementation is very important, cause if matching is slow, the whole system would be slow. We have 2 implementation of order book:
 * [MapOrderBook](https://github.com/dgaydukov/exchange-core/blob/master/src/main/java/com/exchange/core/matching/orderbook/OrderBook.java) - naive implementation, here we are using default JDK implementations `java.utils.TreeMap` to store internal state of order book like bids/asks. Since these JDK implementations are not designed for low latency, they won't perform well under high load due to: gc problems or primitive unboxing/auto-boxing. Such implementation is good for educational purpose, but completely useless for real-world apps.
 * [ArrayOrderBook](https://github.com/dgaydukov/exchange-core/blob/master/src/main/java/com/exchange/core/matching/orderbook/array/ArrayOrderBook.java) - advanced version of order book, compared to `MapOrderBook` order book, here we can achieve faster performance by directly manipulating the underlying array. In `TreeMap` there is also underlying array and each time we insert/remove, it's sorted internally/implicitly. But here we are adding/removing from order book explicitly
+
+### Snapshot
+Snapshot is the crucial concept in ME design. Since our ME using internal memory to store the state that means that order book, user balances and other state stored in internal memory while our java app is running. But imagine is something like this happens:
+* app crash
+* planned downtime
+* deployment with downtime
+Any of these 3 would require to restart (stop & start) our java app, and once we do this, our app would start from 0, and nothing would be there. So we need some logic that:
+* once-in-a-while => system take snapshot of in-memory data and store it
+* once we start => system would read latest snapshot and update internal state
+This concept is implemented in all matching-engines, cause otherwise it won't work properly. Below is a set of rules how we implement it here:
+* storage: store snapshot in files
+* format: use raw json as format
 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our core part a lot with both unit testing & integration testing.
