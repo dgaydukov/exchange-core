@@ -10,6 +10,11 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
+import com.exchange.core.matching.snapshot.SnapshotManager;
+import com.exchange.core.matching.snapshot.Snapshotable;
+import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
+import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
+import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
 import com.exchange.core.matching.waitstrategy.WaitStrategy;
 import com.exchange.core.model.Trade;
@@ -22,6 +27,7 @@ import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +43,11 @@ public class MatchingEngine {
   private final Queue<Message> inbound;
   private final Queue<Message> outbound;
   private final OrderBookType orderBookType;
+  private final SnapshotManager snapshotManager;
+  private final List<Snapshotable> snapshotables;
+  private final StorageWriter storageWriter;
   private final boolean printInboundMsg;
+  private final String SNAPSHOT_BASE_PATH = System.getProperty("user.dir") + "/snapshots";
 
   public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
     this(inbound, outbound, OrderBookType.MAP, true);
@@ -56,9 +66,20 @@ public class MatchingEngine {
     this.outbound = outbound;
     this.orderBookType = orderBookType;
     this.printInboundMsg = printInboundMsg;
+    snapshotables = new ArrayList<>();
+    snapshotables.add((Snapshotable) accountRepository);
+    snapshotables.add((Snapshotable) instrumentRepository);
+    storageWriter = new FileStorageWriter();
+    snapshotManager = new SnapshotManager(snapshotables,
+        new JsonObjectConverter(), storageWriter, SNAPSHOT_BASE_PATH);
   }
 
   public void start() {
+    String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_PATH);
+    if (filename != null){
+      System.out.println("Loading data from snapshot: name="+filename);
+      snapshotManager.loadSnapshot(filename);
+    }
     System.out.println("Starting matching engine...");
     new Thread(this::run, "MatchingThread").start();
   }
@@ -87,6 +108,8 @@ public class MatchingEngine {
       addOrder(order);
     } else if (msg instanceof UserBalance ab) {
       addBalance(ab);
+    } else if (msg instanceof SnapshotMessage) {
+      snapshotManager.makeSnapshot();
     } else {
       throw new AppException("Undefined message: msg=" + msg);
     }
@@ -95,7 +118,9 @@ public class MatchingEngine {
   private void addInstrument(InstrumentConfig msg) {
     instrumentRepository.add(msg);
     final String symbol = msg.getSymbol();
-    orderBooks.put(symbol, createNewOrderBook(symbol));
+    OrderBook ob = createNewOrderBook(symbol);
+    orderBooks.put(symbol, ob);
+    snapshotables.add((Snapshotable) ob);
   }
 
   private OrderBook createNewOrderBook(String symbol){
