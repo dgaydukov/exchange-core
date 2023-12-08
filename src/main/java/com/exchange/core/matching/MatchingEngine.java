@@ -105,7 +105,7 @@ public class MatchingEngine {
       // load snapshots
       snapshotManager.loadSnapshot(filename);
       // update counter for next orderId
-      long lastOrderId = snapshotManager.getLastOrderId(filename);
+      long lastOrderId = snapshotManager.getLastOrderId();
       System.out.println("Updating counter: lastOrderId=" + lastOrderId);
       while (lastOrderId != counter.getNextOrderId()) {
       }

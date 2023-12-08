@@ -10,5 +10,5 @@ public interface SnapshotManager {
 
   List<String> getSymbols(String name);
 
-  long getLastOrderId(String name);
+  long getLastOrderId();
 }

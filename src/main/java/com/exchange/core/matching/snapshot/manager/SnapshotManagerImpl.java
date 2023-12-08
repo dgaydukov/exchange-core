@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import lombok.Getter;
 
 public class SnapshotManagerImpl implements SnapshotManager {
 
@@ -20,6 +21,9 @@ public class SnapshotManagerImpl implements SnapshotManager {
   private final ObjectConverter converter;
   private final StorageWriter storageWriter;
   private final String basePath;
+
+  @Getter
+  private long lastOrderId;
 
   public SnapshotManagerImpl(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
       StorageWriter storageWriter, String basePath) {
@@ -52,6 +56,9 @@ public class SnapshotManagerImpl implements SnapshotManager {
       for (SnapshotItem i : snapshots) {
         if (i.getType() == s.getType()) {
           i.setData(cast(i));
+          if (i.getType() == SnapshotType.ORDER_BOOK){
+            updateLastOrderId(i.getData());
+          }
           s.load(i);
           break;
         }
@@ -76,15 +83,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
     return symbols;
   }
 
-  @Override
-  public long getLastOrderId(String name) {
-    long lastOrderId = 0;
-    Object orders = loadSnapshots(name)
-        .stream()
-        .filter(s -> s.getType() == SnapshotType.ORDER_BOOK)
-        .findFirst()
-        .map(this::cast)
-        .orElse(null);
+  public void updateLastOrderId(Object orders) {
     if (orders != null) {
       lastOrderId = ((List<Order>) orders)
           .stream()
@@ -92,7 +91,6 @@ public class SnapshotManagerImpl implements SnapshotManager {
           .max(Comparator.naturalOrder())
           .get();
     }
-    return lastOrderId;
   }
 
   private List<SnapshotItem> loadSnapshots(String name) {
