@@ -2,18 +2,28 @@ package com.exchange.core.matching.snapshot.converter;
 
 import com.exchange.core.MockData;
 import com.exchange.core.exceptions.AppException;
+import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class ObjectConverterTest {
 
+  private ObjectConverter converter;
+
+  @BeforeEach
+  public void initNewInstance(){
+    converter = new JsonObjectConverter();
+  }
+
   @Test
   public void nullTest() {
-    ObjectConverter converter = new JsonObjectConverter();
     String str = converter.objToString(null);
     Assertions.assertNull(str);
     Object obj = converter.stringToObj(null, null);
@@ -22,7 +32,6 @@ public class ObjectConverterTest {
 
   @Test
   public void instrumentConfigTest() {
-    ObjectConverter converter = new JsonObjectConverter();
     InstrumentConfig instrument = MockData.getInstrument();
     String instrumentStr = converter.objToString(instrument);
     Assertions.assertEquals("{\"symbol\":\"BTC/USDT\",\"base\":\"BTC\",\"quote\":\"USDT\"}",
@@ -35,7 +44,6 @@ public class ObjectConverterTest {
 
   @Test
   public void instrumentConfigListTest() {
-    ObjectConverter converter = new JsonObjectConverter();
     InstrumentConfig inst1 = MockData.getInstrument();
     InstrumentConfig inst2 = new InstrumentConfig();
     inst2.setSymbol("ETH-USDT");
@@ -59,7 +67,6 @@ public class ObjectConverterTest {
 
   @Test
   public void stringToObjExceptionTest(){
-    ObjectConverter converter = new JsonObjectConverter();
     String str = "hello world";
     AppException exception = Assertions.assertThrows(AppException.class,
         () ->  converter.stringToObj(str, new TypeReference<>() {}), "Exception should be thrown");

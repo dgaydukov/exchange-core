@@ -5,8 +5,10 @@ import lombok.Data;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Account {
 
   private int accountId;

@@ -4,8 +4,10 @@ import com.exchange.core.exceptions.AppException;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Position{
 
   private String symbol;

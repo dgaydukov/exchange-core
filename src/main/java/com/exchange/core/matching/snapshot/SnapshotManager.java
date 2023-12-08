@@ -1,5 +1,6 @@
 package com.exchange.core.matching.snapshot;
 
+import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,20 +17,25 @@ public class SnapshotManager {
 
   public SnapshotManager(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
       StorageWriter storageWriter, String basePath) {
+    if (snapshotables.size() == 0){
+      throw new AppException("List of Snapshotable should be provided");
+    }
     this.snapshotables = snapshotables;
     this.objectConverter = objectConverter;
     this.storageWriter = storageWriter;
     this.basePath = basePath;
   }
 
-  public void makeSnapshot() {
+  public String makeSnapshot() {
     List<SnapshotItem> snapshots = new ArrayList<>();
     for (Snapshotable s : snapshotables) {
       snapshots.add(s.create());
     }
     String snapshotStr = objectConverter.objToString(snapshots);
-    String path = basePath + "/" + System.currentTimeMillis();
+    String filename = "snap_"+System.currentTimeMillis();
+    String path = basePath + "/" + filename;
     storageWriter.write(path, snapshotStr);
+    return filename;
   }
 
   public void loadSnapshot(String name) {
