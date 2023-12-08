@@ -39,6 +39,7 @@ public class MatchingEngine {
   private final Map<String, OrderBook> orderBooks;
   private final AccountRepository accountRepository;
   private final InstrumentRepository instrumentRepository;
+  private final GlobalCounter counter;
   private final PreOrderCheck preOrderCheck;
   private final PostOrderCheck postOrderCheck;
   private final Queue<Message> inbound;
@@ -58,7 +59,7 @@ public class MatchingEngine {
     orderBooks = new HashMap<>();
     accountRepository = new AccountRepositoryImpl();
     instrumentRepository = new InstrumentRepositoryImpl();
-    GlobalCounter counter = new SimpleGlobalCounter();
+    counter = new SimpleGlobalCounter();
     preOrderCheck = new PreOrderCheckImpl(counter, accountRepository, instrumentRepository,
         outbound);
     postOrderCheck = new PostOrderCheckImpl(counter, accountRepository, instrumentRepository,
@@ -76,17 +77,28 @@ public class MatchingEngine {
   }
 
   public void start() {
+    loadSnapshot();
+    System.out.println("Starting matching engine...");
+    new Thread(this::run, "MatchingThread").start();
+  }
+
+  private void loadSnapshot(){
     File file = new File(SNAPSHOT_BASE_DIR);
     if (!file.exists()){
+      System.out.println("Creating snapshot directory: path="+file);
       file.mkdir();
     }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null){
       System.out.println("Loading data from snapshot: name="+filename);
       snapshotManager.loadSnapshot(filename);
+      instrumentRepository.getInstruments().forEach(i -> addOrderBook(i.getSymbol()));
+      // TODO: think how we can load instruments first, then add orderbooks and then load orders
+      // so it should be ordered snapshot creation. Or first get all instruments, create ob then load snapshots
+      snapshotManager.loadSnapshot(filename);
+      // TODO: update counters for orders & executors
+      counter.getNextOrderId();
     }
-    System.out.println("Starting matching engine...");
-    new Thread(this::run, "MatchingThread").start();
   }
 
   private void run() {
@@ -123,9 +135,14 @@ public class MatchingEngine {
   private void addInstrument(InstrumentConfig msg) {
     instrumentRepository.add(msg);
     final String symbol = msg.getSymbol();
+    addOrderBook(symbol);
+  }
+
+  private void addOrderBook(String symbol){
     OrderBook ob = createNewOrderBook(symbol);
     orderBooks.put(symbol, ob);
     snapshotables.add((Snapshotable) ob);
+
   }
 
   private OrderBook createNewOrderBook(String symbol){

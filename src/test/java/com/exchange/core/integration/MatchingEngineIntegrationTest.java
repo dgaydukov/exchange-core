@@ -14,8 +14,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.Queue;
+import org.mockito.BDDMockito.Then;
 
 public class MatchingEngineIntegrationTest {
   private final String SNAPSHOT_BASE_DIR = System.getProperty("user.dir") + "/snapshots";
@@ -203,6 +206,11 @@ public class MatchingEngineIntegrationTest {
     // add balance
     UserBalance ub = MockData.getUser(inst.getQuote());
     inbound.add(ub);
+    UserBalance ub2 = new UserBalance();
+    ub2.setAccount(2);
+    ub2.setAsset(inst.getBase());
+    ub2.setAmount(new BigDecimal("15"));
+    inbound.add(ub2);
     // add order
     Order buy = MockData.getLimitBuy();
     inbound.add(buy);
@@ -244,8 +252,13 @@ public class MatchingEngineIntegrationTest {
         .orElse(null);
     Assertions.assertNotNull(accountData);
     List<Account> accounts = mapper.readValue(mapper.writeValueAsString(accountData), new TypeReference<>() {});
-    Assertions.assertEquals(1, accounts.size(), "should be 1 account");
-    Account account = accounts.get(0);
+    Assertions.assertEquals(2, accounts.size(), "should be 2 account");
+    Account account = accounts
+        .stream()
+        .filter(a -> a.getAccountId() == ub.getAccount())
+        .findFirst()
+        .orElse(null);
+    Assertions.assertNotNull(account);
     Assertions.assertEquals(ub.getAccount(), account.getAccountId(), "accountId mismatch");
     Assertions.assertEquals(1, account.getPositions().size(), "should be 1 position");
     Position position = new Position(ub.getAsset(), ub.getAmount());
@@ -264,16 +277,76 @@ public class MatchingEngineIntegrationTest {
     Assertions.assertEquals(1, orders.size(), "should be 1 order");
     Order order = orders.get(0);
     Assertions.assertEquals(buy, order, "order mismatch");
+
+    // cleanup
+    TestUtils.deleteDirectory(baseDir);
   }
 
   @Test
-  public void loadSnapshotTest(){
-    String content = "[{\"type\":\"ACCOUNT\",\"data\":[{\"accountId\":1,\"positions\":{\"USDT\":{\"symbol\":\"USDT\",\"balance\":1000,\"locked\":1000,\"totalBalance\":2000}}}]},{\"type\":\"INSTRUMENT\",\"data\":[{\"symbol\":\"BTC/USDT\",\"base\":\"BTC\",\"quote\":\"USDT\"}]},{\"type\":\"ORDER_BOOK\",\"data\":[{\"symbol\":\"BTC/USDT\",\"orderId\":1,\"clOrdId\":null,\"account\":1,\"side\":\"BUY\",\"type\":\"LIMIT\",\"orderQty\":10,\"leavesQty\":10,\"quoteOrderQty\":null,\"price\":100}]}]";
+  public void loadSnapshotTest() throws IOException, InterruptedException {
+    String content = "[{\"type\":\"ACCOUNT\",\"data\":[{\"accountId\":1,\"positions\":{\"USDT\":{\"symbol\":\"USDT\",\"balance\":1000,\"locked\":1000,\"totalBalance\":2000}}},{\"accountId\":2,\"positions\":{\"BTC\":{\"symbol\":\"BTC\",\"balance\":15,\"locked\":0,\"totalBalance\":15}}}]},{\"type\":\"INSTRUMENT\",\"data\":[{\"symbol\":\"BTC/USDT\",\"base\":\"BTC\",\"quote\":\"USDT\"}]},{\"type\":\"ORDER_BOOK\",\"data\":[{\"symbol\":\"BTC/USDT\",\"orderId\":1,\"clOrdId\":null,\"account\":1,\"side\":\"BUY\",\"type\":\"LIMIT\",\"orderQty\":10,\"leavesQty\":10,\"quoteOrderQty\":null,\"price\":100}]}]";
     File baseDir = new File(SNAPSHOT_BASE_DIR);
     TestUtils.deleteDirectory(baseDir);
     Assertions.assertFalse(baseDir.exists());
     baseDir.mkdir();
-    File snapshotFile = new File(SNAPSHOT_BASE_DIR);
+    File snapshotFile = new File(SNAPSHOT_BASE_DIR + "/snap_" + System.currentTimeMillis());
+    BufferedWriter writer = new BufferedWriter(new FileWriter(snapshotFile));
+    writer.write(content);
+    writer.close();
+
+    // ME should pick-up the snapshot and load it into memory
+    Queue<Message> inbound = new LinkedList<>();
+    Queue<Message> outbound = new LinkedList<>();
+    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    me.start();
+
+    // we can send counter order for account=2 and see trade results
+    Order sell = MockData.getLimitBuy();
+    sell.setAccount(2);
+    sell.setOrderQty(new BigDecimal("15"));
+    sell.setSide(OrderSide.SELL);
+    inbound.add(sell);
+    Thread.sleep(200);
+
+    final int takerOrderId = 2, makerOrderId = 1;
+    final BigDecimal sellLeavesQty = new BigDecimal("5");
+    ExecutionReport takerNew = (ExecutionReport) outbound.poll();
+    Assertions.assertEquals(takerOrderId, takerNew.getOrderId(), "orderId mismatch");
+    Assertions.assertEquals(1, takerNew.getExecId(), "execId mismatch");
+    Assertions.assertEquals(OrderStatus.NEW, takerNew.getStatus(), "status should be new");
+
+    ExecutionReport takerFilled = (ExecutionReport) outbound.poll();
+    Assertions.assertEquals(takerOrderId, takerFilled.getOrderId(), "orderId mismatch");
+    Assertions.assertEquals(2, takerFilled.getExecId(), "execId mismatch");
+    Assertions.assertEquals(sell.getSymbol(), takerFilled.getSymbol(), "symbol mismatch");
+    Assertions.assertEquals(sell.getOrderQty(), takerFilled.getOrderQty(), "orderQty mismatch");
+    Assertions.assertEquals(sellLeavesQty, takerFilled.getLeavesQty(), "leavesQty mismatch");
+    Assertions.assertEquals(sell.getPrice(), takerFilled.getPrice(), "price mismatch");
+    Assertions.assertEquals(OrderStatus.PARTIALLY_FILLED, takerFilled.getStatus(), "status should be partially_filled");
+
+    ExecutionReport makerFilled = (ExecutionReport) outbound.poll();
+    Assertions.assertEquals(makerOrderId, makerFilled.getOrderId(), "orderId mismatch");
+    Assertions.assertEquals(3, makerFilled.getExecId(), "execId mismatch");
+    Assertions.assertEquals(sell.getSymbol(), makerFilled.getSymbol(), "symbol mismatch");
+    Assertions.assertEquals(new BigDecimal("10"), makerFilled.getOrderQty(), "orderQty mismatch");
+    Assertions.assertEquals(new BigDecimal("0"), makerFilled.getLeavesQty(), "leavesQty mismatch");
+    Assertions.assertEquals(sell.getPrice(), makerFilled.getPrice(), "price mismatch");
+    Assertions.assertEquals(OrderStatus.FILLED, makerFilled.getStatus(), "status should be new");
+
+    MarketData md = (MarketData) outbound.poll();
+    Assertions.assertEquals(1, md.getDepth(), "depth should be 1");
+    Assertions.assertEquals(0, md.getBids().length, "bids size should be 0");
+    Assertions.assertEquals(1, md.getAsks().length, "asks size should be 1");
+    BigDecimal[][] asks = new BigDecimal[][]{
+        {sell.getPrice(), sellLeavesQty},
+    };
+    Assertions.assertArrayEquals(asks, md.getAsks(), "asks mismatch");
+
+    // confirm there is no more messages in the outbound queue
+    Assertions.assertNull(outbound.poll());
+
+    // cleanup
+    TestUtils.deleteDirectory(baseDir);
   }
 
 
