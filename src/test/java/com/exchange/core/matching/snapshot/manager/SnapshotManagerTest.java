@@ -103,7 +103,7 @@ public class SnapshotManagerTest {
   }
 
   @Test
-  public void lastOrderIdTest(){
+  public void lastOrderIdTest() {
     List<Snapshotable> snapshotables = new ArrayList<>();
     ObjectConverter converter = new JsonObjectConverter();
     StorageWriter storageWriter = new FileStorageWriter();
@@ -113,7 +113,7 @@ public class SnapshotManagerTest {
         storageWriter, BASE_PATH);
     // add 5 orders
     List<Order> orders = new ArrayList<>();
-    for (int i = 1; i <= 5; i++){
+    for (int i = 1; i <= 5; i++) {
       Order buy = MockData.getLimitBuy();
       buy.setOrderId(i);
       orders.add(buy);
@@ -135,7 +135,7 @@ public class SnapshotManagerTest {
   }
 
   @Test
-  public void getSymbolsTest(){
+  public void getSymbolsTest() {
     List<Snapshotable> snapshotables = new ArrayList<>();
     ObjectConverter converter = new JsonObjectConverter();
     StorageWriter storageWriter = new FileStorageWriter();

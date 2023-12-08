@@ -56,7 +56,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
       for (SnapshotItem i : snapshots) {
         if (i.getType() == s.getType()) {
           i.setData(cast(i));
-          if (i.getType() == SnapshotType.ORDER_BOOK){
+          if (i.getType() == SnapshotType.ORDER_BOOK) {
             updateLastOrderId(i.getData());
           }
           s.load(i);

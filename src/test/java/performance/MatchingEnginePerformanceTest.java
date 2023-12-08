@@ -58,28 +58,29 @@ public class MatchingEnginePerformanceTest {
     String lastClOrdId = "";
     for (int i = 0; i < QUEUE_SIZE; i++) {
       Order buy = buyLimitUser1();
-      buy.setClOrdId("buy_"+i);
+      buy.setClOrdId("buy_" + i);
       inbound.add(buy);
       Order sell = sellLimitUser2();
-      sell.setClOrdId("sell_"+i);
+      sell.setClOrdId("sell_" + i);
       inbound.add(sell);
       lastClOrdId = sell.getClOrdId();
     }
 
     long count = 0;
-    while (true){
+    while (true) {
       Message msg = outbound.poll();
       if (msg instanceof ExecutionReport exec) {
         count++;
-        if (exec.getClOrdId().equals(lastClOrdId)){
+        if (exec.getClOrdId().equals(lastClOrdId)) {
           break;
         }
       }
     }
 
     long timeTaken = System.currentTimeMillis() - start;
-    double tps = QUEUE_SIZE/(double)timeTaken*1000;
-    System.out.println("timeTaken=" + timeTaken+", TPS="+(long)tps+", outboundMessagesRead="+count);
+    double tps = QUEUE_SIZE / (double) timeTaken * 1000;
+    System.out.println(
+        "timeTaken=" + timeTaken + ", TPS=" + (long) tps + ", outboundMessagesRead=" + count);
   }
 
   @Test
@@ -116,24 +117,24 @@ public class MatchingEnginePerformanceTest {
     for (int i = 0; i < QUEUE_SIZE; i++) {
       long timestamp = System.currentTimeMillis();
       Order buy = buyLimitUser1();
-      buy.setClOrdId("buy_"+i);
+      buy.setClOrdId("buy_" + i);
       inbound.add(buy);
       Order sell = sellLimitUser2();
       long sellTimestamp = System.currentTimeMillis();
-      sell.setClOrdId("sell_"+i);
+      sell.setClOrdId("sell_" + i);
       inbound.add(sell);
       lastClOrdId = sell.getClOrdId();
       latencyMap.put(buy.getClOrdId(), timestamp);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
     }
 
-    while (true){
+    while (true) {
       Message msg = outbound.poll();
       if (msg instanceof ExecutionReport exec) {
-        if (exec.getStatus() == OrderStatus.NEW){
-          latencyMap.compute(exec.getClOrdId(), (k,v)-> System.currentTimeMillis() - v);
+        if (exec.getStatus() == OrderStatus.NEW) {
+          latencyMap.compute(exec.getClOrdId(), (k, v) -> System.currentTimeMillis() - v);
         }
-        if (exec.getClOrdId().equals(lastClOrdId)){
+        if (exec.getClOrdId().equals(lastClOrdId)) {
           break;
         }
       }
@@ -145,9 +146,12 @@ public class MatchingEnginePerformanceTest {
         .stream()
         .sorted()
         .toList();
-    System.out.println("latency for 50% is below " + latencyList.get((int)(latencyList.size()*.5)));
-    System.out.println("latency for 90% is below " + latencyList.get((int)(latencyList.size()*.9)));
-    System.out.println("latency for 99% is below " + latencyList.get((int)(latencyList.size()*.99)));
+    System.out.println(
+        "latency for 50% is below " + latencyList.get((int) (latencyList.size() * .5)));
+    System.out.println(
+        "latency for 90% is below " + latencyList.get((int) (latencyList.size() * .9)));
+    System.out.println(
+        "latency for 99% is below " + latencyList.get((int) (latencyList.size() * .99)));
   }
 
   private BigDecimal getPrice() {

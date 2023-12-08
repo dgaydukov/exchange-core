@@ -79,8 +79,9 @@ public class PreOrderCheckImpl implements PreOrderCheck {
       }
       if (order.getSide() == OrderSide.BUY) {
         return order.getQuoteOrderQty() != null;
-      } else
+      } else {
         return order.getOrderQty() != null;
+      }
     }
     return true;
   }
