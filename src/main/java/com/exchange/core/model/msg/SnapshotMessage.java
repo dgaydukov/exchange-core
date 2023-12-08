@@ -1,7 +1,8 @@
 package com.exchange.core.model.msg;
 
-import com.exchange.core.model.msg.Message;
+import lombok.Data;
 
+@Data
 public class SnapshotMessage implements Message {
 
 }

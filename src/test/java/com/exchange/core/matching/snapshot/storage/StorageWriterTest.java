@@ -1,5 +1,6 @@
 package com.exchange.core.matching.snapshot.storage;
 
+import com.exchange.core.TestUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -26,17 +27,7 @@ public class StorageWriterTest {
 
   @AfterAll
   public static void cleanup(){
-    deleteDirectory(new File(BASE_PATH));
-  }
-
-  private static boolean deleteDirectory(File directoryToBeDeleted) {
-    File[] allContents = directoryToBeDeleted.listFiles();
-    if (allContents != null) {
-      for (File file : allContents) {
-        deleteDirectory(file);
-      }
-    }
-    return directoryToBeDeleted.delete();
+    TestUtils.deleteDirectory(new File(BASE_PATH));
   }
 
   @Test

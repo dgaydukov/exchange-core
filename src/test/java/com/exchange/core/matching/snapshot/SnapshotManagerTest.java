@@ -1,6 +1,7 @@
 package com.exchange.core.matching.snapshot;
 
 import com.exchange.core.MockData;
+import com.exchange.core.TestUtils;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
@@ -11,7 +12,6 @@ import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -35,18 +35,9 @@ public class SnapshotManagerTest {
 
   @AfterAll
   public static void cleanup(){
-    deleteDirectory(new File(BASE_PATH));
+    TestUtils.deleteDirectory(new File(BASE_PATH));
   }
 
-  private static boolean deleteDirectory(File directoryToBeDeleted) {
-    File[] allContents = directoryToBeDeleted.listFiles();
-    if (allContents != null) {
-      for (File file : allContents) {
-        deleteDirectory(file);
-      }
-    }
-    return directoryToBeDeleted.delete();
-  }
   @Test
   public void loadSnapshotTest(){
     List<Snapshotable> snapshotables = new ArrayList<>();

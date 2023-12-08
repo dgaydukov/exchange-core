@@ -1,10 +1,12 @@
 package com.exchange.core.integration;
 
 import com.exchange.core.MockData;
+import com.exchange.core.TestUtils;
 import com.exchange.core.matching.MatchingEngine;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.*;
+import java.io.File;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -171,6 +173,37 @@ public class MatchingEngineIntegrationTest {
         {new BigDecimal("100"), new BigDecimal("5")}
     };
     Assertions.assertArrayEquals(asks, md2.getAsks(), "asks mismatch");
+  }
+
+  @Test
+  public void snapshotTest() throws InterruptedException {
+    String basePath = System.getProperty("user.dir") + "/snapshots";
+    File baseDir = new File(basePath);
+    TestUtils.deleteDirectory(baseDir);
+    Assertions.assertFalse(baseDir.exists());
+
+    Queue<Message> inbound = new LinkedList<>();
+    Queue<Message> outbound = new LinkedList<>();
+    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    me.start();
+    // add instrument config
+    InstrumentConfig inst = MockData.getInstrument();
+    inbound.add(inst);
+    // add balance
+    UserBalance user = MockData.getUser(inst.getQuote());
+    inbound.add(user);
+    // add order
+    Order buy = MockData.getLimitBuy();
+    inbound.add(buy);
+
+    // validate snapshot directory created after me start
+    Assertions.assertTrue(baseDir.exists());
+    // validate that directory is empty
+    Assertions.assertEquals(0, baseDir.listFiles().length, "directory should be empty");
+    inbound.add(new SnapshotMessage());
+    Thread.sleep(100);
+    Assertions.assertEquals(1, baseDir.listFiles().length, "1 file should be inside directory");
+    // manually read file and see if all data is there
   }
 
 
