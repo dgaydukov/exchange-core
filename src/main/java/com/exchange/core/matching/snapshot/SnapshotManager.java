@@ -4,6 +4,7 @@ import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class SnapshotManager {
@@ -13,8 +14,8 @@ public class SnapshotManager {
   private final StorageWriter storageWriter;
   private final String basePath;
 
-  public SnapshotManager(List<Snapshotable> snapshotables,
-      ObjectConverter objectConverter, StorageWriter storageWriter, String basePath) {
+  public SnapshotManager(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
+      StorageWriter storageWriter, String basePath) {
     this.snapshotables = snapshotables;
     this.objectConverter = objectConverter;
     this.storageWriter = storageWriter;
@@ -32,18 +33,18 @@ public class SnapshotManager {
   }
 
   public void loadSnapshot(String name) {
-//    String path = basePath + "/" + name;
-//    String snapshotStr = storageWriter.read(path);
-//    List<SnapshotItem> snapshots = objectConverter.stringToObj(snapshotStr, new TypeReference<>() {
-//    });
-//    for (Snapshotable s : snapshotables) {
-//      for (SnapshotItem i : snapshots) {
-//        if (i.getType() == s.getType()) {
-//          s.load(i);
-//          break;
-//        }
-//      }
-//    }
+    String path = basePath + "/" + name;
+    String snapshotStr = storageWriter.read(path);
+    List<SnapshotItem> snapshots = objectConverter.stringToObj(snapshotStr, new TypeReference<>() {
+    });
+    for (Snapshotable s : snapshotables) {
+      for (SnapshotItem i : snapshots) {
+        if (i.getType() == s.getType()) {
+          s.load(i);
+          break;
+        }
+      }
+    }
   }
 
   public void loadLatestSnapshot() {
@@ -51,9 +52,8 @@ public class SnapshotManager {
     if (fileNames.size() > 0){
       String name = fileNames
           .stream()
-          .map(s -> Long.parseLong(s))
-          .sorted()
-          .findFirst()
+          .map(Long::parseLong)
+          .max(Comparator.naturalOrder())
           .map(l -> Long.toString(l))
           .get();
       loadSnapshot(name);
