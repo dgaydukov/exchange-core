@@ -82,8 +82,7 @@ public class SnapshotManagerTest {
     when(accountRepo.create()).thenReturn(accountItem);
 
     String filename = snapshotManager.makeSnapshot();
-    String path = BASE_PATH + "/" + filename;
-    Assertions.assertTrue(new File(path).isFile(), "file should exist");
+    Assertions.assertTrue(new File(BASE_PATH + "/" + filename).isFile(), "file should exist");
     snapshotManager.loadSnapshot(filename);
 
     ArgumentCaptor<SnapshotItem> instrumentArgument = ArgumentCaptor.forClass(SnapshotItem.class);
@@ -114,13 +113,9 @@ public class SnapshotManagerTest {
         storageWriter, BASE_PATH);
     // add 5 orders
     List<Order> orders = new ArrayList<>();
-    long orderId = 0;
-    String symbol = "";
     for (int i = 1; i <= 5; i++){
       Order buy = MockData.getLimitBuy();
-      symbol = buy.getSymbol();
-      orderId = i;
-      buy.setOrderId(orderId);
+      buy.setOrderId(i);
       orders.add(buy);
 
     }
@@ -132,13 +127,40 @@ public class SnapshotManagerTest {
     when(ob.create()).thenReturn(item);
 
     String filename = snapshotManager.makeSnapshot();
-    List<String> symbols = snapshotManager.getSymbols(filename);
-    Assertions.assertEquals(1, symbols.size(), "should be 1 symbol");
-    Assertions.assertEquals(symbol, symbols.get(0), "symbol mismatch");
 
     // validate lastOrderId
     Assertions.assertEquals(0, snapshotManager.getLastOrderId(), "lastOrderId should be 0");
     snapshotManager.loadSnapshot(filename);
-    Assertions.assertEquals(orderId, snapshotManager.getLastOrderId(), "lastOrderId should be "+orderId);
+    Assertions.assertEquals(5, snapshotManager.getLastOrderId(), "lastOrderId should be 5");
+  }
+
+  @Test
+  public void getSymbolsTest(){
+    List<Snapshotable> snapshotables = new ArrayList<>();
+    ObjectConverter converter = new JsonObjectConverter();
+    StorageWriter storageWriter = new FileStorageWriter();
+    Snapshotable instrumentRepo = Mockito.mock(Snapshotable.class);
+    snapshotables.add(instrumentRepo);
+    SnapshotManager snapshotManager = new SnapshotManagerImpl(snapshotables, converter,
+        storageWriter, BASE_PATH);
+    // creating item
+    SnapshotItem item = new SnapshotItem();
+    item.setType(SnapshotType.INSTRUMENT);
+    List<InstrumentConfig> instruments = new ArrayList<>();
+    List<String> symbols = List.of("BTC-USDT", "ETH-USDT", "BTC-ETH");
+    for (String s : symbols) {
+      InstrumentConfig config = MockData.getInstrument();
+      config.setSymbol(s);
+      instruments.add(config);
+    }
+    item.setData(instruments);
+    // update instrument mock
+    when(instrumentRepo.getType()).thenReturn(SnapshotType.INSTRUMENT);
+    when(instrumentRepo.create()).thenReturn(item);
+    String filename = snapshotManager.makeSnapshot();
+    // validate symbol
+    List<String> snapshotSymbols = snapshotManager.getSymbols(filename);
+    Assertions.assertEquals(3, snapshotSymbols.size(), "symbols size should be 3");
+    Assertions.assertEquals(symbols, snapshotSymbols, "symbols mismatch");
   }
 }
