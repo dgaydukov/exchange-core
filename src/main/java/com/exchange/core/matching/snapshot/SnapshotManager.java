@@ -3,6 +3,7 @@ package com.exchange.core.matching.snapshot;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
+import com.exchange.core.model.SnapshotItem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.util.List;

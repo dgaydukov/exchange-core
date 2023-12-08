@@ -1,5 +1,6 @@
-package com.exchange.core.matching.snapshot;
+package com.exchange.core.model;
 
+import com.exchange.core.model.enums.SnapshotType;
 import lombok.Data;
 
 @Data

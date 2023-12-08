@@ -1,4 +1,4 @@
-package com.exchange.core.matching.snapshot;
+package com.exchange.core.model.msg;
 
 import com.exchange.core.model.msg.Message;
 

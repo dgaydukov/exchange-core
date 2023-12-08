@@ -6,6 +6,8 @@ import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
+import com.exchange.core.model.SnapshotItem;
+import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;

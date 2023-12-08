@@ -50,6 +50,7 @@ This concept is implemented in all matching-engines, cause otherwise it won't wo
 Pay attention to development process:
 * We first build `snapshot` package
 * then we covered it by tests, but since we haven't implemented `Snapshotable` we imitate this behavior inside our test. Such approach allows us to develop separately. One can create snapshot code that would be responsible: creating snapshot, storing it into file, recover it from the file, load into the system. And another can actually implement `Snapshotable` into different classes (instruments, accounts, orders). By doing this we can split the work with the help of java interfaces.
+  * Take a look into [SnapshotManagerTest](https://github.com/dgaydukov/exchange-core/blob/master/src/test/java/com/exchange/core/matching/snapshot/SnapshotManagerTest.java) - here you can see that although we don't have any implementation of `Snapshotable` yes, it doesn't stop us from actually test snapshot manager, by mocking this interface. So again this is a nice example of how you can collaborate & distribute tasks within a team, by using java interfaces as a contract between different developers.
 * actually implement `Snapshotable` interface with already existing classes, and add tests for this new interface for already existing tests.
 
 ### Test coverage
