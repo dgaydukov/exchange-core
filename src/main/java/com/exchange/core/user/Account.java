@@ -13,7 +13,6 @@ public class Account {
 
   private int accountId;
   private Map<String, Position> positions;
-  private BigDecimal leverage;
 
   public Account(int accountId) {
     this.accountId = accountId;
