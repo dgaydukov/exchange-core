@@ -3,10 +3,9 @@ package com.exchange.core.repository;
 import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
 
 public class AccountRepositoryTest {
 

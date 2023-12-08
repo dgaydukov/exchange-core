@@ -3,10 +3,9 @@ package com.exchange.core.matching.orderbook.array;
 import com.exchange.core.MockData;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
 
 public class PriceLevelTest {
 

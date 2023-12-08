@@ -8,10 +8,15 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 public class MapOrderBook implements OrderBook, Snapshotable {
 

@@ -8,7 +8,6 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;

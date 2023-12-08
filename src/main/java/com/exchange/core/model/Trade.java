@@ -1,10 +1,9 @@
 package com.exchange.core.model;
 
 import com.exchange.core.model.msg.Order;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor

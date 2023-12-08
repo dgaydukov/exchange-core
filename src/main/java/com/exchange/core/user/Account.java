@@ -1,10 +1,8 @@
 package com.exchange.core.user;
 
-import java.math.BigDecimal;
-import lombok.Data;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data

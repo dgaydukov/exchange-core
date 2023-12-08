@@ -1,16 +1,15 @@
 package com.exchange.core.matching.orderchecks;
 
 import com.exchange.core.matching.counter.GlobalCounter;
-import com.exchange.core.repository.AccountRepository;
-import com.exchange.core.user.Position;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.ErrorMessage;
+import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
-import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.InstrumentRepository;
-
+import com.exchange.core.user.Position;
 import java.math.BigDecimal;
 import java.util.Queue;
 
@@ -79,12 +78,9 @@ public class PreOrderCheckImpl implements PreOrderCheck {
         return false;
       }
       if (order.getSide() == OrderSide.BUY) {
-        if (order.getQuoteOrderQty() == null) {
-          return false;
-        }
-      } else if (order.getOrderQty() == null) {
-        return false;
-      }
+        return order.getQuoteOrderQty() != null;
+      } else
+        return order.getOrderQty() != null;
     }
     return true;
   }

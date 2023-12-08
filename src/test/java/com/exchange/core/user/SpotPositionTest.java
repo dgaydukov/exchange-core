@@ -1,10 +1,9 @@
 package com.exchange.core.user;
 
 import com.exchange.core.exceptions.AppException;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
 
 public class SpotPositionTest {
 

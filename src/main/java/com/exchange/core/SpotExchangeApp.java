@@ -1,23 +1,22 @@
 package com.exchange.core;
 
-import com.exchange.core.model.msg.SnapshotMessage;
-import com.exchange.core.model.msg.UserBalance;
-import com.exchange.core.model.msg.Message;
-import com.exchange.core.model.msg.Order;
-import com.exchange.core.model.msg.InstrumentConfig;
-import com.exchange.core.model.enums.OrderSide;
-import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.matching.MatchingEngine;
 import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
 import com.exchange.core.matching.waitstrategy.WaitStrategy;
-
+import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
+import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.model.msg.Message;
+import com.exchange.core.model.msg.Order;
+import com.exchange.core.model.msg.SnapshotMessage;
+import com.exchange.core.model.msg.UserBalance;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.Queue;
 
 /**
- * This is example how to run matching-engine and communicate with it by sending messages to inbound queue
- * and listening messages from outbound queue
+ * This is example how to run matching-engine and communicate with it by sending messages to inbound
+ * queue and listening messages from outbound queue
  */
 public class SpotExchangeApp {
 

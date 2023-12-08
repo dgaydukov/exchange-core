@@ -7,7 +7,6 @@ import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.enums.SnapshotType;
-import com.exchange.core.model.msg.ErrorMessage;
 import com.exchange.core.model.msg.ExecutionReport;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.msg.MarketData;

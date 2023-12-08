@@ -1,7 +1,6 @@
 package com.exchange.core.repository;
 
 import com.exchange.core.model.msg.InstrumentConfig;
-
 import java.util.List;
 
 public interface InstrumentRepository {

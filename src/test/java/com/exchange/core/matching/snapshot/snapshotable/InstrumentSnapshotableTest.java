@@ -18,18 +18,19 @@ public class InstrumentSnapshotableTest {
   private Snapshotable snapshotable;
 
   @BeforeEach
-  public void initNewInstance(){
+  public void initNewInstance() {
     snapshotable = new InstrumentRepositoryImpl();
   }
 
 
   @Test
-  public void snapshotTypeTest(){
-    Assertions.assertEquals(SnapshotType.INSTRUMENT, snapshotable.getType(), "snapshot type mismatch");
+  public void snapshotTypeTest() {
+    Assertions.assertEquals(SnapshotType.INSTRUMENT, snapshotable.getType(),
+        "snapshot type mismatch");
   }
 
   @Test
-  public void createSnapshotTest(){
+  public void createSnapshotTest() {
     InstrumentRepository repo = (InstrumentRepository) snapshotable;
     InstrumentConfig config = MockData.getInstrument();
     repo.add(config);
@@ -43,7 +44,7 @@ public class InstrumentSnapshotableTest {
   }
 
   @Test
-  public void loadSnapshotTest(){
+  public void loadSnapshotTest() {
     InstrumentConfig config = MockData.getInstrument();
     SnapshotItem item = new SnapshotItem();
     item.setType(SnapshotType.INSTRUMENT);

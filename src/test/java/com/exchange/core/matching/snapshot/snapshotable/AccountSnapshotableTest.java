@@ -16,20 +16,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class AccountSnapshotableTest {
+
   private Snapshotable snapshotable;
 
   @BeforeEach
-  public void initNewInstance(){
+  public void initNewInstance() {
     snapshotable = new AccountRepositoryImpl();
   }
 
   @Test
-  public void snapshotTypeTest(){
+  public void snapshotTypeTest() {
     Assertions.assertEquals(SnapshotType.ACCOUNT, snapshotable.getType(), "snapshot type mismatch");
   }
 
   @Test
-  public void createSnapshotTest(){
+  public void createSnapshotTest() {
     AccountRepository repo = (AccountRepository) snapshotable;
     UserBalance ub = MockData.getUser("BTC");
     repo.addBalance(ub);
@@ -45,7 +46,7 @@ public class AccountSnapshotableTest {
   }
 
   @Test
-  public void loadSnapshotTest(){
+  public void loadSnapshotTest() {
     SnapshotItem item = new SnapshotItem();
     item.setType(SnapshotType.ACCOUNT);
     List<Account> accounts = new ArrayList<>();
@@ -61,6 +62,7 @@ public class AccountSnapshotableTest {
     Account acc = repo.getAccount(ub.getAccount());
     Assertions.assertNotNull(acc);
     Assertions.assertEquals(ub.getAccount(), acc.getAccountId(), "accountId mismatch");
-    Assertions.assertEquals(new Position(ub.getAsset(), ub.getAmount()), acc.getPosition(ub.getAsset()), "accountId mismatch");
+    Assertions.assertEquals(new Position(ub.getAsset(), ub.getAmount()),
+        acc.getPosition(ub.getAsset()), "accountId mismatch");
   }
 }

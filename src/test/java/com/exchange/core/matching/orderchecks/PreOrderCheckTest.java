@@ -1,5 +1,8 @@
 package com.exchange.core.matching.orderchecks;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.exchange.core.MockData;
 import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.model.enums.OrderType;
@@ -10,14 +13,10 @@ import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.Queue;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class PreOrderCheckTest {
 

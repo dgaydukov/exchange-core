@@ -5,7 +5,6 @@ import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.UserBalance;
-
 import java.math.BigDecimal;
 
 public class MockData {

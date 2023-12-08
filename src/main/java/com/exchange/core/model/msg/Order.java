@@ -2,9 +2,8 @@ package com.exchange.core.model.msg;
 
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
-import lombok.Data;
-
 import java.math.BigDecimal;
+import lombok.Data;
 
 @Data
 public class Order implements Message {

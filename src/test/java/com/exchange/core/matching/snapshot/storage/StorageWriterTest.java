@@ -12,22 +12,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class StorageWriterTest {
+
+  private final static String BASE_PATH =
+      System.getProperty("user.dir") + "/test_snapshots_" + System.currentTimeMillis();
   private StorageWriter storageWriter;
-  private final static String BASE_PATH = System.getProperty("user.dir") + "/test_snapshots_" + System.currentTimeMillis();
 
   @BeforeAll
-  public static void init(){
+  public static void init() {
     new File(BASE_PATH).mkdir();
   }
 
-  @BeforeEach
-  public void initNewInstance(){
-    storageWriter = new FileStorageWriter();
+  @AfterAll
+  public static void cleanup() {
+    TestUtils.deleteDirectory(new File(BASE_PATH));
   }
 
-  @AfterAll
-  public static void cleanup(){
-    TestUtils.deleteDirectory(new File(BASE_PATH));
+  @BeforeEach
+  public void initNewInstance() {
+    storageWriter = new FileStorageWriter();
   }
 
   @Test
@@ -55,8 +57,8 @@ public class StorageWriterTest {
     init();
     String filename = storageWriter.getLastModifiedFilename(BASE_PATH);
     Assertions.assertNull(filename);
-    for (int i = 0; i < 10; i++){
-      storageWriter.write(BASE_PATH + "/file_" + i, "content_"+i);
+    for (int i = 0; i < 10; i++) {
+      storageWriter.write(BASE_PATH + "/file_" + i, "content_" + i);
       Thread.sleep(100);
     }
     filename = storageWriter.getLastModifiedFilename(BASE_PATH);
@@ -64,6 +66,7 @@ public class StorageWriterTest {
     String lastFileName = "file_9";
     String lastFileContent = "content_9";
     Assertions.assertEquals(lastFileName, filename, "last filename mismatch");
-    Assertions.assertEquals(lastFileContent, storageWriter.read(BASE_PATH+"/"+lastFileName), "last file content mismatch");
+    Assertions.assertEquals(lastFileContent, storageWriter.read(BASE_PATH + "/" + lastFileName),
+        "last file content mismatch");
   }
 }

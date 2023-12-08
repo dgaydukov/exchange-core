@@ -7,15 +7,14 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class OrderBookTest {
 
@@ -206,15 +205,15 @@ public class OrderBookTest {
     Assertions.assertEquals(new BigDecimal("1500"), trade2.getTradeAmount(),
         "tradeAmount should be 1500");
     Trade trade3 = trades.get(2);
-    Assertions.assertTrue(trade3.getTradeQty().compareTo(new BigDecimal("2.5")) == 0,
+    Assertions.assertEquals(0, trade3.getTradeQty().compareTo(new BigDecimal("2.5")),
         "tradeQty should be 2.5");
-    Assertions.assertTrue(trade3.getTradePrice().compareTo(new BigDecimal("200")) == 0,
+    Assertions.assertEquals(0, trade3.getTradePrice().compareTo(new BigDecimal("200")),
         "tradePrice should be 200");
-    Assertions.assertTrue(trade3.getTradeAmount().compareTo(new BigDecimal("500")) == 0,
+    Assertions.assertEquals(0, trade3.getTradeAmount().compareTo(new BigDecimal("500")),
         "tradeAmount should be 500");
-    Assertions.assertTrue(trade3.getTaker().getLeavesQty().compareTo(new BigDecimal("0")) == 0,
+    Assertions.assertEquals(0, trade3.getTaker().getLeavesQty().compareTo(new BigDecimal("0")),
         "taker leavesQty should be 0");
-    Assertions.assertTrue(trade3.getMaker().getLeavesQty().compareTo(new BigDecimal("7.5")) == 0,
+    Assertions.assertEquals(0, trade3.getMaker().getLeavesQty().compareTo(new BigDecimal("7.5")),
         "maker leavesQty should be 7.5");
   }
 

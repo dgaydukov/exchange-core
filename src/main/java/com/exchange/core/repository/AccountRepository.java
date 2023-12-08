@@ -1,9 +1,8 @@
 package com.exchange.core.repository;
 
+import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import com.exchange.core.model.msg.UserBalance;
-
 import java.util.List;
 
 public interface AccountRepository {

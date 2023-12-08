@@ -1,9 +1,8 @@
 package com.exchange.core.model.msg;
 
 import com.exchange.core.model.enums.OrderStatus;
-import lombok.Data;
-
 import java.math.BigDecimal;
+import lombok.Data;
 
 @Data
 public class ExecutionReport implements Message {

@@ -2,11 +2,11 @@ package com.exchange.core.matching.orderbook.array;
 
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import lombok.Getter;
-
-import java.math.BigDecimal;
-import java.util.*;
 
 @Data
 public class PriceLevel {

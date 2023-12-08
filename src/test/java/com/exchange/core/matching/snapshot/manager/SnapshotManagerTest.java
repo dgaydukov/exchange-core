@@ -1,5 +1,8 @@
 package com.exchange.core.matching.snapshot.manager;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.exchange.core.MockData;
 import com.exchange.core.TestUtils;
 import com.exchange.core.exceptions.AppException;
@@ -24,34 +27,37 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.*;
-
 public class SnapshotManagerTest {
-  private final static String BASE_PATH = System.getProperty("user.dir") + "/test_snapshots_" + System.currentTimeMillis();
+
+  private final static String BASE_PATH =
+      System.getProperty("user.dir") + "/test_snapshots_" + System.currentTimeMillis();
 
   @BeforeAll
-  public static void init(){
+  public static void init() {
     new File(BASE_PATH).mkdir();
   }
 
   @AfterAll
-  public static void cleanup(){
+  public static void cleanup() {
     TestUtils.deleteDirectory(new File(BASE_PATH));
   }
 
   @Test
-  public void loadSnapshotTest(){
+  public void loadSnapshotTest() {
     List<Snapshotable> snapshotables = new ArrayList<>();
     ObjectConverter converter = new JsonObjectConverter();
     StorageWriter storageWriter = new FileStorageWriter();
     AppException initException = Assertions.assertThrows(AppException.class, () ->
-        new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH), "Exception should be thrown");
-    Assertions.assertEquals("List of Snapshotable should be provided", initException.getMessage(), "Exception message mismatch");
+            new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH),
+        "Exception should be thrown");
+    Assertions.assertEquals("List of Snapshotable should be provided", initException.getMessage(),
+        "Exception message mismatch");
     Snapshotable instrumentRepo = Mockito.mock(Snapshotable.class);
     Snapshotable accountRepo = Mockito.mock(Snapshotable.class);
     snapshotables.add(instrumentRepo);
     snapshotables.add(accountRepo);
-    SnapshotManager snapshotManager = new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH);
+    SnapshotManager snapshotManager = new SnapshotManagerImpl(snapshotables, converter,
+        storageWriter, BASE_PATH);
 
     SnapshotItem instrumentItem = new SnapshotItem();
     instrumentItem.setType(SnapshotType.INSTRUMENT);
@@ -83,9 +89,10 @@ public class SnapshotManagerTest {
     verify(instrumentRepo).load(instrumentArgument.capture());
     SnapshotItem argumentInstrumentItem = instrumentArgument.getValue();
     Assertions.assertNotNull(argumentInstrumentItem.getType());
-    Assertions.assertEquals(SnapshotType.INSTRUMENT, argumentInstrumentItem.getType(), "type mismatch");
-    Assertions.assertEquals(instruments, argumentInstrumentItem.getData(), "instrument list mismatch");
-
+    Assertions.assertEquals(SnapshotType.INSTRUMENT, argumentInstrumentItem.getType(),
+        "type mismatch");
+    Assertions.assertEquals(instruments, argumentInstrumentItem.getData(),
+        "instrument list mismatch");
 
     ArgumentCaptor<SnapshotItem> accountArgument = ArgumentCaptor.forClass(SnapshotItem.class);
     verify(accountRepo).load(accountArgument.capture());

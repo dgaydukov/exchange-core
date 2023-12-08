@@ -1,22 +1,28 @@
 package com.exchange.core.matching.orderchecks;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.exchange.core.MockData;
 import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
-import com.exchange.core.model.msg.*;
+import com.exchange.core.model.msg.ExecutionReport;
+import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.model.msg.MarketData;
+import com.exchange.core.model.msg.Message;
+import com.exchange.core.model.msg.Order;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.user.Position;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Queue;
-
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 public class PostOrderCheckTest {
 

@@ -7,12 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
-import java.util.List;
 
 public class FileStorageWriter implements StorageWriter {
 
@@ -44,12 +39,12 @@ public class FileStorageWriter implements StorageWriter {
   @Override
   public String getLastModifiedFilename(String path) {
     File[] files = new File(path).listFiles();
-    if (files == null || files.length == 0){
+    if (files == null || files.length == 0) {
       return null;
     }
     return Arrays.stream(files)
         .filter(File::isFile)
-        .sorted((f1, f2)-> Math.toIntExact(f2.lastModified() - f1.lastModified()))
+        .sorted((f1, f2) -> Math.toIntExact(f2.lastModified() - f1.lastModified()))
         .map(File::getName)
         .findFirst()
         .get();

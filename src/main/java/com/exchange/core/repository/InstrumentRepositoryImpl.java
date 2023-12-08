@@ -4,7 +4,6 @@ import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.InstrumentConfig;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

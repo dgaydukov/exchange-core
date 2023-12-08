@@ -1,8 +1,7 @@
 package com.exchange.core.model.msg;
 
-import lombok.Data;
-
 import java.math.BigDecimal;
+import lombok.Data;
 
 @Data
 public class UserBalance implements Message {

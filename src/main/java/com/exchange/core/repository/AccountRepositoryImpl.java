@@ -3,10 +3,9 @@ package com.exchange.core.repository;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.SnapshotType;
+import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
-import com.exchange.core.model.msg.UserBalance;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class AtomicGlobalCounter implements GlobalCounter {
 
-  private AtomicLong orderId = new AtomicLong();
-  private AtomicLong executionId = new AtomicLong();
+  private final AtomicLong orderId = new AtomicLong();
+  private final AtomicLong executionId = new AtomicLong();
 
   @Override
   public long getNextOrderId() {

@@ -10,10 +10,10 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
-import com.exchange.core.matching.snapshot.manager.SnapshotManager;
-import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
+import com.exchange.core.matching.snapshot.manager.SnapshotManager;
+import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
@@ -21,12 +21,16 @@ import com.exchange.core.matching.waitstrategy.WaitStrategy;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderBookType;
 import com.exchange.core.model.enums.OrderType;
-import com.exchange.core.model.msg.*;
+import com.exchange.core.model.msg.ErrorMessage;
+import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.model.msg.Message;
+import com.exchange.core.model.msg.Order;
+import com.exchange.core.model.msg.SnapshotMessage;
+import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
-
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -56,7 +60,8 @@ public class MatchingEngine {
     this(inbound, outbound, OrderBookType.MAP, true);
   }
 
-  public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound, OrderBookType orderBookType, boolean printInboundMsg) {
+  public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound,
+      OrderBookType orderBookType, boolean printInboundMsg) {
     orderBooks = new HashMap<>();
     accountRepository = new AccountRepositoryImpl();
     instrumentRepository = new InstrumentRepositoryImpl();
@@ -83,28 +88,29 @@ public class MatchingEngine {
     new Thread(this::run, "MatchingThread").start();
   }
 
-  private void loadSnapshot(){
+  private void loadSnapshot() {
     File file = new File(SNAPSHOT_BASE_DIR);
-    if (!file.exists()){
-      System.out.println("Creating snapshot directory: path="+file);
+    if (!file.exists()) {
+      System.out.println("Creating snapshot directory: path=" + file);
       file.mkdir();
     }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
-    if (filename != null){
+    if (filename != null) {
       // create order books
-      System.out.println("Loading snapshot: name="+filename);
+      System.out.println("Loading snapshot: name=" + filename);
       snapshotManager.getSymbols(filename).forEach(symbol -> {
-        System.out.println("Adding order book: symbol="+symbol);
+        System.out.println("Adding order book: symbol=" + symbol);
         addOrderBook(symbol);
       });
       // load snapshots
       snapshotManager.loadSnapshot(filename);
       // update counter for next orderId
       long lastOrderId = snapshotManager.getLastOrderId(filename);
-      System.out.println("Updating counter: lastOrderId="+lastOrderId);
-      while (lastOrderId != counter.getNextOrderId()){}
+      System.out.println("Updating counter: lastOrderId=" + lastOrderId);
+      while (lastOrderId != counter.getNextOrderId()) {
+      }
 
-      System.out.println("Loaded snapshot: name="+filename);
+      System.out.println("Loaded snapshot: name=" + filename);
     }
   }
 
@@ -113,8 +119,9 @@ public class MatchingEngine {
     while (true) {
       Message msg = inbound.poll();
       if (msg != null) {
-        if(printInboundMsg)
+        if (printInboundMsg) {
           System.out.println("inbound => " + msg);
+        }
         try {
           process(msg);
         } catch (Exception ex) {
@@ -145,15 +152,15 @@ public class MatchingEngine {
     addOrderBook(symbol);
   }
 
-  private void addOrderBook(String symbol){
+  private void addOrderBook(String symbol) {
     OrderBook ob = createNewOrderBook(symbol);
     orderBooks.put(symbol, ob);
     snapshotables.add((Snapshotable) ob);
 
   }
 
-  private OrderBook createNewOrderBook(String symbol){
-    return switch (orderBookType){
+  private OrderBook createNewOrderBook(String symbol) {
+    return switch (orderBookType) {
       case MAP -> new MapOrderBook(symbol);
       case ARRAY -> new ArrayOrderBook(symbol);
     };
