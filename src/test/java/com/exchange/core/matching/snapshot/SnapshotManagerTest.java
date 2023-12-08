@@ -92,11 +92,7 @@ public class SnapshotManagerTest {
     SnapshotItem argumentInstrumentItem = instrumentArgument.getValue();
     Assertions.assertNotNull(argumentInstrumentItem.getType());
     Assertions.assertEquals(SnapshotType.INSTRUMENT, argumentInstrumentItem.getType(), "type mismatch");
-    List<InstrumentConfig> instruments2 = converter.stringToObj(
-        converter.objToString(argumentInstrumentItem.getData()),
-        new TypeReference<>() {
-        });
-    Assertions.assertEquals(instruments, instruments2, "instrument list mismatch");
+    Assertions.assertEquals(instruments, argumentInstrumentItem.getData(), "instrument list mismatch");
 
 
     ArgumentCaptor<SnapshotItem> accountArgument = ArgumentCaptor.forClass(SnapshotItem.class);
@@ -104,11 +100,6 @@ public class SnapshotManagerTest {
     SnapshotItem argumentAccountItem = accountArgument.getValue();
     Assertions.assertNotNull(argumentAccountItem);
     Assertions.assertEquals(SnapshotType.ACCOUNT, argumentAccountItem.getType(), "type mismatch");
-    System.out.println(argumentAccountItem.getData());
-    List<Account> accounts2 = converter.stringToObj(
-        converter.objToString(argumentAccountItem.getData()),
-        new TypeReference<>() {
-        });
-    Assertions.assertEquals(accounts, accounts2, "account list mismatch");
+    Assertions.assertEquals(accounts, argumentAccountItem.getData(), "account list mismatch");
   }
 }
