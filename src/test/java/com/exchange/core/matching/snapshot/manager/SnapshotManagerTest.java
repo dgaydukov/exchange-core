@@ -14,6 +14,7 @@ import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.model.msg.Order;
 import com.exchange.core.user.Account;
 import com.exchange.core.user.Position;
 import java.io.File;
@@ -100,5 +101,44 @@ public class SnapshotManagerTest {
     Assertions.assertNotNull(argumentAccountItem);
     Assertions.assertEquals(SnapshotType.ACCOUNT, argumentAccountItem.getType(), "type mismatch");
     Assertions.assertEquals(accounts, argumentAccountItem.getData(), "account list mismatch");
+  }
+
+  @Test
+  public void lastOrderIdTest(){
+    List<Snapshotable> snapshotables = new ArrayList<>();
+    ObjectConverter converter = new JsonObjectConverter();
+    StorageWriter storageWriter = new FileStorageWriter();
+    Snapshotable ob = Mockito.mock(Snapshotable.class);
+    snapshotables.add(ob);
+    SnapshotManager snapshotManager = new SnapshotManagerImpl(snapshotables, converter,
+        storageWriter, BASE_PATH);
+    // add 5 orders
+    List<Order> orders = new ArrayList<>();
+    long orderId = 0;
+    String symbol = "";
+    for (int i = 1; i <= 5; i++){
+      Order buy = MockData.getLimitBuy();
+      symbol = buy.getSymbol();
+      orderId = i;
+      buy.setOrderId(orderId);
+      orders.add(buy);
+
+    }
+    SnapshotItem item = new SnapshotItem();
+    item.setType(SnapshotType.ORDER_BOOK);
+    item.setData(orders);
+    // update instrument mock
+    when(ob.getType()).thenReturn(item.getType());
+    when(ob.create()).thenReturn(item);
+
+    String filename = snapshotManager.makeSnapshot();
+    List<String> symbols = snapshotManager.getSymbols(filename);
+    Assertions.assertEquals(1, symbols.size(), "should be 1 symbol");
+    Assertions.assertEquals(symbol, symbols.get(0), "symbol mismatch");
+
+    // validate lastOrderId
+    Assertions.assertEquals(0, snapshotManager.getLastOrderId(), "lastOrderId should be 0");
+    snapshotManager.loadSnapshot(filename);
+    Assertions.assertEquals(orderId, snapshotManager.getLastOrderId(), "lastOrderId should be "+orderId);
   }
 }
