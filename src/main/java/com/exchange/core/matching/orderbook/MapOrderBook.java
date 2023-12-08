@@ -1,8 +1,11 @@
 package com.exchange.core.matching.orderbook;
 
 import com.exchange.core.config.AppConstants;
+import com.exchange.core.matching.snapshot.Snapshotable;
+import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 
@@ -10,7 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
-public class MapOrderBook implements OrderBook {
+public class MapOrderBook implements OrderBook, Snapshotable {
 
   private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>(
       Comparator.reverseOrder());
@@ -151,5 +154,27 @@ public class MapOrderBook implements OrderBook {
     md.setBids(bids);
     md.setAsks(asks);
     return md;
+  }
+
+  @Override
+  public SnapshotType getType() {
+    return SnapshotType.ORDER_BOOK;
+  }
+
+  @Override
+  public SnapshotItem create() {
+    List<Order> orders = new ArrayList<>();
+    bids.values().forEach(orders::addAll);
+    asks.values().forEach(orders::addAll);
+    SnapshotItem item = new SnapshotItem();
+    item.setType(getType());
+    item.setData(orders);
+    return item;
+  }
+
+  @Override
+  public void load(SnapshotItem data) {
+    ((List<Order>) data.getData())
+        .forEach(this::add);
   }
 }
