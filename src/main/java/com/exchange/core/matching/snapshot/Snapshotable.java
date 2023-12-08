@@ -1,6 +1,7 @@
 package com.exchange.core.matching.snapshot;
 
 public interface Snapshotable {
-  SnapshotItem download();
-  void upload(SnapshotItem data);
+  SnapshotType getType();
+  SnapshotItem create();
+  void load(SnapshotItem data);
 }

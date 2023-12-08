@@ -3,9 +3,12 @@ package com.exchange.core.matching.snapshot.storage;
 import com.exchange.core.exceptions.AppException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class FileStorageWriter implements StorageWriter {
 
@@ -32,5 +35,14 @@ public class FileStorageWriter implements StorageWriter {
     } catch (IOException ex) {
       throw new AppException("Failed to read: path=" + path);
     }
+  }
+
+  @Override
+  public List<String> getAllFileNames(String path) {
+    return Arrays.stream(new File(path)
+        .listFiles())
+        .filter(File::isFile)
+        .map(File::getName)
+        .toList();
   }
 }
