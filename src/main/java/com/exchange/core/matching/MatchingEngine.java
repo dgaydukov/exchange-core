@@ -10,6 +10,7 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
+import com.exchange.core.matching.snapshot.manager.SnapshotManager;
 import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
@@ -45,7 +46,7 @@ public class MatchingEngine {
   private final Queue<Message> inbound;
   private final Queue<Message> outbound;
   private final OrderBookType orderBookType;
-  private final SnapshotManagerImpl snapshotManager;
+  private final SnapshotManager snapshotManager;
   private final List<Snapshotable> snapshotables;
   private final StorageWriter storageWriter;
   private final boolean printInboundMsg;
@@ -90,17 +91,19 @@ public class MatchingEngine {
     }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null){
+      // create order books
       System.out.println("Loading snapshot: name="+filename);
       snapshotManager.getSymbols(filename).forEach(symbol -> {
         System.out.println("Adding order book: symbol="+symbol);
         addOrderBook(symbol);
       });
-
+      // load snapshots
+      snapshotManager.loadSnapshot(filename);
+      // update counter for next orderId
       long lastOrderId = snapshotManager.getLastOrderId(filename);
       System.out.println("Updating counter: lastOrderId="+lastOrderId);
       while (lastOrderId != counter.getNextOrderId()){}
 
-      snapshotManager.loadSnapshot(filename);
       System.out.println("Loaded snapshot: name="+filename);
     }
   }

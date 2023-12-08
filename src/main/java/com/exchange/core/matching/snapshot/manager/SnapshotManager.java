@@ -1,6 +1,5 @@
 package com.exchange.core.matching.snapshot.manager;
 
-import com.exchange.core.model.SnapshotItem;
 import java.util.List;
 
 public interface SnapshotManager {

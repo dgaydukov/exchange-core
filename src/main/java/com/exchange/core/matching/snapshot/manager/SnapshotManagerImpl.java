@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class SnapshotManagerImpl {
+public class SnapshotManagerImpl implements SnapshotManager {
 
   private final List<Snapshotable> snapshotables;
   private final ObjectConverter converter;
@@ -23,7 +23,7 @@ public class SnapshotManagerImpl {
 
   public SnapshotManagerImpl(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
       StorageWriter storageWriter, String basePath) {
-    if (snapshotables.size() == 0){
+    if (snapshotables.size() == 0) {
       throw new AppException("List of Snapshotable should be provided");
     }
     this.snapshotables = snapshotables;
@@ -32,18 +32,20 @@ public class SnapshotManagerImpl {
     this.basePath = basePath;
   }
 
+  @Override
   public String makeSnapshot() {
     List<SnapshotItem> snapshots = new ArrayList<>();
     for (Snapshotable s : snapshotables) {
       snapshots.add(s.create());
     }
     String snapshotStr = converter.objToString(snapshots);
-    String filename = "snap_"+System.currentTimeMillis();
+    String filename = "snap_" + System.currentTimeMillis();
     String path = basePath + "/" + filename;
     storageWriter.write(path, snapshotStr);
     return filename;
   }
 
+  @Override
   public void loadSnapshot(String name) {
     List<SnapshotItem> snapshots = loadSnapshots(name);
     for (Snapshotable s : snapshotables) {
@@ -57,15 +59,51 @@ public class SnapshotManagerImpl {
     }
   }
 
-  private List<SnapshotItem> loadSnapshots(String name){
+
+  @Override
+  public List<String> getSymbols(String name) {
+    List<String> symbols = new ArrayList<>();
+    Object instruments = loadSnapshots(name)
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.INSTRUMENT)
+        .findFirst()
+        .map(this::cast)
+        .orElse(null);
+    if (instruments != null) {
+      ((List<InstrumentConfig>) instruments)
+          .forEach(i -> symbols.add(i.getSymbol()));
+    }
+    return symbols;
+  }
+
+  @Override
+  public long getLastOrderId(String name) {
+    long lastOrderId = 0;
+    Object orders = loadSnapshots(name)
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.ORDER_BOOK)
+        .findFirst()
+        .map(this::cast)
+        .orElse(null);
+    if (orders != null) {
+      lastOrderId = ((List<Order>) orders)
+          .stream()
+          .map(Order::getOrderId)
+          .max(Comparator.naturalOrder())
+          .get();
+    }
+    return lastOrderId;
+  }
+
+  private List<SnapshotItem> loadSnapshots(String name) {
     String path = basePath + "/" + name;
     String snapshotStr = storageWriter.read(path);
     return converter.stringToObj(snapshotStr, new TypeReference<>() {
     });
   }
 
-  private Object cast(SnapshotItem item){
-    return switch (item.getType()){
+  private Object cast(SnapshotItem item) {
+    return switch (item.getType()) {
       case ACCOUNT -> converter.stringToObj(
           converter.objToString(item.getData()),
           new TypeReference<List<Account>>() {
@@ -79,37 +117,5 @@ public class SnapshotManagerImpl {
           new TypeReference<List<Order>>() {
           });
     };
-  }
-
-  public List<String> getSymbols(String name){
-    List<String> symbols = new ArrayList<>();
-    Object instruments = loadSnapshots(name)
-        .stream()
-        .filter(s -> s.getType() == SnapshotType.INSTRUMENT)
-        .findFirst()
-        .map(this::cast)
-        .orElse(null);
-    if (instruments != null){
-      ((List<InstrumentConfig>)instruments)
-          .forEach(i -> symbols.add(i.getSymbol()));
-    }
-    return symbols;
-  }
-  public long getLastOrderId(String name){
-    long lastOrderId = 0;
-    Object orders = loadSnapshots(name)
-        .stream()
-        .filter(s -> s.getType() == SnapshotType.ORDER_BOOK)
-        .findFirst()
-        .map(this::cast)
-        .orElse(null);
-    if (orders != null){
-      lastOrderId = ((List<Order>)orders)
-          .stream()
-          .map(Order::getOrderId)
-          .max(Comparator.naturalOrder())
-          .get();
-    }
-    return lastOrderId;
   }
 }

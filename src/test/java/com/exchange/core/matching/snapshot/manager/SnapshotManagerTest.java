@@ -1,11 +1,11 @@
-package com.exchange.core.matching.snapshot;
+package com.exchange.core.matching.snapshot.manager;
 
 import com.exchange.core.MockData;
 import com.exchange.core.TestUtils;
 import com.exchange.core.exceptions.AppException;
+import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
-import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.model.SnapshotItem;
@@ -51,7 +51,7 @@ public class SnapshotManagerTest {
     Snapshotable accountRepo = Mockito.mock(Snapshotable.class);
     snapshotables.add(instrumentRepo);
     snapshotables.add(accountRepo);
-    SnapshotManagerImpl snapshotManager = new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH);
+    SnapshotManager snapshotManager = new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH);
 
     SnapshotItem instrumentItem = new SnapshotItem();
     instrumentItem.setType(SnapshotType.INSTRUMENT);
