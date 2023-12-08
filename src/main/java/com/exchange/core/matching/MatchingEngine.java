@@ -10,7 +10,7 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheckImpl;
-import com.exchange.core.matching.snapshot.SnapshotManager;
+import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
 import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
@@ -45,7 +45,7 @@ public class MatchingEngine {
   private final Queue<Message> inbound;
   private final Queue<Message> outbound;
   private final OrderBookType orderBookType;
-  private final SnapshotManager snapshotManager;
+  private final SnapshotManagerImpl snapshotManager;
   private final List<Snapshotable> snapshotables;
   private final StorageWriter storageWriter;
   private final boolean printInboundMsg;
@@ -72,7 +72,7 @@ public class MatchingEngine {
     snapshotables.add((Snapshotable) accountRepository);
     snapshotables.add((Snapshotable) instrumentRepository);
     storageWriter = new FileStorageWriter();
-    snapshotManager = new SnapshotManager(snapshotables,
+    snapshotManager = new SnapshotManagerImpl(snapshotables,
         new JsonObjectConverter(), storageWriter, SNAPSHOT_BASE_DIR);
   }
 

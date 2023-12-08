@@ -5,6 +5,7 @@ import com.exchange.core.TestUtils;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.snapshot.converter.JsonObjectConverter;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
+import com.exchange.core.matching.snapshot.manager.SnapshotManagerImpl;
 import com.exchange.core.matching.snapshot.storage.FileStorageWriter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.model.SnapshotItem;
@@ -44,13 +45,13 @@ public class SnapshotManagerTest {
     ObjectConverter converter = new JsonObjectConverter();
     StorageWriter storageWriter = new FileStorageWriter();
     AppException initException = Assertions.assertThrows(AppException.class, () ->
-        new SnapshotManager(snapshotables, converter, storageWriter, BASE_PATH), "Exception should be thrown");
+        new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH), "Exception should be thrown");
     Assertions.assertEquals("List of Snapshotable should be provided", initException.getMessage(), "Exception message mismatch");
     Snapshotable instrumentRepo = Mockito.mock(Snapshotable.class);
     Snapshotable accountRepo = Mockito.mock(Snapshotable.class);
     snapshotables.add(instrumentRepo);
     snapshotables.add(accountRepo);
-    SnapshotManager snapshotManager = new SnapshotManager(snapshotables, converter, storageWriter, BASE_PATH);
+    SnapshotManagerImpl snapshotManager = new SnapshotManagerImpl(snapshotables, converter, storageWriter, BASE_PATH);
 
     SnapshotItem instrumentItem = new SnapshotItem();
     instrumentItem.setType(SnapshotType.INSTRUMENT);

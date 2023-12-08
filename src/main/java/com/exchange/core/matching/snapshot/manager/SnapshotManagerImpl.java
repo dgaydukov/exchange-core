@@ -1,6 +1,7 @@
-package com.exchange.core.matching.snapshot;
+package com.exchange.core.matching.snapshot.manager;
 
 import com.exchange.core.exceptions.AppException;
+import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.model.SnapshotItem;
@@ -13,14 +14,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class SnapshotManager {
+public class SnapshotManagerImpl {
 
   private final List<Snapshotable> snapshotables;
   private final ObjectConverter converter;
   private final StorageWriter storageWriter;
   private final String basePath;
 
-  public SnapshotManager(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
+  public SnapshotManagerImpl(List<Snapshotable> snapshotables, ObjectConverter objectConverter,
       StorageWriter storageWriter, String basePath) {
     if (snapshotables.size() == 0){
       throw new AppException("List of Snapshotable should be provided");
