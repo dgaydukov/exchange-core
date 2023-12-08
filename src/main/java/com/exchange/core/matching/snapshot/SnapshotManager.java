@@ -2,6 +2,7 @@ package com.exchange.core.matching.snapshot;
 
 import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,17 +32,18 @@ public class SnapshotManager {
   }
 
   public void loadSnapshot(String name) {
-    String path = basePath + "/" + name;
-    String snapshotStr = storageWriter.read(path);
-    List<SnapshotItem> snapshots = (List<SnapshotItem>) objectConverter.stringToObj(snapshotStr);
-    for (Snapshotable s : snapshotables) {
-      for (SnapshotItem i : snapshots) {
-        if (i.getType() == s.getType()) {
-          s.load(i);
-          break;
-        }
-      }
-    }
+//    String path = basePath + "/" + name;
+//    String snapshotStr = storageWriter.read(path);
+//    List<SnapshotItem> snapshots = objectConverter.stringToObj(snapshotStr, new TypeReference<>() {
+//    });
+//    for (Snapshotable s : snapshotables) {
+//      for (SnapshotItem i : snapshots) {
+//        if (i.getType() == s.getType()) {
+//          s.load(i);
+//          break;
+//        }
+//      }
+//    }
   }
 
   public void loadLatestSnapshot() {

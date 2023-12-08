@@ -47,6 +47,10 @@ Any of these 3 would require to restart (stop & start) our java app, and once we
 This concept is implemented in all matching-engines, cause otherwise it won't work properly. Below is a set of rules how we implement it here:
 * storage: store snapshot in files
 * format: use raw json as format
+Pay attention to development process:
+* We first build `snapshot` package
+* then we covered it by tests, but since we haven't implemented `Snapshotable` we imitate this behavior inside our test. Such approach allows us to develop separately. One can create snapshot code that would be responsible: creating snapshot, storing it into file, recover it from the file, load into the system. And another can actually implement `Snapshotable` into different classes (instruments, accounts, orders). By doing this we can split the work with the help of java interfaces.
+* actually implement `Snapshotable` interface with already existing classes, and add tests for this new interface for already existing tests.
 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our core part a lot with both unit testing & integration testing.
