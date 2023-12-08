@@ -8,5 +8,5 @@ public interface StorageWriter {
 
   String read(String path);
 
-  List<String> getAllFileNames(String path);
+  String getLastModifiedFilename(String path);
 }

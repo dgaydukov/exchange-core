@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -61,16 +59,20 @@ public class StorageWriterTest {
   }
 
   @Test
-  public void getAllFileNamesTest() throws IOException {
-    List<String> fileNames = new ArrayList<>();
+  public void getLastModifiedFilenameTest() throws InterruptedException {
+    cleanup();
+    init();
+    String filename = storageWriter.getLastModifiedFilename(BASE_PATH);
+    Assertions.assertNull(filename);
     for (int i = 0; i < 10; i++){
-      String name = "file_"+i;
-      fileNames.add(name);
-      new File(BASE_PATH+"/"+name).createNewFile();
+      storageWriter.write(BASE_PATH + "/file_" + i, "content_"+i);
+      Thread.sleep(100);
     }
-    List<String> list = storageWriter.getAllFileNames(BASE_PATH)
-            .stream().sorted().toList();
-    Assertions.assertEquals(10, list.size(), "size should be 10");
-    Assertions.assertIterableEquals(fileNames, list, "names mismatch");
+    filename = storageWriter.getLastModifiedFilename(BASE_PATH);
+    Assertions.assertNotNull(filename);
+    String lastFileName = "file_9";
+    String lastFileContent = "content_9";
+    Assertions.assertEquals(lastFileName, filename, "last filename mismatch");
+    Assertions.assertEquals(lastFileContent, storageWriter.read(BASE_PATH+"/"+lastFileName), "last file content mismatch");
   }
 }

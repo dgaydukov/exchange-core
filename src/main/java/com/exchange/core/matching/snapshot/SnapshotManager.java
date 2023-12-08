@@ -5,7 +5,6 @@ import com.exchange.core.matching.snapshot.converter.ObjectConverter;
 import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class SnapshotManager {
@@ -50,19 +49,6 @@ public class SnapshotManager {
           break;
         }
       }
-    }
-  }
-
-  public void loadLatestSnapshot() {
-    List<String> fileNames = storageWriter.getAllFileNames(basePath);
-    if (fileNames.size() > 0){
-      String name = fileNames
-          .stream()
-          .map(Long::parseLong)
-          .max(Comparator.naturalOrder())
-          .map(l -> Long.toString(l))
-          .get();
-      loadSnapshot(name);
     }
   }
 }
