@@ -1,5 +1,6 @@
 package com.exchange.core;
 
+import com.exchange.core.model.msg.SnapshotMessage;
 import com.exchange.core.model.msg.UserBalance;
 import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
@@ -79,5 +80,7 @@ public class SpotExchangeApp {
     sell.setOrderQty(new BigDecimal("3"));
     sell.setAccount(userBalance2.getAccount());
     inbound.add(sell);
+    // send snapshot message to make snapshot
+    inbound.add(new SnapshotMessage());
   }
 }

@@ -6,6 +6,7 @@ import com.exchange.core.matching.snapshot.storage.StorageWriter;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.InstrumentConfig;
+import com.exchange.core.model.msg.Order;
 import com.exchange.core.user.Account;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
@@ -67,7 +68,10 @@ public class SnapshotManager {
           converter.objToString(item.getData()),
           new TypeReference<List<InstrumentConfig>>() {
           });
-      case ORDER_BOOK -> new Object();
+      case ORDER_BOOK -> converter.stringToObj(
+          converter.objToString(item.getData()),
+          new TypeReference<List<Order>>() {
+          });
     };
   }
 }

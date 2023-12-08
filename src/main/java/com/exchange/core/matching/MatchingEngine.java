@@ -26,6 +26,7 @@ import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,6 +76,10 @@ public class MatchingEngine {
   }
 
   public void start() {
+    File file = new File(SNAPSHOT_BASE_PATH);
+    if (!file.exists()){
+      file.mkdir();
+    }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_PATH);
     if (filename != null){
       System.out.println("Loading data from snapshot: name="+filename);
