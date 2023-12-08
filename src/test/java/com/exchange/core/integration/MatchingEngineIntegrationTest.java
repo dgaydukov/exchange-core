@@ -3,10 +3,21 @@ package com.exchange.core.integration;
 import com.exchange.core.MockData;
 import com.exchange.core.TestUtils;
 import com.exchange.core.matching.MatchingEngine;
+import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
+import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.*;
+import com.exchange.core.user.Account;
+import com.exchange.core.user.Position;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +26,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class MatchingEngineIntegrationTest {
+  private final String SNAPSHOT_BASE_DIR = System.getProperty("user.dir") + "/snapshots";
 
   @Test
   public void invalidSymbolTest() {
@@ -176,9 +188,8 @@ public class MatchingEngineIntegrationTest {
   }
 
   @Test
-  public void snapshotTest() throws InterruptedException {
-    String basePath = System.getProperty("user.dir") + "/snapshots";
-    File baseDir = new File(basePath);
+  public void makeSnapshotTest() throws InterruptedException, IOException {
+    File baseDir = new File(SNAPSHOT_BASE_DIR);
     TestUtils.deleteDirectory(baseDir);
     Assertions.assertFalse(baseDir.exists());
 
@@ -190,8 +201,8 @@ public class MatchingEngineIntegrationTest {
     InstrumentConfig inst = MockData.getInstrument();
     inbound.add(inst);
     // add balance
-    UserBalance user = MockData.getUser(inst.getQuote());
-    inbound.add(user);
+    UserBalance ub = MockData.getUser(inst.getQuote());
+    inbound.add(ub);
     // add order
     Order buy = MockData.getLimitBuy();
     inbound.add(buy);
@@ -201,9 +212,68 @@ public class MatchingEngineIntegrationTest {
     // validate that directory is empty
     Assertions.assertEquals(0, baseDir.listFiles().length, "directory should be empty");
     inbound.add(new SnapshotMessage());
-    Thread.sleep(100);
-    Assertions.assertEquals(1, baseDir.listFiles().length, "1 file should be inside directory");
+    Thread.sleep(200);
+    File[] files = baseDir.listFiles();
+    Assertions.assertEquals(1, files.length, "1 file should be inside directory");
     // manually read file and see if all data is there
+    File snapshotFile = files[0];
+    BufferedReader reader = new BufferedReader(new FileReader(snapshotFile));
+    String content = reader.readLine();
+    reader.close();
+    final ObjectMapper mapper = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    List<SnapshotItem> snapshotItems = mapper.readValue(content, new TypeReference<>() {});
+    Assertions.assertEquals(3, snapshotItems.size(), "should be 3 items in the snapshot");
+    // validate instrument
+    Object instrumentData = snapshotItems
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.INSTRUMENT)
+        .map(SnapshotItem::getData)
+        .findFirst()
+        .orElse(null);
+    Assertions.assertNotNull(instrumentData);
+    List<InstrumentConfig> instruments = mapper.readValue(mapper.writeValueAsString(instrumentData), new TypeReference<>() {});
+    Assertions.assertEquals(1, instruments.size(), "should be 1 instrument");
+    Assertions.assertEquals(inst, instruments.get(0), "instrument mismatch");
+    // validate account
+    Object accountData = snapshotItems
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.ACCOUNT)
+        .map(SnapshotItem::getData)
+        .findFirst()
+        .orElse(null);
+    Assertions.assertNotNull(accountData);
+    List<Account> accounts = mapper.readValue(mapper.writeValueAsString(accountData), new TypeReference<>() {});
+    Assertions.assertEquals(1, accounts.size(), "should be 1 account");
+    Account account = accounts.get(0);
+    Assertions.assertEquals(ub.getAccount(), account.getAccountId(), "accountId mismatch");
+    Assertions.assertEquals(1, account.getPositions().size(), "should be 1 position");
+    Position position = new Position(ub.getAsset(), ub.getAmount());
+    // inside ME would lock balance once order got received
+    position.lock(buy.getOrderQty().multiply(buy.getPrice()));
+    Assertions.assertEquals(position, account.getPosition(ub.getAsset()), "position mismatch");
+    // validate order book
+    Object orderBookData = snapshotItems
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.ORDER_BOOK)
+        .map(SnapshotItem::getData)
+        .findFirst()
+        .orElse(null);
+    Assertions.assertNotNull(orderBookData);
+    List<Order> orders = mapper.readValue(mapper.writeValueAsString(orderBookData), new TypeReference<>() {});
+    Assertions.assertEquals(1, orders.size(), "should be 1 order");
+    Order order = orders.get(0);
+    Assertions.assertEquals(buy, order, "order mismatch");
+  }
+
+  @Test
+  public void loadSnapshotTest(){
+    String content = "[{\"type\":\"ACCOUNT\",\"data\":[{\"accountId\":1,\"positions\":{\"USDT\":{\"symbol\":\"USDT\",\"balance\":1000,\"locked\":1000,\"totalBalance\":2000}}}]},{\"type\":\"INSTRUMENT\",\"data\":[{\"symbol\":\"BTC/USDT\",\"base\":\"BTC\",\"quote\":\"USDT\"}]},{\"type\":\"ORDER_BOOK\",\"data\":[{\"symbol\":\"BTC/USDT\",\"orderId\":1,\"clOrdId\":null,\"account\":1,\"side\":\"BUY\",\"type\":\"LIMIT\",\"orderQty\":10,\"leavesQty\":10,\"quoteOrderQty\":null,\"price\":100}]}]";
+    File baseDir = new File(SNAPSHOT_BASE_DIR);
+    TestUtils.deleteDirectory(baseDir);
+    Assertions.assertFalse(baseDir.exists());
+    baseDir.mkdir();
+    File snapshotFile = new File(SNAPSHOT_BASE_DIR);
   }
 
 

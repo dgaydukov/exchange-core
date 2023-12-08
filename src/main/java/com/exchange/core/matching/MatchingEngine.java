@@ -48,7 +48,7 @@ public class MatchingEngine {
   private final List<Snapshotable> snapshotables;
   private final StorageWriter storageWriter;
   private final boolean printInboundMsg;
-  private final String SNAPSHOT_BASE_PATH = System.getProperty("user.dir") + "/snapshots";
+  private final String SNAPSHOT_BASE_DIR = System.getProperty("user.dir") + "/snapshots";
 
   public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
     this(inbound, outbound, OrderBookType.MAP, true);
@@ -72,15 +72,15 @@ public class MatchingEngine {
     snapshotables.add((Snapshotable) instrumentRepository);
     storageWriter = new FileStorageWriter();
     snapshotManager = new SnapshotManager(snapshotables,
-        new JsonObjectConverter(), storageWriter, SNAPSHOT_BASE_PATH);
+        new JsonObjectConverter(), storageWriter, SNAPSHOT_BASE_DIR);
   }
 
   public void start() {
-    File file = new File(SNAPSHOT_BASE_PATH);
+    File file = new File(SNAPSHOT_BASE_DIR);
     if (!file.exists()){
       file.mkdir();
     }
-    String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_PATH);
+    String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null){
       System.out.println("Loading data from snapshot: name="+filename);
       snapshotManager.loadSnapshot(filename);
