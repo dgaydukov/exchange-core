@@ -10,6 +10,7 @@ import com.exchange.core.model.msg.Order;
 import com.exchange.core.user.Account;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class SnapshotManager {
@@ -43,10 +44,7 @@ public class SnapshotManager {
   }
 
   public void loadSnapshot(String name) {
-    String path = basePath + "/" + name;
-    String snapshotStr = storageWriter.read(path);
-    List<SnapshotItem> snapshots = converter.stringToObj(snapshotStr, new TypeReference<>() {
-    });
+    List<SnapshotItem> snapshots = loadSnapshots(name);
     for (Snapshotable s : snapshotables) {
       for (SnapshotItem i : snapshots) {
         if (i.getType() == s.getType()) {
@@ -56,6 +54,13 @@ public class SnapshotManager {
         }
       }
     }
+  }
+
+  private List<SnapshotItem> loadSnapshots(String name){
+    String path = basePath + "/" + name;
+    String snapshotStr = storageWriter.read(path);
+    return converter.stringToObj(snapshotStr, new TypeReference<>() {
+    });
   }
 
   private Object cast(SnapshotItem item){
@@ -73,5 +78,37 @@ public class SnapshotManager {
           new TypeReference<List<Order>>() {
           });
     };
+  }
+
+  public List<String> getSymbols(String name){
+    List<String> symbols = new ArrayList<>();
+    Object instruments = loadSnapshots(name)
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.INSTRUMENT)
+        .findFirst()
+        .map(this::cast)
+        .orElse(null);
+    if (instruments != null){
+      ((List<InstrumentConfig>)instruments)
+          .forEach(i -> symbols.add(i.getSymbol()));
+    }
+    return symbols;
+  }
+  public long getLastOrderId(String name){
+    long lastOrderId = 0;
+    Object orders = loadSnapshots(name)
+        .stream()
+        .filter(s -> s.getType() == SnapshotType.ORDER_BOOK)
+        .findFirst()
+        .map(this::cast)
+        .orElse(null);
+    if (orders != null){
+      lastOrderId = ((List<Order>)orders)
+          .stream()
+          .map(Order::getOrderId)
+          .max(Comparator.naturalOrder())
+          .get();
+    }
+    return lastOrderId;
   }
 }

@@ -90,14 +90,18 @@ public class MatchingEngine {
     }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null){
-      System.out.println("Loading data from snapshot: name="+filename);
+      System.out.println("Loading snapshot: name="+filename);
+      snapshotManager.getSymbols(filename).forEach(symbol -> {
+        System.out.println("Adding order book: symbol="+symbol);
+        addOrderBook(symbol);
+      });
+
+      long lastOrderId = snapshotManager.getLastOrderId(filename);
+      System.out.println("Updating counter: lastOrderId="+lastOrderId);
+      while (lastOrderId != counter.getNextOrderId()){}
+
       snapshotManager.loadSnapshot(filename);
-      instrumentRepository.getInstruments().forEach(i -> addOrderBook(i.getSymbol()));
-      // TODO: think how we can load instruments first, then add orderbooks and then load orders
-      // so it should be ordered snapshot creation. Or first get all instruments, create ob then load snapshots
-      snapshotManager.loadSnapshot(filename);
-      // TODO: update counters for orders & executors
-      counter.getNextOrderId();
+      System.out.println("Loaded snapshot: name="+filename);
     }
   }
 
