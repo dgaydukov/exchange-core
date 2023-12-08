@@ -22,6 +22,7 @@ public class AccountSnapshotableTest {
   public void initNewInstance(){
     snapshotable = new AccountRepositoryImpl();
   }
+
   @Test
   public void snapshotTypeTest(){
     Assertions.assertEquals(SnapshotType.ACCOUNT, snapshotable.getType(), "snapshot type mismatch");
