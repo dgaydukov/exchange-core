@@ -28,7 +28,7 @@ public class MatchingEnginePerformanceTest {
 
   @Test
   public void tpsAndThroughputTest() {
-    final int QUEUE_SIZE = 5_000;
+    final int QUEUE_SIZE = 20000;
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
@@ -84,8 +84,9 @@ public class MatchingEnginePerformanceTest {
   }
 
   @Test
-  public void latencyTest() {
+  public void latencyTest() throws InterruptedException {
     final int QUEUE_SIZE = 5_000;
+    long start1 = System.currentTimeMillis();
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
@@ -111,9 +112,43 @@ public class MatchingEnginePerformanceTest {
     userBalance2.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance2);
 
-    long start = System.currentTimeMillis();
     Map<String, Long> latencyMap = new ConcurrentHashMap<>();
-    String lastClOrdId = "";
+    String lastClOrdId = "sell_"+(QUEUE_SIZE-1);
+
+    Runnable runnable = () -> {
+      long start = System.currentTimeMillis();
+      while (true) {
+        Message msg = outbound.poll();
+        if (msg instanceof ExecutionReport exec) {
+          if (exec.getStatus() == OrderStatus.NEW) {
+            latencyMap.compute(exec.getClOrdId(), (k, v) -> System.currentTimeMillis() - v);
+          }
+          if (exec.getClOrdId().equals(lastClOrdId)) {
+            break;
+          }
+        }
+      }
+
+      long timeTaken = System.currentTimeMillis() - start;
+      System.out.println("timeTaken=" + timeTaken);
+      List<Long> latencyList = latencyMap.values()
+          .stream()
+          .sorted()
+          .toList();
+      System.out.println(latencyMap);
+      System.out.println(latencyList);
+      System.out.println(
+          "latency for 50% is below " + latencyList.get((int) (latencyList.size() * .5)));
+      System.out.println(
+          "latency for 90% is below " + latencyList.get((int) (latencyList.size() * .9)));
+      System.out.println(
+          "latency for 99% is below " + latencyList.get((int) (latencyList.size() * .99)));
+    };
+
+    Thread reader = new Thread(runnable);
+    reader.setDaemon(true);
+    reader.start();
+
     for (int i = 0; i < QUEUE_SIZE; i++) {
       long timestamp = System.currentTimeMillis();
       Order buy = buyLimitUser1();
@@ -123,35 +158,11 @@ public class MatchingEnginePerformanceTest {
       long sellTimestamp = System.currentTimeMillis();
       sell.setClOrdId("sell_" + i);
       inbound.add(sell);
-      lastClOrdId = sell.getClOrdId();
       latencyMap.put(buy.getClOrdId(), timestamp);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
     }
-
-    while (true) {
-      Message msg = outbound.poll();
-      if (msg instanceof ExecutionReport exec) {
-        if (exec.getStatus() == OrderStatus.NEW) {
-          latencyMap.compute(exec.getClOrdId(), (k, v) -> System.currentTimeMillis() - v);
-        }
-        if (exec.getClOrdId().equals(lastClOrdId)) {
-          break;
-        }
-      }
-    }
-
-    long timeTaken = System.currentTimeMillis() - start;
-    System.out.println("timeTaken=" + timeTaken);
-    List<Long> latencyList = latencyMap.values()
-        .stream()
-        .sorted()
-        .toList();
-    System.out.println(
-        "latency for 50% is below " + latencyList.get((int) (latencyList.size() * .5)));
-    System.out.println(
-        "latency for 90% is below " + latencyList.get((int) (latencyList.size() * .9)));
-    System.out.println(
-        "latency for 99% is below " + latencyList.get((int) (latencyList.size() * .99)));
+    System.out.println("taken="+(System.currentTimeMillis()-start1));
+    reader.join();
   }
 
   private BigDecimal getPrice() {
