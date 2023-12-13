@@ -155,13 +155,20 @@ public class MatchingEnginePerformanceTest {
 
   @Test
   public void latencyTest() throws InterruptedException {
-    final int QUEUE_SIZE = 20_000;
+    final int QUEUE_SIZE = 100_000;
+    runLatencyTest(QUEUE_SIZE, OrderBookType.MAP);
+    System.out.println();
+    runLatencyTest(QUEUE_SIZE, OrderBookType.ARRAY);
+  }
+
+  private void runLatencyTest(int queueSize, OrderBookType type) throws InterruptedException {
+    System.out.println("runLatencyTest: type=" + OrderBookType.MAP + ", size=" + queueSize);
     Map<String, Long> latencyMap = new ConcurrentHashMap<>();
-    String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
+    String lastClOrdId = "sell_" + (queueSize - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
+    MatchingEngine me = new MatchingEngine(inbound, outbound, type, false);
     me.start();
     long start = System.currentTimeMillis();
 
@@ -211,7 +218,7 @@ public class MatchingEnginePerformanceTest {
     Thread t1 = new Thread(reader);
     t1.start();
 
-    for (int i = 0; i < QUEUE_SIZE; i++) {
+    for (int i = 0; i < queueSize; i++) {
       long timestamp = System.currentTimeMillis();
       Order buy = buyLimitUser1();
       buy.setClOrdId("buy_" + i);
