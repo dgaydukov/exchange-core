@@ -133,8 +133,6 @@ public class MatchingEngine {
     }
   }
 
-  private long timestamp;
-
   private void process(Message msg) {
     if (msg instanceof InstrumentConfig symbol) {
       addInstrument(symbol);

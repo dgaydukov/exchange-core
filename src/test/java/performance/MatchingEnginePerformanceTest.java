@@ -11,13 +11,10 @@ import com.exchange.core.model.msg.Message;
 import com.exchange.core.model.msg.Order;
 import com.exchange.core.model.msg.UserBalance;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.junit.jupiter.api.Test;
@@ -30,22 +27,23 @@ public class MatchingEnginePerformanceTest {
   private final static Random random = new Random();
 
   /**
-   * Simple test to validate JDK Queue performance to understand is it a good structure to measure latency and TPS
-   * Since we are using pure in-memory tests, any structure including JDK would work, cause we don't waste time on
-   * serialize/decerialize. The conclusion, JDK Queue implementation is good enough to validate
+   * Simple test to validate JDK Queue performance to understand is it a good structure to measure
+   * latency and TPS Since we are using pure in-memory tests, any structure including JDK would
+   * work, cause we don't waste time on serialize/decerialize. The conclusion, JDK Queue
+   * implementation is good enough to validate
    */
   @Test
-  public void javaQueueTest() throws InterruptedException {
+  public void javaQueueLatencyTest() throws InterruptedException {
     int QUEUE_SIZE = 1_000_000;
-    String lastClOrdId = "sell_"+(QUEUE_SIZE-1);
+    final String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
     // use thread-safe queue instead of LinkedList cause we read it from another repo
     Queue<Order> queue = new LinkedBlockingQueue<>();
     long start = System.currentTimeMillis();
     Map<String, Long> latencyMap = new ConcurrentHashMap<>();
 
-    Runnable reader = ()->{
+    Runnable reader = () -> {
       long readerStart = System.currentTimeMillis();
-      int counter=0;
+      int counter = 0;
       while (true) {
         Message msg = queue.poll();
         if (msg instanceof Order exec) {
@@ -56,7 +54,9 @@ public class MatchingEnginePerformanceTest {
           }
         }
       }
-      System.out.println("time to process read: "+(System.currentTimeMillis()-readerStart)+", counter="+counter);
+      System.out.println(
+          "time to process read: " + (System.currentTimeMillis() - readerStart) + ", counter="
+              + counter);
       List<Long> latencyList = latencyMap.values()
           .stream()
           .sorted()
@@ -76,22 +76,23 @@ public class MatchingEnginePerformanceTest {
       long timestamp = System.currentTimeMillis();
       Order buy = buyLimitUser1();
       buy.setClOrdId("buy_" + i);
+      latencyMap.put(buy.getClOrdId(), timestamp);
+      queue.add(buy);
       Order sell = sellLimitUser2();
       long sellTimestamp = System.currentTimeMillis();
       sell.setClOrdId("sell_" + i);
-      latencyMap.put(buy.getClOrdId(), timestamp);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
       queue.add(sell);
-      queue.add(buy);
     }
 
-    System.out.println("time to process write: "+(System.currentTimeMillis()-start));
+    System.out.println("time to process write: " + (System.currentTimeMillis() - start));
     t1.join();
-
   }
+
   @Test
-  public void tpsAndThroughputTest() {
-    final int QUEUE_SIZE = 20_000;
+  public void tpsAndThroughputTest() throws InterruptedException {
+    final int QUEUE_SIZE = 50_000;
+    final String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
@@ -117,8 +118,28 @@ public class MatchingEnginePerformanceTest {
     userBalance2.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance2);
 
+    Runnable reader = () -> {
+      long readerStart = System.currentTimeMillis();
+      long count = 0;
+      while (true) {
+        Message msg = outbound.poll();
+        if (msg instanceof ExecutionReport exec) {
+          count++;
+          if (exec.getClOrdId().equals(lastClOrdId)) {
+            break;
+          }
+        }
+      }
+      long timeTaken = System.currentTimeMillis() - readerStart;
+      double tps = QUEUE_SIZE / (double) timeTaken * 1000;
+      System.out.println(
+          "time to process read=" + timeTaken + ", TPS=" + (long) tps + ", outboundMessagesRead="
+              + count);
+    };
+    Thread t1 = new Thread(reader);
+    t1.start();
+
     long start = System.currentTimeMillis();
-    String lastClOrdId = "";
     for (int i = 0; i < QUEUE_SIZE; i++) {
       Order buy = buyLimitUser1();
       buy.setClOrdId("buy_" + i);
@@ -126,29 +147,17 @@ public class MatchingEnginePerformanceTest {
       Order sell = sellLimitUser2();
       sell.setClOrdId("sell_" + i);
       inbound.add(sell);
-      lastClOrdId = sell.getClOrdId();
     }
 
-    long count = 0;
-    while (true) {
-      Message msg = outbound.poll();
-      if (msg instanceof ExecutionReport exec) {
-        count++;
-        if (exec.getClOrdId().equals(lastClOrdId)) {
-          break;
-        }
-      }
-    }
-
-    long timeTaken = System.currentTimeMillis() - start;
-    double tps = QUEUE_SIZE / (double) timeTaken * 1000;
-    System.out.println(
-        "timeTaken=" + timeTaken + ", TPS=" + (long) tps + ", outboundMessagesRead=" + count);
+    System.out.println("time to process write: " + (System.currentTimeMillis() - start));
+    t1.join();
   }
 
   @Test
   public void latencyTest() throws InterruptedException {
-    final int QUEUE_SIZE = 1_000;
+    final int QUEUE_SIZE = 20_000;
+    Map<String, Long> latencyMap = new ConcurrentHashMap<>();
+    String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
@@ -175,8 +184,32 @@ public class MatchingEnginePerformanceTest {
     userBalance2.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance2);
 
-    Map<String, Long> latencyMap = new ConcurrentHashMap<>();
-    String lastClOrdId = "sell_"+(QUEUE_SIZE-1);
+    Runnable reader = () -> {
+      while (true) {
+        Message msg = outbound.poll();
+        if (msg instanceof ExecutionReport exec) {
+          if (exec.getStatus() == OrderStatus.NEW) {
+            latencyMap.compute(exec.getClOrdId(), (k, v) -> System.currentTimeMillis() - v);
+          }
+          if (exec.getClOrdId().equals(lastClOrdId)) {
+            break;
+          }
+        }
+      }
+      System.out.println("time to process read: " + (System.currentTimeMillis() - start));
+      List<Long> latencyList = latencyMap.values()
+          .stream()
+          .sorted()
+          .toList();
+      System.out.println(
+          "latency for 50% is below " + latencyList.get((int) (latencyList.size() * .5)));
+      System.out.println(
+          "latency for 90% is below " + latencyList.get((int) (latencyList.size() * .9)));
+      System.out.println(
+          "latency for 99% is below " + latencyList.get((int) (latencyList.size() * .99)));
+    };
+    Thread t1 = new Thread(reader);
+    t1.start();
 
     for (int i = 0; i < QUEUE_SIZE; i++) {
       long timestamp = System.currentTimeMillis();
@@ -190,34 +223,8 @@ public class MatchingEnginePerformanceTest {
       latencyMap.put(buy.getClOrdId(), timestamp);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
     }
-
-    System.out.println("process inbound: " + (System.currentTimeMillis() - start));
-
-    while (true) {
-      Message msg = outbound.poll();
-      if (msg instanceof ExecutionReport exec) {
-        if (exec.getStatus() == OrderStatus.NEW) {
-          latencyMap.compute(exec.getClOrdId(), (k, v) -> System.currentTimeMillis() - v);
-        }
-        if (exec.getClOrdId().equals(lastClOrdId)) {
-          break;
-        }
-      }
-    }
-
-    System.out.println("process outbound: " + (System.currentTimeMillis() - start));
-    List<Long> latencyList = latencyMap.values()
-        .stream()
-        .sorted()
-        .toList();
-    System.out.println(latencyList);
-    System.out.println(
-        "latency for 50% is below " + latencyList.get((int) (latencyList.size() * .5)));
-    System.out.println(
-        "latency for 90% is below " + latencyList.get((int) (latencyList.size() * .9)));
-    System.out.println(
-        "latency for 99% is below " + latencyList.get((int) (latencyList.size() * .99)));
-
+    System.out.println("time to process write: " + (System.currentTimeMillis() - start));
+    t1.join();
   }
 
 
