@@ -162,7 +162,7 @@ public class MatchingEnginePerformanceTest {
   }
 
   private void runLatencyTest(int queueSize, OrderBookType type) throws InterruptedException {
-    System.out.println("runLatencyTest: type=" + OrderBookType.MAP + ", size=" + queueSize);
+    System.out.println("runLatencyTest: size="+queueSize+", type="+type);
     Map<String, Long> latencyMap = new ConcurrentHashMap<>();
     String lastClOrdId = "sell_" + (queueSize - 1);
 

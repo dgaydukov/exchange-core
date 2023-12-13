@@ -148,6 +148,9 @@ public class MapOrderBook implements OrderBook, Snapshotable {
         cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
       }
       bids[bidIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
+//      if (bidIndex == bidSize) {
+//        break;
+//      }
     }
     for (Map.Entry<BigDecimal, List<Order>> e : this.asks.entrySet()) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
@@ -155,6 +158,9 @@ public class MapOrderBook implements OrderBook, Snapshotable {
         cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
       }
       asks[asksIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
+//      if (asksIndex == askSize) {
+//        break;
+//      }
     }
     md.setBids(bids);
     md.setAsks(asks);
