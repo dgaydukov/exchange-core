@@ -118,19 +118,22 @@ public class MatchingEngine {
     WaitStrategy wait = new SleepWaitStrategy();
     while (true) {
       Message msg = inbound.poll();
-      if (msg != null) {
-        if (printInboundMsg) {
-          System.out.println("inbound => " + msg);
-        }
-        try {
-          process(msg);
-        } catch (Exception ex) {
-          outbound.add(new ErrorMessage(ex.getMessage(), msg));
-        }
+      if (msg == null) {
+        wait.idle();
+        continue;
       }
-      wait.idle();
+      if (printInboundMsg) {
+        System.out.println("inbound => " + msg);
+      }
+      try {
+        process(msg);
+      } catch (Exception ex) {
+        outbound.add(new ErrorMessage(ex.getMessage(), msg));
+      }
     }
   }
+
+  private long timestamp;
 
   private void process(Message msg) {
     if (msg instanceof InstrumentConfig symbol) {
