@@ -91,7 +91,7 @@ public class MatchingEnginePerformanceTest {
 
   @Test
   public void tpsAndThroughputTest() throws InterruptedException {
-    final int QUEUE_SIZE = 50_000;
+    final int QUEUE_SIZE = 100_000;
     final String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
@@ -236,7 +236,7 @@ public class MatchingEnginePerformanceTest {
 
 
   private BigDecimal getPrice() {
-    int next = random.nextInt(100, 200);
+    int next = random.nextInt(1, 1000);
     return new BigDecimal(next);
   }
 
