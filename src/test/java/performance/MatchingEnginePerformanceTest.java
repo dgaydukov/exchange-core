@@ -29,7 +29,7 @@ public class MatchingEnginePerformanceTest {
   private final static Random random = new Random();
 
   private static Stream<Arguments> getOrderBookTypes() {
-    final int size = 100_000;
+    final int size = 500_000;
     return Stream.of(
         Arguments.of(size, OrderBookType.MAP),
         Arguments.of(size, OrderBookType.ARRAY)
@@ -145,8 +145,7 @@ public class MatchingEnginePerformanceTest {
       }
       long timeTaken = System.currentTimeMillis() - readerStart;
       double tps = queueSize / (double) timeTaken * 1000;
-      System.out.println(
-          "time to process read=" + timeTaken + ", TPS=" + (long) tps + ", outboundMessagesRead="
+      System.out.println("reading done: time=" + timeTaken + ", TPS=" + (long) tps + ", messagesRead="
               + count);
     };
     Thread t1 = new Thread(reader);
@@ -162,7 +161,7 @@ public class MatchingEnginePerformanceTest {
       inbound.add(sell);
     }
 
-    System.out.println("time to process write: " + (System.currentTimeMillis() - start));
+    System.out.println("writing done: time=" + (System.currentTimeMillis() - start));
     t1.join();
   }
 
@@ -210,7 +209,7 @@ public class MatchingEnginePerformanceTest {
           }
         }
       }
-      System.out.println("time to process read: " + (System.currentTimeMillis() - start));
+      System.out.println("reading done: time=" + (System.currentTimeMillis() - start));
       List<Long> latencyList = latencyMap.values()
           .stream()
           .sorted()
@@ -237,7 +236,7 @@ public class MatchingEnginePerformanceTest {
       latencyMap.put(buy.getClOrdId(), timestamp);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
     }
-    System.out.println("time to process write: " + (System.currentTimeMillis() - start));
+    System.out.println("writing done: time=" + (System.currentTimeMillis() - start));
     t1.join();
   }
 

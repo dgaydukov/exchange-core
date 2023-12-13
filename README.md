@@ -54,21 +54,31 @@ There are 2 types of tests in this project:
 * Since we have 2 order books - and both implement same interface and are expected to behave the same way, I've created [parametrized test](/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java#L26) where I run all the tests at the same time for 2 orderbooks, using Junit `@ParameterizedTest` annotation
 Performance testing - this is integration test that measures system performance overall. It should be integration, cause you need to actually run your system end-to-end, and then put extreme load into it and measure performance. I've created [MatchingEnginePerformanceTest](/src/test/java/performance/MatchingEnginePerformanceTest.java) that measures 2 things:
 * TPS - how many messages/orders system can handle per second
-* latency - what is average latency per single request. Here we measure end-to-end latency from the moment user send his order to our system and to the point when he received message back (in case of order - message would be execution report). If you dig into latency test you would notice that 90% of time is taken by adding and matching the order. If you run `latencyTest` you will notice that `ArrayOrderBook` performs way faster then `MapOrderBook`. If you look into test results it shows, that array-based order book performs better, only because `OrderBook.add` method is faster. Yet this is relevant for price range `100-200`. If we modify it in function `getPrice()` to range `1..1000`, results would be comparable.
+* latency - what is average latency per single request. Here we measure end-to-end latency from the moment user send his order to our system and to the point when he received message back (in case of order - message would be execution report). If you dig into latency test you would notice that 90% of time is taken by adding and matching the order. If you run `latencyTest` you will notice that `ArrayOrderBook` performs way faster then `MapOrderBook`. If you look into test results it shows, that array-based order book performs on average better, due to native manipulation with data in array, where in `MapOrderBook` we are using java `TreeMap` which on average performs slower then array. See test results below for comparison:
 ```
-runLatencyTest: type=MAP, size=100000
+# Test results for TPS:
+tpsAndThroughputTest: orderBookType=MAP, size=500000
 Starting matching engine...
-time to process write: 399
-time to process read: 20431
-latency for 50% is below 5396
-latency for 90% is below 16555
-latency for 99% is below 19652
+writing done: time=751
+reading done: time=47821, TPS=10455, messagesRead=1781876
+tpsAndThroughputTest: orderBookType=ARRAY, size=500000
+Starting matching engine...
+writing done: time=223
+reading done: time=5391, TPS=92747, messagesRead=1782574
 
-runLatencyTest: type=MAP, size=100000
+# Test results for latency:
+runLatencyTest: size=500000, type=MAP
 Starting matching engine...
-time to process write: 173
-time to process read: 1126
-latency for 50% is below 598
-latency for 90% is below 991
-latency for 99% is below 1041
+writing done: time=1457
+reading done: time=45611
+latency for 50% is below 10111
+latency for 90% is below 35381
+latency for 99% is below 42995
+runLatencyTest: size=500000, type=ARRAY
+Starting matching engine...
+writing done: time=445
+reading done: time=9080
+latency for 50% is below 5681
+latency for 90% is below 7974
+latency for 99% is below 8563
 ```
