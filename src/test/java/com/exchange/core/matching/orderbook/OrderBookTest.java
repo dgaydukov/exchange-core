@@ -317,7 +317,25 @@ public class OrderBookTest {
         "maker leavesQty should be 0");
     Assertions.assertEquals(new BigDecimal("10"), trade3.getTaker().getLeavesQty(),
         "maker leavesQty should be 10");
+  }
 
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void maxMarketDataTest(OrderBook ob) {
+    for(int i = 0; i < 1000; i++){
+      BigDecimal price = new BigDecimal(i);
+      Order buy = getLimitBuy();
+      buy.setPrice(price);
+      Order sell = getLimitBuy();
+      sell.setSide(OrderSide.SELL);
+      sell.setPrice(price);
+      ob.add(buy);
+      ob.add(sell);
+    }
+    MarketData md = ob.buildMarketData();
+    Assertions.assertEquals(20, md.getDepth(), "depth should be 20");
+    Assertions.assertEquals(20, md.getBids().length, "bids size should be 20");
+    Assertions.assertEquals(20, md.getAsks().length, "asks size should be 20");
   }
 
   private void add3SellOrders(OrderBook ob) {
