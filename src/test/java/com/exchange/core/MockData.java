@@ -9,7 +9,9 @@ import java.math.BigDecimal;
 
 public class MockData {
 
-  public final static String SYMBOL = "BTC/USDT";
+  public final static String BASE = "BTC";
+  public final static String QUOTE = "USDT";
+  public final static String SYMBOL = BASE + "/" + QUOTE;
   public final static int BUY_ACCOUNT = 1;
 
   public static InstrumentConfig getInstrument() {

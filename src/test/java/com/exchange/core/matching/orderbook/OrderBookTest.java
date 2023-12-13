@@ -1,5 +1,6 @@
 package com.exchange.core.matching.orderbook;
 
+import com.exchange.core.MockData;
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
 import com.exchange.core.model.Trade;
@@ -18,13 +19,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class OrderBookTest {
 
-  private final static String SYMBOL = "BTC/USDT";
-
-
   private static Stream<Arguments> getOrderBooks() {
     return Stream.of(
-        Arguments.of(new MapOrderBook(SYMBOL)),
-        Arguments.of(new ArrayOrderBook(SYMBOL))
+        Arguments.of(new MapOrderBook(MockData.SYMBOL)),
+        Arguments.of(new ArrayOrderBook(MockData.SYMBOL))
     );
   }
 
@@ -33,7 +31,7 @@ public class OrderBookTest {
   public void addOrderTest(OrderBook ob) {
     MarketData md = ob.buildMarketData();
     Assertions.assertNotNull(md);
-    Assertions.assertEquals(SYMBOL, md.getSymbol(), "symbols mismatch");
+    Assertions.assertEquals(MockData.SYMBOL, md.getSymbol(), "symbols mismatch");
     Assertions.assertEquals(0, md.getDepth(), "depth should be 0 for empty orderbook");
     Assertions.assertEquals(0, md.getBids().length, "bids should be 0 for empty orderbook");
     Assertions.assertEquals(0, md.getAsks().length, "asks should be 0 for empty orderbook");
@@ -322,7 +320,7 @@ public class OrderBookTest {
   @ParameterizedTest
   @MethodSource("getOrderBooks")
   public void maxMarketDataTest(OrderBook ob) {
-    for(int i = 0; i < 1000; i++){
+    for (int i = 0; i < 1000; i++) {
       BigDecimal price = new BigDecimal(i);
       Order buy = getLimitBuy();
       buy.setPrice(price);
@@ -369,7 +367,7 @@ public class OrderBookTest {
 
   private Order getLimitBuy() {
     Order order = new Order();
-    order.setSymbol(SYMBOL);
+    order.setSymbol(MockData.SYMBOL);
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);
     order.setPrice(new BigDecimal("100"));

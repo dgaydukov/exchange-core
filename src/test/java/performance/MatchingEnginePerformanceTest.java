@@ -1,5 +1,6 @@
 package performance;
 
+import com.exchange.core.MockData;
 import com.exchange.core.matching.MatchingEngine;
 import com.exchange.core.model.enums.OrderBookType;
 import com.exchange.core.model.enums.OrderSide;
@@ -17,14 +18,23 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class MatchingEnginePerformanceTest {
 
-  private final static String BASE = "BTC";
-  private final static String QUOTE = "USDT";
-  private final static String SYMBOL = BASE + "/" + QUOTE;
   private final static Random random = new Random();
+
+  private static Stream<Arguments> getOrderBookTypes() {
+    final int size = 100_000;
+    return Stream.of(
+        Arguments.of(size, OrderBookType.MAP),
+        Arguments.of(size, OrderBookType.ARRAY)
+    );
+  }
 
   /**
    * Simple test to validate JDK Queue performance to understand is it a good structure to measure
@@ -89,32 +99,35 @@ public class MatchingEnginePerformanceTest {
     t1.join();
   }
 
-  @Test
-  public void tpsAndThroughputTest() throws InterruptedException {
-    final int QUEUE_SIZE = 100_000;
-    final String lastClOrdId = "sell_" + (QUEUE_SIZE - 1);
+  @ParameterizedTest
+  @MethodSource("getOrderBookTypes")
+  public void tpsAndThroughputTest(int queueSize, OrderBookType orderBookType)
+      throws InterruptedException {
+    System.out.println(
+        "tpsAndThroughputTest: orderBookType=" + orderBookType + ", size=" + queueSize);
+    final String lastClOrdId = "sell_" + (queueSize - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
+    MatchingEngine me = new MatchingEngine(inbound, outbound, orderBookType, false);
     me.start();
 
     // adding instrument
     InstrumentConfig symbolMsg = new InstrumentConfig();
-    symbolMsg.setBase(BASE);
-    symbolMsg.setQuote(QUOTE);
-    symbolMsg.setSymbol(SYMBOL);
+    symbolMsg.setBase(MockData.BASE);
+    symbolMsg.setQuote(MockData.QUOTE);
+    symbolMsg.setSymbol(MockData.SYMBOL);
     inbound.add(symbolMsg);
 
     // adding 2 users with balances
     UserBalance userBalance1 = new UserBalance();
     userBalance1.setAccount(1);
-    userBalance1.setAsset(QUOTE);
+    userBalance1.setAsset(MockData.QUOTE);
     userBalance1.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance1);
     UserBalance userBalance2 = new UserBalance();
     userBalance2.setAccount(2);
-    userBalance2.setAsset(BASE);
+    userBalance2.setAsset(MockData.BASE);
     userBalance2.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance2);
 
@@ -131,7 +144,7 @@ public class MatchingEnginePerformanceTest {
         }
       }
       long timeTaken = System.currentTimeMillis() - readerStart;
-      double tps = QUEUE_SIZE / (double) timeTaken * 1000;
+      double tps = queueSize / (double) timeTaken * 1000;
       System.out.println(
           "time to process read=" + timeTaken + ", TPS=" + (long) tps + ", outboundMessagesRead="
               + count);
@@ -140,7 +153,7 @@ public class MatchingEnginePerformanceTest {
     t1.start();
 
     long start = System.currentTimeMillis();
-    for (int i = 0; i < QUEUE_SIZE; i++) {
+    for (int i = 0; i < queueSize; i++) {
       Order buy = buyLimitUser1();
       buy.setClOrdId("buy_" + i);
       inbound.add(buy);
@@ -153,41 +166,35 @@ public class MatchingEnginePerformanceTest {
     t1.join();
   }
 
-  @Test
-  public void latencyTest() throws InterruptedException {
-    final int QUEUE_SIZE = 100_000;
-    runLatencyTest(QUEUE_SIZE, OrderBookType.MAP);
-    System.out.println();
-    runLatencyTest(QUEUE_SIZE, OrderBookType.ARRAY);
-  }
-
-  private void runLatencyTest(int queueSize, OrderBookType type) throws InterruptedException {
-    System.out.println("runLatencyTest: size="+queueSize+", type="+type);
+  @ParameterizedTest
+  @MethodSource("getOrderBookTypes")
+  public void latencyTest(int queueSize, OrderBookType orderBookType) throws InterruptedException {
+    System.out.println("runLatencyTest: size=" + queueSize + ", type=" + orderBookType);
     Map<String, Long> latencyMap = new ConcurrentHashMap<>();
     String lastClOrdId = "sell_" + (queueSize - 1);
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound, type, false);
+    MatchingEngine me = new MatchingEngine(inbound, outbound, orderBookType, false);
     me.start();
     long start = System.currentTimeMillis();
 
     // adding instrument
     InstrumentConfig symbolMsg = new InstrumentConfig();
-    symbolMsg.setBase(BASE);
-    symbolMsg.setQuote(QUOTE);
-    symbolMsg.setSymbol(SYMBOL);
+    symbolMsg.setBase(MockData.BASE);
+    symbolMsg.setQuote(MockData.QUOTE);
+    symbolMsg.setSymbol(MockData.SYMBOL);
     inbound.add(symbolMsg);
 
     // adding 2 users with balances
     UserBalance userBalance1 = new UserBalance();
     userBalance1.setAccount(1);
-    userBalance1.setAsset(QUOTE);
+    userBalance1.setAsset(MockData.QUOTE);
     userBalance1.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance1);
     UserBalance userBalance2 = new UserBalance();
     userBalance2.setAccount(2);
-    userBalance2.setAsset(BASE);
+    userBalance2.setAsset(MockData.BASE);
     userBalance2.setAmount(new BigDecimal("10000000000"));
     inbound.add(userBalance2);
 
@@ -242,7 +249,7 @@ public class MatchingEnginePerformanceTest {
 
   private Order buyLimitUser1() {
     Order order = new Order();
-    order.setSymbol(SYMBOL);
+    order.setSymbol(MockData.SYMBOL);
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);
     order.setAccount(1);
