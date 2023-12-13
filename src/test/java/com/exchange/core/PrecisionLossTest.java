@@ -9,12 +9,24 @@ import org.junit.jupiter.api.Test;
 public class PrecisionLossTest {
 
   @Test
-  public void bigDecimalTest(){
+  public void bigDecimalDivisionTest(){
     BigDecimal amount = new BigDecimal("111");
     BigDecimal price = new BigDecimal("219");
-    BigDecimal tradeQty = amount.divide(price, AppConstants.ROUNDING_SCALE, RoundingMode.DOWN);
+    BigDecimal tradeQty = amount.divide(price, 16, RoundingMode.HALF_EVEN);
     BigDecimal tradeAmount = tradeQty.multiply(price);
     System.out.println("tradeQty="+tradeQty+", tradeAmount="+tradeAmount);
+    Assertions.assertEquals(new BigDecimal("0.5068493150684932"), tradeQty, "tradeQty mismatch");
     Assertions.assertNotEquals(amount, tradeAmount, "values shouldn't match");
+  }
+
+  @Test
+  public void doubleDivisionTest(){
+    double amount = 111;
+    double price = 219;
+    double tradeQty = amount / price;
+    double tradeAmount = tradeQty * price;
+    System.out.println("tradeQty="+tradeQty+", tradeAmount="+tradeAmount);
+    Assertions.assertEquals(0.5068493150684932, tradeQty, "tradeQty mismatch");
+    Assertions.assertEquals(amount, tradeAmount, "values shouldn't match");
   }
 }

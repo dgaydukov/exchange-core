@@ -92,7 +92,7 @@ There are 3 ways you can store price/quantity inside you system:
   * cons: precision loss almost in all cases, bad for finance
 * BigDecimal - very high precision, can store any big number. but limitation on space:
   * pros: high precision, almost no loss
-  * cons: require more bytes to store object, and it takes harder to serialize and transfer over the network. you may still encounter precision loss when you divide/multiply at the same time, take a look at [PrecisionLossTest](/src/test/java/com/exchange/core/PrecisionLossTest.java). No matter what rounding method are you using you will never get back original amount value.
+  * cons: require more bytes to store object, and it takes harder to serialize and transfer over the network. you may still encounter precision loss when you divide/multiply at the same time, take a look at [PrecisionLossTest](/src/test/java/com/exchange/core/PrecisionLossTest.java). No matter what rounding method are you using you will never get back original amount value. Yet if you look into same example for double, you would notice that when we multiply back double we can get correct value. Yet with `BigDecimal` it's behaved differently. But don't worry there is plenty of cases where `double` fails too.
 * value/scale - where for each price/quantity you store 2 fields: `long value` & `byte scale`. By doing so you can pass any arbitrary number. For example you work with bitcoin, and you want to operate with up to 6 digits after the comma. Then you can set `scale=6`. so your values would be:
 ```
 1 BTC = 1000000
