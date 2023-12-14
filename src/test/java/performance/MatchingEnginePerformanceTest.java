@@ -145,7 +145,8 @@ public class MatchingEnginePerformanceTest {
       }
       long timeTaken = System.currentTimeMillis() - readerStart;
       double tps = queueSize / (double) timeTaken * 1000;
-      System.out.println("reading done: time=" + timeTaken + ", TPS=" + (long) tps + ", messagesRead="
+      System.out.println(
+          "reading done: time=" + timeTaken + ", TPS=" + (long) tps + ", messagesRead="
               + count);
     };
     Thread t1 = new Thread(reader);

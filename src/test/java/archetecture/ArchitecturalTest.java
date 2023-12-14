@@ -7,7 +7,6 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
-import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption.DoNotIncludeTests;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -15,7 +14,6 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 @AnalyzeClasses(packages = "com.exchange.core", importOptions = {DoNotIncludeTests.class})
