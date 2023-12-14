@@ -50,13 +50,13 @@ public class ArchitecturalTest {
             javaClass.getDirectDependenciesFromSelf()
                 .forEach(d -> {
                   JavaClass target = d.getTargetClass();
-                  if (target.getName().contains("PreOrderCheck") || target.getName()
-                      .contains("PostOrderCheck")) {
-                    if (target.isInterface()){
-                    } else {
-                      System.out.println(target.getInterfaces());
-                      System.out.println(target.getInterfaces().contains(PostOrderCheck.class));
-                    }
+                  // isEquivalentTo - if dependency is interface
+                  // isAssignableTo - if dependency is implementation of interface
+                  if (target.isEquivalentTo(PreOrderCheck.class)
+                      || target.isEquivalentTo(PostOrderCheck.class)
+                      || target.isAssignableTo(PreOrderCheck.class)
+                      || target.isAssignableTo(PostOrderCheck.class)
+                  ) {
                     events.add(new SimpleConditionEvent(javaClass, false,
                         d.getOriginClass().getName()
                             + " shouldn't implement PreOrderCheck/PostOrderCheck interfaces"));
