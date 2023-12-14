@@ -137,9 +137,12 @@ public class FailedOrderBook implements OrderBook {
   }
 }
 ```
-To complicate things we add one dependency as interface and another as concrete implementation. But our test written in such a way that it can detect it, and if you run it, you will get error
+To complicate things we add one dependency as interface and another as concrete implementation. But our test written in such a way that it can detect it, and if you run it, you will get error. There are 4 errors, cause 4 total dependencies, 2 declared as `private final` amd others 2 are passed as arguments into constructor. Yet if we remove all 4 dependencies, test would pass again.
 ```
-java.lang.AssertionError: Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement com.exchange.core.matching.orderbook.OrderBook should yup' was violated (4 times):
+java.lang.AssertionError: Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement com.exchange.core.matching.orderbook.OrderBook should OrderBook shouldn't implement OrderChecks' was violated (4 times):
+com.exchange.core.matching.orderbook.FailedOrderBook shouldn't implement PreOrderCheck/PostOrderCheck interfaces
+com.exchange.core.matching.orderbook.FailedOrderBook shouldn't implement PreOrderCheck/PostOrderCheck interfaces
+com.exchange.core.matching.orderbook.FailedOrderBook shouldn't implement PreOrderCheck/PostOrderCheck interfaces
 com.exchange.core.matching.orderbook.FailedOrderBook shouldn't implement PreOrderCheck/PostOrderCheck interfaces
 ```
 
