@@ -7,6 +7,7 @@ import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption.DoNotIncludeTests;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -14,6 +15,7 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 @AnalyzeClasses(packages = "com.exchange.core", importOptions = {DoNotIncludeTests.class})
@@ -42,14 +44,22 @@ public class ArchitecturalTest {
   public void validateOrderChecksInsideOrderBook() {
     ArchRule archRule = classes()
         .that().implement(OrderBook.class)
-        .should(new ArchCondition<>("yup") {
+        .should(new ArchCondition<>("OrderBook shouldn't implement OrderChecks") {
           @Override
           public void check(JavaClass javaClass, ConditionEvents events) {
             javaClass.getDirectDependenciesFromSelf()
                 .forEach(d -> {
                   JavaClass target = d.getTargetClass();
-                  if (target.getName().contains("PreOrderCheck") || target.getName().contains("PostOrderCheck")){
-                    events.add(new SimpleConditionEvent(javaClass, false, d.getOriginClass().getName()+" shouldn't implement PreOrderCheck/PostOrderCheck"));
+                  if (target.getName().contains("PreOrderCheck") || target.getName()
+                      .contains("PostOrderCheck")) {
+                    if (target.isInterface()){
+                    } else {
+                      System.out.println(target.getInterfaces());
+                      System.out.println(target.getInterfaces().contains(PostOrderCheck.class));
+                    }
+                    events.add(new SimpleConditionEvent(javaClass, false,
+                        d.getOriginClass().getName()
+                            + " shouldn't implement PreOrderCheck/PostOrderCheck interfaces"));
                   }
                 });
           }

@@ -104,7 +104,7 @@ Here we can actually create a test that would enforce our architecture. We are u
 Here we implement [ArchitecturalTest](/src/test/java/archetecture/ArchitecturalTest.java) where we validate that `orderchecks` can't be used inside `orderbook`. Since we decided to separate validation, matching and settlement. those 3 shouldn't mixed together. If you create new instance of `OrderBook` and pass either `PreOrderCheck` or `PostOrderCheck`, such tests would fail.
 By default all arch tests are passing, but if you add this orderbook class, it would fail. As you see here, we created OrderBook implementation that depends on `PreOrderCheck/PostOrderCheck` which is again our architecture rules.
 ```java
-import com.exchange.core.matching.orderchecks.PostOrderCheck;
+import com.exchange.core.matching.orderchecks.PostOrderCheckImpl;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.msg.MarketData;
@@ -114,9 +114,9 @@ import java.util.List;
 public class FailedOrderBook implements OrderBook {
 
   private final PreOrderCheck preOrderCheck;
-  private final PostOrderCheck postOrderCheck;
+  private final PostOrderCheckImpl postOrderCheck;
 
-  public FailedOrderBook(PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+  public FailedOrderBook(PreOrderCheck preOrderCheck, PostOrderCheckImpl postOrderCheck) {
     this.preOrderCheck = preOrderCheck;
     this.postOrderCheck = postOrderCheck;
   }
@@ -136,6 +136,11 @@ public class FailedOrderBook implements OrderBook {
     return null;
   }
 }
+```
+To complicate things we add one dependency as interface and another as concrete implementation. But our test written in such a way that it can detect it, and if you run it, you will get error
+```
+java.lang.AssertionError: Architecture Violation [Priority: MEDIUM] - Rule 'classes that implement com.exchange.core.matching.orderbook.OrderBook should yup' was violated (4 times):
+com.exchange.core.matching.orderbook.FailedOrderBook shouldn't implement PreOrderCheck/PostOrderCheck interfaces
 ```
 
 ### Precision loss problem
