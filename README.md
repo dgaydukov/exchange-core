@@ -5,6 +5,10 @@
 * [Matching engine architecture](#matching-engine-architecture)
 * [Snapshot](#snapshot)
 * [Test coverage](#test-coverage)
+  * [Unit test](#unit-test)
+  * [Integration test](#integration-test)
+  * [Performance test](#performance-test)
+  * [Architectural test](#architectural-test)
 * [Precision loss problem](#precision-loss-problem)
 
 ### Description
@@ -48,11 +52,22 @@ Pay attention to development process:
 As you see you can use different test classes for each interface that you class implements.
 
 ### Test coverage
-Test coverage is the most important thing in any app, so here we covered our core part a lot with both unit testing & integration testing.
-There are 2 types of tests in this project:
-* unit tests - where we test only source code. All code except `MatchingEngine` covered by unit tests.
-* integration test - where we actually run the app, send incoming messages & listen for outgoing. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
-* Since we have 2 order books - and both implement same interface and are expected to behave the same way, I've created [parametrized test](/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java#L26) where I run all the tests at the same time for 2 orderbooks, using Junit `@ParameterizedTest` annotation
+Test coverage is the most important thing in any app, so here we covered our application with all test cases.
+There are 4 types of tes coverage:
+* unit test
+* integration test
+* performance test
+* architectural test
+Let's dive with more details into each of test set
+
+#### Unit test
+In unit tests we test only source code. Most of your code should be covered by unit test. They are fast to run, cause we don't need to start the app, we test the code. They take like 80% of overall test coverage. In this app all code except `MatchingEngine` covered by unit tests. And we can't test `MatchingEngine` class with unit test, cause it's running app that start threads and read messages, this is not a class that you can mock. So we have to write integration test for it. The basic rule, if class can be easily mocked, we should use unit test for it.
+Since we have 2 order books - and both implement same interface and are expected to behave the same way, I've created [parametrized test](/src/test/java/com/exchange/core/matching/orderbook/OrderBookTest.java) where I run all the tests at the same time for 2 order books, using Junit `@ParameterizedTest` annotation.
+
+#### Integration test
+integration test - where we actually run the app, send incoming messages & listen for outgoing. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
+
+#### Performance test
 Performance testing - this is integration test that measures system performance overall. It should be integration, cause you need to actually run your system end-to-end, and then put extreme load into it and measure performance. I've created [MatchingEnginePerformanceTest](/src/test/java/performance/MatchingEnginePerformanceTest.java) that measures 2 things:
 * TPS - how many messages/orders system can handle per second
 * latency - what is average latency per single request. Here we measure end-to-end latency from the moment user send his order to our system and to the point when he received message back (in case of order - message would be execution report). If you dig into latency test you would notice that 90% of time is taken by adding and matching the order. If you run `latencyTest` you will notice that `ArrayOrderBook` performs way faster then `MapOrderBook`. If you look into test results it shows, that array-based order book performs on average better, due to native manipulation with data in array, where in `MapOrderBook` we are using java `TreeMap` which on average performs slower then array. See test results below for comparison (we send 1 million orders at once through the loop):
@@ -84,6 +99,9 @@ latency for 90% is below 7974
 latency for 99% is below 8563
 ```
 
+#### Architectural test
+new scenario
+
 ### Precision loss problem
 This is the most common problem in finance where we deal with floating point.
 There are 3 ways you can store price/quantity inside you system:
@@ -93,7 +111,7 @@ There are 3 ways you can store price/quantity inside you system:
 * BigDecimal - very high precision, can store any big number. but limitation on space:
   * pros: high precision, almost no loss
   * cons: require more bytes to store object, and it takes harder to serialize and transfer over the network. you may still encounter precision loss when you divide/multiply at the same time, take a look at [PrecisionLossTest](/src/test/java/com/exchange/core/PrecisionLossTest.java). No matter what rounding method are you using you will never get back original amount value. Yet if you look into same example for double, you would notice that when we multiply back double we can get correct value. Yet with `BigDecimal` it's behaved differently. But don't worry there is plenty of cases where `double` fails too.
-* value/scale - where for each price/quantity you store 2 fields: `long value` & `byte scale`. By doing so you can pass any arbitrary number. For example you work with bitcoin, and you want to operate with up to 6 digits after the comma. Then you can set `scale=6`. so your values would be:
+* value/scale - where for each price/quantity you store 2 fields: `long value` & `byte scale`. By doing so you can pass any arbitrary number. For example, you work with bitcoin, and you want to operate with up to 6 digits after the comma. Then you can set `scale=6`. so your values would be:
 ```
 1 BTC = 1000000
 0.001 BTC = 100
