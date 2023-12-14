@@ -3,9 +3,12 @@ package com.exchange.core.matching.orderbook.array;
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.snapshot.Snapshotable;
+import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
+import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
@@ -14,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ArrayOrderBook implements OrderBook {
+public class ArrayOrderBook implements OrderBook, Snapshotable {
 
   private final int DEFAULT_PRICE_LEVEL_SIZE = 1024;
   // sorted in descending order => first bid is the highest price
@@ -212,5 +215,33 @@ public class ArrayOrderBook implements OrderBook {
     md.setBids(bids);
     md.setAsks(asks);
     return md;
+  }
+
+  @Override
+  public SnapshotType getType() {
+    return SnapshotType.ORDER_BOOK;
+  }
+
+  @Override
+  public SnapshotItem create() {
+    List<Order> orders = new ArrayList<>();
+    for (int i = 0; i < bids.length; i++) {
+      PriceLevel level = bids[i];
+      orders.addAll(level.getOrders());
+    }
+    for (int i = 0; i < asks.length; i++) {
+      PriceLevel level = asks[i];
+      orders.addAll(level.getOrders());
+    }
+    SnapshotItem item = new SnapshotItem();
+    item.setType(getType());
+    item.setData(orders);
+    return item;
+  }
+
+  @Override
+  public void load(SnapshotItem data) {
+    ((List<Order>) data.getData())
+        .forEach(this::add);
   }
 }
