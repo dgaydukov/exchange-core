@@ -5,14 +5,18 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.orderchecks.PostOrderCheck;
 import com.exchange.core.matching.orderchecks.PreOrderCheck;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption.DoNotIncludeTests;
 import com.tngtech.archunit.junit.AnalyzeClasses;
-import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.Test;
 
-@AnalyzeClasses(packages = "com.exchange.core")
+@AnalyzeClasses(packages = "com.exchange.core", importOptions = {DoNotIncludeTests.class})
 public class ArchitecturalTest {
 
   private final JavaClasses importedClasses = new ClassFileImporter().importPackages(
@@ -36,13 +40,20 @@ public class ArchitecturalTest {
 
   @Test
   public void validateOrderChecksInsideOrderBook() {
-    ArchRule notImplementPreOrderCheck = classes()
+    ArchRule archRule = classes()
         .that().implement(OrderBook.class)
-        .should().onlyHaveDependentClassesThat().doNotImplement(PreOrderCheck.class);
-    ArchRule notImplementPostOrderCheck = classes()
-        .that().implement(OrderBook.class)
-        .should().onlyHaveDependentClassesThat().doNotImplement(PostOrderCheck.class);
-    notImplementPreOrderCheck.check(importedClasses);
-    notImplementPostOrderCheck.check(importedClasses);
+        .should(new ArchCondition<>("yup") {
+          @Override
+          public void check(JavaClass javaClass, ConditionEvents events) {
+            javaClass.getDirectDependenciesFromSelf()
+                .forEach(d -> {
+                  JavaClass target = d.getTargetClass();
+                  if (target.getName().contains("PreOrderCheck") || target.getName().contains("PostOrderCheck")){
+                    events.add(new SimpleConditionEvent(javaClass, false, d.getOriginClass().getName()+" shouldn't implement PreOrderCheck/PostOrderCheck"));
+                  }
+                });
+          }
+        });
+    archRule.check(importedClasses);
   }
 }

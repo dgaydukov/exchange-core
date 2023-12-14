@@ -102,6 +102,41 @@ latency for 99% is below 8563
 #### Architectural test
 Here we can actually create a test that would enforce our architecture. We are using [ArchUnit library](https://www.archunit.org/userguide/html/000_Index.html) to enforce such tests. One good example if you are using `spring boot`, there is a good practice that you don't use `Repository` inside your controllers. So you can add a test to validate this. And next time, some new junior developer will add new API endpoint, and use repository directly inside controller method, the test will fail and he would have to rewrite it and move logic into `Service`. If you don't have such test cases, your only hope is code review, where senior devs would notice pattern breaking. But it's always better to have such tests in the first place.
 Here we implement [ArchitecturalTest](/src/test/java/archetecture/ArchitecturalTest.java) where we validate that `orderchecks` can't be used inside `orderbook`. Since we decided to separate validation, matching and settlement. those 3 shouldn't mixed together. If you create new instance of `OrderBook` and pass either `PreOrderCheck` or `PostOrderCheck`, such tests would fail.
+By default all arch tests are passing, but if you add this orderbook class, it would fail. As you see here, we created OrderBook implementation that depends on `PreOrderCheck/PostOrderCheck` which is again our architecture rules.
+```java
+import com.exchange.core.matching.orderchecks.PostOrderCheck;
+import com.exchange.core.matching.orderchecks.PreOrderCheck;
+import com.exchange.core.model.Trade;
+import com.exchange.core.model.msg.MarketData;
+import com.exchange.core.model.msg.Order;
+import java.util.List;
+
+public class FailedOrderBook implements OrderBook {
+
+  private final PreOrderCheck preOrderCheck;
+  private final PostOrderCheck postOrderCheck;
+
+  public FailedOrderBook(PreOrderCheck preOrderCheck, PostOrderCheck postOrderCheck) {
+    this.preOrderCheck = preOrderCheck;
+    this.postOrderCheck = postOrderCheck;
+  }
+
+  @Override
+  public List<Trade> match(Order order) {
+    return null;
+  }
+
+  @Override
+  public void add(Order order) {
+
+  }
+
+  @Override
+  public MarketData buildMarketData() {
+    return null;
+  }
+}
+```
 
 ### Precision loss problem
 This is the most common problem in finance where we deal with floating point.
