@@ -54,11 +54,10 @@ As you see you can use different test classes for each interface that you class 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our application with all test cases.
 There are 4 types of tes coverage:
-* unit test
-* integration test
-* performance test
-* architectural test
-Let's dive with more details into each of test set
+* unit test - we test source code here
+* integration test - we test running app here
+* performance test - we test performance of running app (we can test performance of code, but mostly we are interested in the end-to-end performance of running app)
+* architectural test - we test enforcement of architectural rules
 
 ##### Unit test
 In unit tests we test only source code. Most of your code should be covered by unit test. They are fast to run, cause we don't need to start the app, we test the code. They take like 80% of overall test coverage. In this app all code except `MatchingEngine` covered by unit tests. And we can't test `MatchingEngine` class with unit test, cause it's running app that start threads and read messages, this is not a class that you can mock. So we have to write integration test for it. The basic rule, if class can be easily mocked, we should use unit test for it.
@@ -99,7 +98,7 @@ latency for 90% is below 7974
 latency for 99% is below 8563
 ```
 
-#### Architectural test
+##### Architectural test
 Here we can actually create a test that would enforce our architecture. We are using [ArchUnit library](https://www.archunit.org/userguide/html/000_Index.html) to enforce such tests. One good example if you are using `spring boot`, there is a good practice that you don't use `Repository` inside your controllers. So you can add a test to validate this. And next time, some new junior developer will add new API endpoint, and use repository directly inside controller method, the test will fail and he would have to rewrite it and move logic into `Service`. If you don't have such test cases, your only hope is code review, where senior devs would notice pattern breaking. But it's always better to have such tests in the first place.
 Here we implement [ArchitecturalTest](/src/test/java/archetecture/ArchitecturalTest.java) where we validate that `orderchecks` can't be used inside `orderbook`. Since we decided to separate validation, matching and settlement. those 3 shouldn't mixed together. If you create new instance of `OrderBook` and pass either `PreOrderCheck` or `PostOrderCheck`, such tests would fail.
 By default all arch tests are passing, but if you add this orderbook class, it would fail. As you see here, we created OrderBook implementation that depends on `PreOrderCheck/PostOrderCheck` which is again our architecture rules.
