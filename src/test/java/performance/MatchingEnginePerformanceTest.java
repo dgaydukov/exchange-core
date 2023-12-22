@@ -241,12 +241,6 @@ public class MatchingEnginePerformanceTest {
     t1.join();
   }
 
-
-  private BigDecimal getPrice() {
-    int next = random.nextInt(1, 1000);
-    return new BigDecimal(next);
-  }
-
   private Order buyLimitUser1() {
     Order order = new Order();
     order.setSymbol(MockData.SYMBOL);
@@ -263,5 +257,10 @@ public class MatchingEnginePerformanceTest {
     order.setAccount(2);
     order.setSide(OrderSide.SELL);
     return order;
+  }
+
+  private BigDecimal getPrice() {
+    int next = random.nextInt(1, 1000);
+    return new BigDecimal(next);
   }
 }
