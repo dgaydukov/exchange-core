@@ -67,7 +67,7 @@ Since we have 2 order books - and both implement same interface and are expected
 In integration tests we actually run the app, send incoming messages & listen for outgoing. So it's like black-box testing. We run out app, send incoming requests (messages to the queue in our case) and listen for response (read messages from outbound queue in our case). This is similar to actually real user using our app. Good candidate here is `MatchingEngine` class. Cause to test it you have to run it, provide 2 queues and send messages into `inbound` queue and verify that you receive messages in the `outbound` queue.
 There are 2 main types of integration tests:
 * integration test - when you run single application, if it spring-boot then you run it using `SpringBootTest` annotation, where you actually start the app with context
-* end-to-end tests - when you run application and it's accessible from the outside. And you are using scripts, for example cucumber to actually query your API endpoints, and imitate real users behavior
+* end-to-end tests - when you run application and it's accessible from the outside. And you are using scripts, for example cucumber to actually query your API endpoints, and imitate real users behavior. But such tests, make sense only if you have REST API web app. There is no point to use cucumber for example for matching-engine alone.
 
 #### Performance test
 Performance testing - this is integration test that measures system performance overall. It should be integration, cause you need to actually run your system end-to-end, and then put extreme load into it and measure performance. I've created [MatchingEnginePerformanceTest](/src/test/java/performance/MatchingEnginePerformanceTest.java) that measures 2 things:

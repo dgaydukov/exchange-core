@@ -2,7 +2,6 @@ package performance;
 
 import com.exchange.core.MockData;
 import com.exchange.core.matching.MatchingEngine;
-import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderBookType;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
