@@ -69,7 +69,8 @@ In integration tests we actually run the app, send incoming messages & listen fo
 #### Performance test
 Performance testing - this is integration test that measures system performance overall. It should be integration, cause you need to actually run your system end-to-end, and then put extreme load into it and measure performance. I've created [MatchingEnginePerformanceTest](/src/test/java/performance/MatchingEnginePerformanceTest.java) that measures 2 things:
 * TPS - how many messages/orders system can handle per second
-* latency - what is average latency per single request. Here we measure end-to-end latency from the moment user send his order to our system and to the point when he received message back (in case of order - message would be execution report). If you dig into latency test you would notice that 90% of time is taken by adding and matching the order. If you run `latencyTest` you will notice that `ArrayOrderBook` performs way faster then `MapOrderBook`. If you look into test results it shows, that array-based order book performs on average better, due to native manipulation with data in array, where in `MapOrderBook` we are using java `TreeMap` which on average performs slower then array. See test results below for comparison (we send 1 million orders at once through the loop):
+* latency - what is average latency per single request. Here we measure end-to-end latency from the moment user send his order to our system and to the point when he received message back (in case of order - message would be execution report). 
+If you dig into latency test you would notice that 90% of time is taken by adding and matching the order. If you run `latencyTest` you will notice that `ArrayOrderBook` performs way faster then `MapOrderBook`. If you look into test results it shows, that array-based order book performs on average better, due to native manipulation with data in array, where in `MapOrderBook` we are using java `TreeMap` which on average performs slower then array. See test results below for comparison (we send 1 million orders at once through the loop):
 ```
 # Test results for TPS:
 tpsAndThroughputTest: orderBookType=MAP, size=500000
@@ -97,6 +98,13 @@ latency for 50% is below 5681
 latency for 90% is below 7974
 latency for 99% is below 8563
 ```
+There are 2 ways you can write performance test:
+* naive way - just write test, save startTime, and endTime. Then calculate the difference. There is so much wrong with thsi approach:
+  * you need to run your code at least several times to find the average time. But if we write custom loop, then the loop itself would affect performance.
+  * JVM can compile or interpret your code during compilation which may significantly affect measurement
+  * JVM/CPU can optimize your code to improve performance, then part of your code would never be called
+To avoid all such problems, it's better to use some framework for such testing.
+* advanced way - using some kind of framework that specifically designed to handle all problems from naive approach. Once of such frameworks is [JMH](https://github.com/openjdk/jmh). This tool was developed by the team who works on JVM, so developers utilized all their knowledge on JVM internals to create a tool that can take into account all JVM nuances. You can utilize it and measure your code performance. This is important, JHM should only be used for code performance. If we are talking about end-to-end performance with apiServer=>matchingEngine=>webSocket. We can use other tools, cause in such cases we are not care about code performance, but rather end-to-end performance. Yet for code performance measurement JHM is the best thing available. 
 
 #### Architectural test
 Here we can actually create a test that would enforce our architecture. We are using [ArchUnit library](https://www.archunit.org/userguide/html/000_Index.html) to enforce such tests. One good example if you are using `spring boot`, there is a good practice that you don't use `Repository` inside your controllers. So you can add a test to validate this. And next time, some new junior developer will add new API endpoint, and use repository directly inside controller method, the test will fail and he would have to rewrite it and move logic into `Service`. If you don't have such test cases, your only hope is code review, where senior devs would notice pattern breaking. But it's always better to have such tests in the first place.
