@@ -33,6 +33,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
 public class OrderBookPerformanceTest {
+
   private OrderBook arrayOrderBook;
   private OrderBook mapOrderBook;
 
@@ -50,12 +51,8 @@ public class OrderBookPerformanceTest {
     arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL);
   }
 
-  @TearDown(Level.Iteration)
-  public void tearDown() {
-  }
-
   @Benchmark
-  public void checkMapOrderBook(Blackhole blackhole) {
+  public void measureMapOrderBook(Blackhole blackhole) {
     mapOrderBook.add(RandomOrder.buyLimitUser1());
     List<Trade> trades = mapOrderBook.match(RandomOrder.sellLimitUser2());
     blackhole.consume(trades);
@@ -63,7 +60,7 @@ public class OrderBookPerformanceTest {
   }
 
   @Benchmark
-  public void checkArrayOrderBook(Blackhole blackhole) {
+  public void measureArrayOrderBook(Blackhole blackhole) {
     arrayOrderBook.add(RandomOrder.buyLimitUser1());
     List<Trade> trades = arrayOrderBook.match(RandomOrder.sellLimitUser2());
     blackhole.consume(trades);

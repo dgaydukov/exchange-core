@@ -31,7 +31,7 @@ public class RandomOrder {
   }
 
   private static BigDecimal getPrice() {
-    int next = random.nextInt(1, 1000);
+    int next = random.nextInt(100, 1000);
     return new BigDecimal(next);
   }
 
