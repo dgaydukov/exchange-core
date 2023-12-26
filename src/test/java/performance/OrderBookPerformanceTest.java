@@ -37,16 +37,12 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Fork(value = 2, jvmArgs = {"-Xms2G", "-Xmx2G"})
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
-public class MatchingEngineJmhTest {
+public class OrderBookPerformanceTest {
 
   private final static Random random = new Random();
-  private final BlockingQueue<Message> inbound = new LinkedBlockingQueue<>();
-  private final BlockingQueue<Message> outbound = new LinkedBlockingQueue<>();
-  private final MatchingEngine me = new MatchingEngine(inbound, outbound, OrderBookType.MAP, false);
-
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()
-        .include(MatchingEngineJmhTest.class.getSimpleName())
+        .include(OrderBookPerformanceTest.class.getSimpleName())
         .forks(1)
         .build();
     new Runner(opt).run();
@@ -91,26 +87,5 @@ public class MatchingEngineJmhTest {
     blackhole.consume(outbound.poll());
   }
 
-  private Order buyLimitUser1() {
-    Order order = new Order();
-    order.setSymbol(MockData.SYMBOL);
-    order.setType(OrderType.LIMIT);
-    order.setSide(OrderSide.BUY);
-    order.setAccount(1);
-    order.setOrderQty(new BigDecimal("1"));
-    order.setPrice(getPrice());
-    return order;
-  }
 
-  private Order sellLimitUser2() {
-    Order order = buyLimitUser1();
-    order.setAccount(2);
-    order.setSide(OrderSide.SELL);
-    return order;
-  }
-
-  private BigDecimal getPrice() {
-    int next = random.nextInt(1, 1000);
-    return new BigDecimal(next);
-  }
 }
