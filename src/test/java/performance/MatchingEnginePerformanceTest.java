@@ -3,9 +3,7 @@ package performance;
 import com.exchange.core.MockData;
 import com.exchange.core.matching.MatchingEngine;
 import com.exchange.core.model.enums.OrderBookType;
-import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
-import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.ExecutionReport;
 import com.exchange.core.model.msg.InstrumentConfig;
 import com.exchange.core.model.msg.Message;
@@ -15,7 +13,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Stream;
@@ -25,8 +22,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class MatchingEnginePerformanceTest {
-
-  private final static Random random = new Random();
 
   private static Stream<Arguments> getOrderBookTypes() {
     final int size = 500_000;
@@ -84,11 +79,11 @@ public class MatchingEnginePerformanceTest {
 
     for (int i = 0; i < QUEUE_SIZE; i++) {
       long timestamp = System.currentTimeMillis();
-      Order buy = buyLimitUser1();
+      Order buy = RandomOrder.buyLimitUser1();
       buy.setClOrdId("buy_" + i);
       latencyMap.put(buy.getClOrdId(), timestamp);
       queue.add(buy);
-      Order sell = sellLimitUser2();
+      Order sell = RandomOrder.sellLimitUser2();
       long sellTimestamp = System.currentTimeMillis();
       sell.setClOrdId("sell_" + i);
       latencyMap.put(sell.getClOrdId(), sellTimestamp);
@@ -154,10 +149,10 @@ public class MatchingEnginePerformanceTest {
 
     long start = System.currentTimeMillis();
     for (int i = 0; i < queueSize; i++) {
-      Order buy = buyLimitUser1();
+      Order buy = RandomOrder.buyLimitUser1();
       buy.setClOrdId("buy_" + i);
       inbound.add(buy);
-      Order sell = sellLimitUser2();
+      Order sell = RandomOrder.sellLimitUser2();
       sell.setClOrdId("sell_" + i);
       inbound.add(sell);
     }
@@ -227,10 +222,10 @@ public class MatchingEnginePerformanceTest {
 
     for (int i = 0; i < queueSize; i++) {
       long timestamp = System.currentTimeMillis();
-      Order buy = buyLimitUser1();
+      Order buy = RandomOrder.buyLimitUser1();
       buy.setClOrdId("buy_" + i);
       inbound.add(buy);
-      Order sell = sellLimitUser2();
+      Order sell = RandomOrder.sellLimitUser2();
       long sellTimestamp = System.currentTimeMillis();
       sell.setClOrdId("sell_" + i);
       inbound.add(sell);
@@ -239,28 +234,5 @@ public class MatchingEnginePerformanceTest {
     }
     System.out.println("writing done: time=" + (System.currentTimeMillis() - start));
     t1.join();
-  }
-
-  private Order buyLimitUser1() {
-    Order order = new Order();
-    order.setSymbol(MockData.SYMBOL);
-    order.setType(OrderType.LIMIT);
-    order.setSide(OrderSide.BUY);
-    order.setAccount(1);
-    order.setOrderQty(new BigDecimal("1"));
-    order.setPrice(getPrice());
-    return order;
-  }
-
-  private Order sellLimitUser2() {
-    Order order = buyLimitUser1();
-    order.setAccount(2);
-    order.setSide(OrderSide.SELL);
-    return order;
-  }
-
-  private BigDecimal getPrice() {
-    int next = random.nextInt(1, 1000);
-    return new BigDecimal(next);
   }
 }

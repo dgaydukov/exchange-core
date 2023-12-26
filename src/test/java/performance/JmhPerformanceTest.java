@@ -26,13 +26,13 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Fork(value = 2, jvmArgs = {"-Xms2G", "-Xmx2G"})
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
-public class OrderBookPerformanceTest {
+public class JmhPerformanceTest {
 
   private AtomicLong atomic = new AtomicLong();
 
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()
-        .include(OrderBookPerformanceTest.class.getSimpleName())
+        .include(JmhPerformanceTest.class.getSimpleName())
         .forks(1)
         .build();
     new Runner(opt).run();
@@ -49,6 +49,9 @@ public class OrderBookPerformanceTest {
     System.out.println("tearDown => " + atomic.get());
   }
 
+  /**
+   * This is example test to show how JMH works and what it doing under the hood
+   */
   @Benchmark
   public void latency(Blackhole blackhole) {
     atomic.incrementAndGet();
