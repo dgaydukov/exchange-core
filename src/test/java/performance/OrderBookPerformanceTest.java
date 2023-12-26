@@ -1,5 +1,11 @@
 package performance;
 
+import com.exchange.core.MockData;
+import com.exchange.core.matching.orderbook.MapOrderBook;
+import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
+import com.exchange.core.model.Trade;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -27,8 +33,8 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
 public class OrderBookPerformanceTest {
-
-  private AtomicLong atomic = new AtomicLong();
+  private OrderBook arrayOrderBook;
+  private OrderBook mapOrderBook;
 
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()
@@ -40,17 +46,27 @@ public class OrderBookPerformanceTest {
 
   @Setup(Level.Iteration)
   public void setUp() {
-    System.out.println("setup");
-    atomic.set(0);
+    mapOrderBook = new MapOrderBook(MockData.SYMBOL);
+    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL);
   }
 
   @TearDown(Level.Iteration)
   public void tearDown() {
-    System.out.println("tearDown => " + atomic.get());
   }
 
   @Benchmark
-  public void latency(Blackhole blackhole) {
-    atomic.incrementAndGet();
+  public void checkMapOrderBook(Blackhole blackhole) {
+    mapOrderBook.add(RandomOrder.buyLimitUser1());
+    List<Trade> trades = mapOrderBook.match(RandomOrder.sellLimitUser2());
+    blackhole.consume(trades);
+    blackhole.consume(mapOrderBook.buildMarketData());
+  }
+
+  @Benchmark
+  public void checkArrayOrderBook(Blackhole blackhole) {
+    arrayOrderBook.add(RandomOrder.buyLimitUser1());
+    List<Trade> trades = arrayOrderBook.match(RandomOrder.sellLimitUser2());
+    blackhole.consume(trades);
+    blackhole.consume(arrayOrderBook.buildMarketData());
   }
 }

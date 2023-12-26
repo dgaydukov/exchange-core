@@ -18,6 +18,7 @@ public class RandomOrder {
     order.setSide(OrderSide.BUY);
     order.setAccount(1);
     order.setOrderQty(getQuantity());
+    order.setLeavesQty(order.getOrderQty());
     order.setPrice(getPrice());
     return order;
   }
