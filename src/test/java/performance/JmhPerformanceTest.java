@@ -40,7 +40,7 @@ public class JmhPerformanceTest {
 
   @Setup(Level.Iteration)
   public void setUp() {
-    System.out.println("setup");
+    System.out.println("setUp");
     atomic.set(0);
   }
 
@@ -50,10 +50,12 @@ public class JmhPerformanceTest {
   }
 
   /**
-   * This is example test to show how JMH works and what it doing under the hood
+   * This is example test to show how JMH works under-the-hood and how many times it invokes each
+   * function As you see by logs, it runs 2 times per 5 iterations, but inside each iteration it
+   * calls 700M times our function
    */
   @Benchmark
-  public void latency(Blackhole blackhole) {
-    atomic.incrementAndGet();
+  public void measure(Blackhole blackhole) {
+    blackhole.consume(atomic.incrementAndGet());
   }
 }
