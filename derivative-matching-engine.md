@@ -10,12 +10,12 @@
 ### Description
 Below is proposed architecture design for real-world matching-engine solution with end-to-end integration using `aeron` as a communication bus between different component and API & WS for clients and FIX gateway for institutional clients.
 Derivative matching engine consist of several parts:
-* [spot matching engine](/README.md) - this is the part that is shared here in public github repository
-* derivative matching engine
+* [spot matching engine](/README.md) - this is the part that is shared here in public Github repository
+* derivative matching engine - second ME running separately and communicating with spot through Aeron
 * REST API for client communication who prefer REST
 * WS read/write - for clients who prefer websocket connection
 * FIX - for institutional clients who prefer FIX protocol communication with exchange
-* aeron - message bus that connects matching-engine with 3 services REST/WS/FIX
+* Aeron - message bus that connects matching-engine with 3 services REST/WS/FIX
 
 ### Exchange architecture
 Example of exchange components (based on https://www.youtube.com/watch?v=b1e4t2k2KJY):
@@ -29,9 +29,9 @@ Example of exchange components (based on https://www.youtube.com/watch?v=b1e4t2k
 * secondary me (also called passive me) that listen output from primary me (this is important, it shouldn't listen incoming messages from message bus, only result of already processed messages by first me) and builds exactly the same state as first ME (so in case first me fail, we can start second me from exactly same place where first fail) => you can use paxos to decide who is primary me and when you should switch to secondary me. But no exchange use it, most exchanges has simple fail over logic, if main me fail, promote passive me to primary.
 * multi-threading - new thread per order book - good, but centralization has benefits
 * state-machine recovery is a replay
-* speed, latency, throughput, determinism - basic principle of exchange
+* basic principle of exchange - speed, latency, throughput, determinism
 Exchange should include 3 components:
-  * matching engine (2 instances should be running, see [architecture](#matching-engine-architecture))
+  * matching engine - 2 instances should be running, see [architecture](#matching-engine-architecture)
   * communication channel or bus - [aeron](#aeron---internal-communication-bus) should be used
   * external api - how clients can communicate with the system. Most top exchanges uses 3 level of communication
     * http-api
