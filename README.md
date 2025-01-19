@@ -76,7 +76,8 @@ Apparently there are many other solutions, but basic idea is that you have to us
 The idea is when you need to switch, your system, detect switch signal and change Secondary for Primary.
 And the change happens in such a way that no message is lost, like message-99 is handled by current Primary, then you initiate the switch through another message and then message-100 is switch, but message-101 would already go to newly promoted Primary instance.
 
-I want to keep this repository as pure java no-dependencies order-book. But I've created new one [distributed-matching-engine](/dgaydukov/distributed-matching-engine) where you can take a look how zero-downtime actually works in practice
+I want to keep this repository as pure java no-dependencies order-book. But I've created new one [distributed-matching-engine](https://github.com/dgaydukov/distributed-matching-engine) where you can take a look how zero-downtime actually works in practice.
+In order to test you need to run distributed system like zookeeper in docker, also need a few dependencies, so I don't want to clutter this project with such code, I want this project to be pure java order-book and matching-engine example.
 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our application with all test cases. 
