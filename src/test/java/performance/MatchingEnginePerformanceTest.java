@@ -2,6 +2,7 @@ package performance;
 
 import com.exchange.core.MockData;
 import com.exchange.core.matching.MatchingEngine;
+import com.exchange.core.matching.spot.SpotMatchingEngine;
 import com.exchange.core.model.enums.OrderBookType;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.ExecutionReport;
@@ -104,7 +105,7 @@ public class MatchingEnginePerformanceTest {
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound, orderBookType, false);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound, orderBookType, false);
     me.start();
 
     // adding instrument
@@ -170,7 +171,7 @@ public class MatchingEnginePerformanceTest {
 
     Queue<Message> inbound = new LinkedBlockingQueue<>();
     Queue<Message> outbound = new LinkedBlockingQueue<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound, orderBookType, false);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound, orderBookType, false);
     me.start();
     long start = System.currentTimeMillis();
 

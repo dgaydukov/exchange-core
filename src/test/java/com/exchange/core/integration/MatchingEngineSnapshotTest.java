@@ -3,6 +3,7 @@ package com.exchange.core.integration;
 import com.exchange.core.MockData;
 import com.exchange.core.TestUtils;
 import com.exchange.core.matching.MatchingEngine;
+import com.exchange.core.matching.spot.SpotMatchingEngine;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
@@ -44,7 +45,7 @@ public class MatchingEngineSnapshotTest {
 
     Queue<Message> inbound = new LinkedList<>();
     Queue<Message> outbound = new LinkedList<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound);
     me.start();
     // add instrument config
     InstrumentConfig inst = MockData.getInstrument();
@@ -150,7 +151,7 @@ public class MatchingEngineSnapshotTest {
     // ME should pick-up the snapshot and load it into memory
     Queue<Message> inbound = new LinkedList<>();
     Queue<Message> outbound = new LinkedList<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound);
     me.start();
 
     // we can send counter order for account=2 and see trade results

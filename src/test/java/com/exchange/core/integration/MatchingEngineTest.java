@@ -2,6 +2,7 @@ package com.exchange.core.integration;
 
 import com.exchange.core.MockData;
 import com.exchange.core.matching.MatchingEngine;
+import com.exchange.core.matching.spot.SpotMatchingEngine;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.ErrorMessage;
@@ -23,7 +24,7 @@ public class MatchingEngineTest {
   public void invalidSymbolTest() {
     Queue<Message> inbound = new LinkedList<>();
     Queue<Message> outbound = new LinkedList<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound);
     Assertions.assertNull(outbound.poll());
     me.start();
     Assertions.assertNull(outbound.poll());
@@ -56,7 +57,7 @@ public class MatchingEngineTest {
   public void preOrderCheckFailTest() {
     Queue<Message> inbound = new LinkedList<>();
     Queue<Message> outbound = new LinkedList<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound);
     me.start();
 
     InstrumentConfig inst = MockData.getInstrument();
@@ -87,7 +88,7 @@ public class MatchingEngineTest {
   public void placeAndMatchOrderTest() {
     Queue<Message> inbound = new LinkedList<>();
     Queue<Message> outbound = new LinkedList<>();
-    MatchingEngine me = new MatchingEngine(inbound, outbound);
+    MatchingEngine me = new SpotMatchingEngine(inbound, outbound);
     me.start();
     // add instrument config
     InstrumentConfig inst = MockData.getInstrument();
