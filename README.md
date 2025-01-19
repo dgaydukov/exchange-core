@@ -4,6 +4,7 @@
 * [Description](#description)
 * [Matching engine architecture](#matching-engine-architecture)
 * [Snapshot](#snapshot)
+* [Zero downtime](#zero-downtime)
 * [Test coverage](#test-coverage)
   * [Unit test](#unit-test)
   * [Integration test](#integration-test)
@@ -50,6 +51,26 @@ Pay attention to development process:
   * [AccountRepositoryTest](/src/test/java/com/exchange/core/repository/AccountRepositoryTest.java) - test of `AccountRepository` interface and it's main functions
   * [AccountSnapshotableTest](/src/test/java/com/exchange/core/matching/snapshot/snapshotable/AccountSnapshotableTest.java) - test of `Snapshotable` interface with its main functions. See how here we cast our object back to `AccountRepository` to actually validate how snapshotting works, when we create snapshot & load snapshot.
 As you see you can use different test classes for each interface that you class implements.
+
+### Zero downtime
+One of the most important concept when we're building trading system is so-called "zero downtime deployment".
+Since trading system is supposed to work 24/7, or if your system has downtime, but you may need to deploy urgent fix during working hours, you have to implement such feature.
+The idea is that you run 2 or more instances at the same time, and you can always switch between them.
+Let's consider example of 2 instances running:
+* one Primary and one Secondary instance running at the same time and both have the same state
+* We decided to deploy new feature
+* Shutdown Secondary and update the code and start-up the Secondary
+* Primary is running with old code and Secondary with new code, both have the same state
+* Choose some message and switch Secondary with Primary
+* Now Primary is running new code, Secondary is running old code
+* Shutdown secondary and deploy new code and start up
+As you see this process allows us to deploy feature while the app is running. This may be useful in any high-load app, but necessary for trading app.
+The most difficult part is actually switching, because you need some mediator that would control the actual switching.
+As mediator you can use:
+* Zookeeper - if you are using Kafka as main message bus
+* Aeron Cluster - if you're using aeron as main message bus
+Apparently there are other systems, I've worked with these 2. You can use something else or any of the above.
+The idea is when you need to switch, your system, detect switch signal and change Secondary for Primary.
 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our application with all test cases. 
