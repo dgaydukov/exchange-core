@@ -64,15 +64,18 @@ Let's consider example of 2 instances running:
 * Choose some message and switch Secondary with Primary
 * Now Primary is running new code, Secondary is running old code
 * Shutdown secondary and deploy new code and start up
+
 As you see this process allows us to deploy feature while the app is running. This may be useful in any high-load app, but necessary for trading app.
 The most difficult part is actually switching, because you need some mediator that would control the actual switching.
 As mediator you can use:
 * Zookeeper (coordination service) - if you are using Kafka as main message bus
 * Aeron Cluster (cluster pool) - if you're using aeron as main message bus
 * Redis/Memcached - if you use other message bus and don't have Kafka/Aeron
+
 Apparently there are many other solutions, but basic idea is that you have to use distributed system that several of your instances can connect and coordinate between themselves.
 The idea is when you need to switch, your system, detect switch signal and change Secondary for Primary.
 And the change happens in such a way that no message is lost, like message-99 is handled by current Primary, then you initiate the switch through another message and then message-100 is switch, but message-101 would already go to newly promoted Primary instance.
+I want to keep this repository as pure java no-dependencies order-book. But I've created new one [distributed-matching-engine](#distributed-matching-engine) where you can take a look how zero-downtime actually works in practice
 
 ### Test coverage
 Test coverage is the most important thing in any app, so here we covered our application with all test cases. 
