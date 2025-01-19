@@ -92,7 +92,9 @@ public class MatchingEngine {
     File file = new File(SNAPSHOT_BASE_DIR);
     if (!file.exists()) {
       System.out.println("Creating snapshot directory: path=" + file);
-      file.mkdir();
+      if (!file.mkdir()){
+        throw new AppException("Failed to create snapshot directory: path=" + file);
+      }
     }
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null) {
