@@ -55,6 +55,7 @@ public class MatchingEngine {
   private final StorageWriter storageWriter;
   private final boolean printInboundMsg;
   private final String SNAPSHOT_BASE_DIR = System.getProperty("user.dir") + "/snapshots";
+  private final WaitStrategy waitStrategy;
 
   public MatchingEngine(Queue<Message> inbound, Queue<Message> outbound) {
     this(inbound, outbound, OrderBookType.MAP, true);
@@ -80,6 +81,7 @@ public class MatchingEngine {
     storageWriter = new FileStorageWriter();
     snapshotManager = new SnapshotManagerImpl(snapshotables,
         new JsonObjectConverter(), storageWriter, SNAPSHOT_BASE_DIR);
+    waitStrategy = new SleepWaitStrategy();
   }
 
   public void start() {
@@ -110,6 +112,7 @@ public class MatchingEngine {
       long lastOrderId = snapshotManager.getLastOrderId();
       System.out.println("Updating counter: lastOrderId=" + lastOrderId);
       while (lastOrderId != counter.getNextOrderId()) {
+        waitStrategy.idle();
       }
 
       System.out.println("Loaded snapshot: name=" + filename);
