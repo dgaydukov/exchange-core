@@ -24,6 +24,15 @@ public class PriceLevelTest {
   }
 
   @Test
+  public void nullOrderErrorTest() {
+    Order buy = MockData.getLimitBuy();
+    PriceLevel level = new PriceLevelImpl(buy);
+    AppException lock = Assertions.assertThrows(AppException.class,
+            () -> level.add(null), "Exception should be thrown");
+    Assertions.assertEquals(lock.getMessage(), "Fail to add order: order is null");
+  }
+
+  @Test
   public void addOrderTest() {
     List<Order> expected = new ArrayList<>();
     Order buy = MockData.getLimitBuy();
@@ -65,6 +74,7 @@ public class PriceLevelTest {
     Assertions.assertEquals(third, level.getFirst(), "third order mismatch");
     Assertions.assertTrue(level.remove(third), "third order should be removed successfully");
 
+    Assertions.assertNull(level.getFirst(), "first order should be null");
     Iterator<Order> iterator = level.getOrders();
     Assertions.assertFalse(iterator.hasNext(), "Iterator should be empty");
   }

@@ -24,6 +24,9 @@ public class PriceLevelImpl implements PriceLevel{
 
   @Override
   public void add(Order order) {
+    if (order == null){
+      throw new AppException("Fail to add order: order is null");
+    }
     if (price.compareTo(order.getPrice()) != 0) {
       throw new AppException("Fail to add order: price mismatch");
     }
@@ -37,7 +40,7 @@ public class PriceLevelImpl implements PriceLevel{
 
   @Override
   public Order getFirst() {
-    return orders.isEmpty() ? null : orders.get(0);
+    return !orders.isEmpty() ? orders.getFirst() : null;
   }
 
   @Override
