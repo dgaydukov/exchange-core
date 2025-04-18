@@ -12,6 +12,9 @@ public class PriceLevelImpl implements PriceLevel{
   private final List<Order> orders;
 
   public PriceLevelImpl(Order order){
+    if (order == null){
+      throw new AppException("Fail to add order: order is null");
+    }
     price = order.getPrice();
     orders = new LinkedList<>();
     add(order);

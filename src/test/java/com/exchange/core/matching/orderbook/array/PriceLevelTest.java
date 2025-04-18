@@ -20,7 +20,14 @@ public class PriceLevelTest {
     buy.setPrice(new BigDecimal("200"));
     AppException lock = Assertions.assertThrows(AppException.class,
             () -> level.add(buy), "Exception should be thrown");
-    Assertions.assertEquals(lock.getMessage(), "Fail to add order: price mismatch");
+    Assertions.assertEquals("Fail to add order: price mismatch", lock.getMessage());
+  }
+
+  @Test
+  public void nullOrderConstructorErrorTest() {
+    AppException lock = Assertions.assertThrows(AppException.class,
+            () -> new PriceLevelImpl(null), "Exception should be thrown");
+    Assertions.assertEquals("Fail to add order: order is null", lock.getMessage());
   }
 
   @Test
@@ -29,7 +36,7 @@ public class PriceLevelTest {
     PriceLevel level = new PriceLevelImpl(buy);
     AppException lock = Assertions.assertThrows(AppException.class,
             () -> level.add(null), "Exception should be thrown");
-    Assertions.assertEquals(lock.getMessage(), "Fail to add order: order is null");
+    Assertions.assertEquals("Fail to add order: order is null", lock.getMessage());
   }
 
   @Test
