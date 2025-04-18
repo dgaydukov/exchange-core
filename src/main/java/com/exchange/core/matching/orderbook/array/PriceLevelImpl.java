@@ -37,8 +37,8 @@ public class PriceLevelImpl implements PriceLevel{
   }
 
   @Override
-  public boolean remove(Order order) {
-    return orders.remove(order);
+  public boolean remove() {
+    return orders.remove(index--) == null;
   }
 
   @Override
@@ -48,7 +48,7 @@ public class PriceLevelImpl implements PriceLevel{
 
   @Override
   public boolean hasNext() {
-    return orders.size() <= index;
+    return index < orders.size();
   }
 
   @Override

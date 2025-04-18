@@ -9,12 +9,11 @@ public interface PriceLevel {
 
     void add(Order order);
 
-    boolean remove(Order order);
-
-    // get next order in the line
-    Order next();
+    boolean remove();
 
     boolean hasNext();
-    // reset iterator for next method
+    // get next order in the line
+    Order next();
+    // reset iterator for hasNext/next method. Always call it before you want to iterate over the list of orders
     void resetIterator();
 }
