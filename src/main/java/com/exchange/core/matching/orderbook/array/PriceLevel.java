@@ -1,35 +1,16 @@
 package com.exchange.core.matching.orderbook.array;
 
-import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
-import lombok.Getter;
 
-@Data
-public class PriceLevel {
+import java.util.Iterator;
 
-  @Getter
-  private BigDecimal price;
-  private List<Order> orders;
-  private int index;
+public interface PriceLevel {
+    void add(Order order);
 
-  public PriceLevel(Order order) {
-    price = order.getPrice();
-    orders = new ArrayList<>();
-    addOrder(order);
-  }
+    boolean remove(Order order);
 
-  public void addOrder(Order order) {
-    if (price.compareTo(order.getPrice()) != 0) {
-      throw new AppException("Fail to add order: price mismatch");
-    }
-    orders.add(order);
-  }
+    // always return first order in the list
+    Order getFirst();
 
-  public List<Order> getOrders() {
-    return orders;
-  }
+    Iterator<Order> getOrders();
 }

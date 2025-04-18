@@ -12,7 +12,7 @@ public class PriceLevelTest {
   @Test
   public void priceMismatchErrorTest() {
     Order buy = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevel(buy);
+    PriceLevelImpl level = new PriceLevelImpl(buy);
     buy.setPrice(new BigDecimal("200"));
     AppException lock = Assertions.assertThrows(AppException.class,
         () -> level.addOrder(buy), "Exception should be thrown");
@@ -22,7 +22,7 @@ public class PriceLevelTest {
   @Test
   public void addOrderTest() {
     Order buy = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevel(buy);
+    PriceLevelImpl level = new PriceLevelImpl(buy);
     for (int i = 0; i < 5; i++) {
       level.addOrder(buy);
     }
