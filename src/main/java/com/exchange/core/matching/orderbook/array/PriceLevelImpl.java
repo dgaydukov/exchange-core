@@ -37,8 +37,9 @@ public class PriceLevelImpl implements PriceLevel{
   }
 
   @Override
-  public boolean remove() {
-    return orders.remove(index--) == null;
+  public void remove() {
+    orders.remove(index-1);
+    index--;
   }
 
   @Override

@@ -9,7 +9,7 @@ public interface PriceLevel {
 
     void add(Order order);
 
-    boolean remove();
+    void remove();
 
     boolean hasNext();
     // get next order in the line

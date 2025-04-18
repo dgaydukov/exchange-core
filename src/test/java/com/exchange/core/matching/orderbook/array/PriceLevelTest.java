@@ -5,7 +5,6 @@ import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -61,7 +60,7 @@ public class PriceLevelTest {
   }
 
   @Test
-  public void getNextTest(){
+  public void getNextTest() {
     Order first = MockData.getLimitBuy();
     PriceLevel level = new PriceLevelImpl(first);
     Order second = MockData.getLimitBuy();
@@ -91,19 +90,25 @@ public class PriceLevelTest {
   }
 
   @Test
-  public void getNextAndRemoveTest(){
+  public void getNextAndRemoveTest() {
     Order first = MockData.getLimitBuy();
     PriceLevel level = new PriceLevelImpl(first);
     Order second = MockData.getLimitBuy();
-    second.setQuoteOrderQty(new BigDecimal("20"));
+    second.setOrderId(2);
     level.add(second);
     Order third = MockData.getLimitBuy();
-    third.setQuoteOrderQty(new BigDecimal("30"));
+    second.setOrderId(3);
     level.add(third);
 
     Assertions.assertTrue(level.hasNext(), "should have next");
     Assertions.assertEquals(first, level.next(), "first order mismatch");
-    Assertions.assertTrue(level.remove(first), "first should be removed successfully");
-
+    level.remove();
+    Assertions.assertTrue(level.hasNext(), "should have next");
+    Assertions.assertEquals(second, level.next(), "second order mismatch");
+    level.remove();
+    Assertions.assertTrue(level.hasNext(), "should have next");
+    Assertions.assertEquals(third, level.next(), "third order mismatch");
+    level.remove();
+    Assertions.assertFalse(level.hasNext(), "should not have next");
   }
 }
