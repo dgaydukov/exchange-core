@@ -82,16 +82,16 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
 
       if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-        iterator.remove();
+        level.remove(maker);
       }
     }
   }
 
   private void matchMarket(Order taker, PriceLevel level, List<Trade> trades) {
-    Iterator<Order> ordIterator = level.getOrders();
+    Iterator<Order> iterator = level.getOrders();
     BigDecimal tradePrice = level.getPrice();
-    while (ordIterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-      Order maker = ordIterator.next();
+    while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+      Order maker = iterator.next();
 
       BigDecimal tradeQty, tradeAmount;
       if (taker.getSide() == OrderSide.BUY) {
@@ -117,7 +117,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
 
       trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
       if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-        ordIterator.remove();
+        level.remove(maker);
       }
     }
   }
