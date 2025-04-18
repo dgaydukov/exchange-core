@@ -1,9 +1,11 @@
 package com.exchange.core.matching.orderbook.array;
 
 import com.exchange.core.model.msg.Order;
-
 import java.math.BigDecimal;
 
+/**
+ * Holder for list of orders for particular price
+ */
 public interface PriceLevel {
     BigDecimal getPrice();
 

@@ -56,5 +56,4 @@ public class PriceLevelImpl implements PriceLevel{
   public void resetIterator() {
     index = 0;
   }
-
 }
