@@ -15,7 +15,7 @@ public class PriceLevelTest {
     PriceLevelImpl level = new PriceLevelImpl(buy);
     buy.setPrice(new BigDecimal("200"));
     AppException lock = Assertions.assertThrows(AppException.class,
-        () -> level.addOrder(buy), "Exception should be thrown");
+        () -> level.add(buy), "Exception should be thrown");
     Assertions.assertEquals(lock.getMessage(), "Fail to add order: price mismatch");
   }
 
@@ -24,8 +24,8 @@ public class PriceLevelTest {
     Order buy = MockData.getLimitBuy();
     PriceLevelImpl level = new PriceLevelImpl(buy);
     for (int i = 0; i < 5; i++) {
-      level.addOrder(buy);
+      level.add(buy);
     }
-    Assertions.assertEquals(6, level.getOrders().size(), "Should be 6 iterations");
+    Assertions.assertEquals(6, level.getOrders(), "Should be 6 iterations");
   }
 }
