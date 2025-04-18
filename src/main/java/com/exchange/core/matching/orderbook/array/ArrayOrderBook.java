@@ -21,9 +21,9 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
 
   private final int DEFAULT_PRICE_LEVEL_SIZE = 1024;
   // sorted in descending order => first bid is the highest price
-  private final PriceLevelImpl[] bids = new PriceLevelImpl[DEFAULT_PRICE_LEVEL_SIZE];
+  private final PriceLevel[] bids = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
   // sorted in ascending order => first ask is the lowest price
-  private final PriceLevelImpl[] asks = new PriceLevelImpl[DEFAULT_PRICE_LEVEL_SIZE];
+  private final PriceLevel[] asks = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
   private final String symbol;
 
 
@@ -36,7 +36,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     List<Trade> trades = new ArrayList<>();
     if (taker.getSide() == OrderSide.BUY) {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-        PriceLevelImpl level = asks[i];
+        PriceLevel level = asks[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
         }
@@ -51,7 +51,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
     } else {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-        PriceLevelImpl level = bids[i];
+        PriceLevel level = bids[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
         }
@@ -69,9 +69,9 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
 
-  private void matchLimit(Order taker, PriceLevelImpl level, List<Trade> trades) {
+  private void matchLimit(Order taker, PriceLevel level, List<Trade> trades) {
     final BigDecimal tradePrice = level.getPrice();
-    Iterator<Order> iterator = level.getOrders().iterator();
+    Iterator<Order> iterator = level.getOrders();
     while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       Order maker = iterator.next();
       BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
@@ -87,8 +87,8 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     }
   }
 
-  private void matchMarket(Order taker, PriceLevelImpl level, List<Trade> trades) {
-    Iterator<Order> ordIterator = level.getOrders().iterator();
+  private void matchMarket(Order taker, PriceLevel level, List<Trade> trades) {
+    Iterator<Order> ordIterator = level.getOrders();
     BigDecimal tradePrice = level.getPrice();
     while (ordIterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       Order maker = ordIterator.next();
@@ -126,13 +126,13 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   public void add(Order order) {
     if (order.getSide() == OrderSide.BUY) {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-        PriceLevelImpl level = bids[i];
+        PriceLevel level = bids[i];
         if (level == null) {
           bids[i] = new PriceLevelImpl(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.addOrder(order);
+          level.add(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
@@ -142,13 +142,13 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
     } else {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-        PriceLevelImpl level = asks[i];
+        PriceLevel level = asks[i];
         if (level == null) {
           asks[i] = new PriceLevelImpl(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.addOrder(order);
+          level.add(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
@@ -159,7 +159,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     }
   }
 
-  private void moveLeft(int index, PriceLevelImpl level, PriceLevelImpl[] arr) {
+  private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;
     if (arr[len - 1] != null) {
       throw new AppException("PriceLevel Overflow. Fail to move left");
@@ -198,17 +198,19 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     BigDecimal[][] asks = new BigDecimal[askSize][];
     for (int i = 0; i < bidSize; i++) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-      PriceLevelImpl level = this.bids[i];
-      for (Order order : level.getOrders()) {
-        cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
+      PriceLevel level = this.bids[i];
+      Iterator<Order> iterator = level.getOrders();
+      while (iterator.hasNext()) {
+        cumulativeQuantity = cumulativeQuantity.add(iterator.next().getLeavesQty());
       }
       bids[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
     }
     for (int i = 0; i < askSize; i++) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-      PriceLevelImpl level = this.asks[i];
-      for (Order order : level.getOrders()) {
-        cumulativeQuantity = cumulativeQuantity.add(order.getLeavesQty());
+      PriceLevel level = this.asks[i];
+      Iterator<Order> iterator = level.getOrders();
+      while (iterator.hasNext()) {
+        cumulativeQuantity = cumulativeQuantity.add(iterator.next().getLeavesQty());
       }
       asks[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
     }
@@ -225,13 +227,17 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   @Override
   public SnapshotItem create() {
     List<Order> orders = new ArrayList<>();
-    for (int i = 0; i < bids.length; i++) {
-      PriceLevelImpl level = bids[i];
-      orders.addAll(level.getOrders());
+    for (PriceLevel level : bids) {
+        Iterator<Order> iterator = level.getOrders();
+        while (iterator.hasNext()) {
+            orders.add(iterator.next());
+        }
     }
-    for (int i = 0; i < asks.length; i++) {
-      PriceLevelImpl level = asks[i];
-      orders.addAll(level.getOrders());
+    for (PriceLevel level : asks) {
+        Iterator<Order> iterator = level.getOrders();
+        while (iterator.hasNext()) {
+            orders.add(iterator.next());
+        }
     }
     SnapshotItem item = new SnapshotItem();
     item.setType(getType());
