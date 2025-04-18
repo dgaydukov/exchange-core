@@ -3,7 +3,6 @@ package com.exchange.core.matching.orderbook.array;
 import com.exchange.core.model.msg.Order;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
 
 public interface PriceLevel {
     BigDecimal getPrice();
@@ -12,8 +11,10 @@ public interface PriceLevel {
 
     boolean remove(Order order);
 
-    // always return first order in the list
-    Order getFirst();
+    // get next order in the line
+    Order next();
 
-    Iterator<Order> getOrders();
+    boolean hasNext();
+    // reset iterator for next method
+    void resetIterator();
 }

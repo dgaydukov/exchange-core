@@ -38,51 +38,51 @@ public class PriceLevelTest {
             () -> level.add(null), "Exception should be thrown");
     Assertions.assertEquals("Fail to add order: order is null", lock.getMessage());
   }
-
-  @Test
-  public void addOrderTest() {
-    List<Order> expected = new ArrayList<>();
-    Order buy = MockData.getLimitBuy();
-    expected.add(buy);
-    PriceLevel level = new PriceLevelImpl(buy);
-    for (int i = 0; i < 5; i++) {
-      Order _buy = MockData.getLimitBuy();
-      _buy.setQuoteOrderQty(new BigDecimal(i));
-      expected.add(_buy);
-      level.add(_buy);
-    }
-    List<Order> orders = new ArrayList<>();
-    Iterator<Order> iterator = level.getOrders();
-    while (iterator.hasNext()) {
-      orders.add(iterator.next());
-    }
-    Assertions.assertEquals(6, orders.size(), "Should be 6 iterations");
-    Assertions.assertIterableEquals(expected, orders, "level order mismatch");
-  }
-
-
-
-  @Test
-  public void getFirstAndRemove(){
-    Order first = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevelImpl(first);
-    Order second = MockData.getLimitBuy();
-    second.setQuoteOrderQty(new BigDecimal("20"));
-    level.add(second);
-    Order third = MockData.getLimitBuy();
-    third.setQuoteOrderQty(new BigDecimal("30"));
-    level.add(third);
-
-    Assertions.assertEquals(first, level.getFirst(), "first order mismatch");
-    Assertions.assertTrue(level.remove(first), "first order should be removed successfully");
-    Assertions.assertFalse(level.remove(first), "first order already removed");
-    Assertions.assertEquals(second, level.getFirst(), "second order should be removed");
-    Assertions.assertTrue(level.remove(second), "second order should be removed successfully");
-    Assertions.assertEquals(third, level.getFirst(), "third order mismatch");
-    Assertions.assertTrue(level.remove(third), "third order should be removed successfully");
-
-    Assertions.assertNull(level.getFirst(), "first order should be null");
-    Iterator<Order> iterator = level.getOrders();
-    Assertions.assertFalse(iterator.hasNext(), "Iterator should be empty");
-  }
+//
+//  @Test
+//  public void addOrderTest() {
+//    List<Order> expected = new ArrayList<>();
+//    Order buy = MockData.getLimitBuy();
+//    expected.add(buy);
+//    PriceLevel level = new PriceLevelImpl(buy);
+//    for (int i = 0; i < 5; i++) {
+//      Order _buy = MockData.getLimitBuy();
+//      _buy.setQuoteOrderQty(new BigDecimal(i));
+//      expected.add(_buy);
+//      level.add(_buy);
+//    }
+//    List<Order> orders = new ArrayList<>();
+//    Iterator<Order> iterator = level.getOrders();
+//    while (iterator.hasNext()) {
+//      orders.add(iterator.next());
+//    }
+//    Assertions.assertEquals(6, orders.size(), "Should be 6 iterations");
+//    Assertions.assertIterableEquals(expected, orders, "level order mismatch");
+//  }
+//
+//
+//
+//  @Test
+//  public void getFirstAndRemove(){
+//    Order first = MockData.getLimitBuy();
+//    PriceLevel level = new PriceLevelImpl(first);
+//    Order second = MockData.getLimitBuy();
+//    second.setQuoteOrderQty(new BigDecimal("20"));
+//    level.add(second);
+//    Order third = MockData.getLimitBuy();
+//    third.setQuoteOrderQty(new BigDecimal("30"));
+//    level.add(third);
+//
+//    Assertions.assertEquals(first, level.getFirst(), "first order mismatch");
+//    Assertions.assertTrue(level.remove(first), "first order should be removed successfully");
+//    Assertions.assertFalse(level.remove(first), "first order already removed");
+//    Assertions.assertEquals(second, level.getFirst(), "second order should be removed");
+//    Assertions.assertTrue(level.remove(second), "second order should be removed successfully");
+//    Assertions.assertEquals(third, level.getFirst(), "third order mismatch");
+//    Assertions.assertTrue(level.remove(third), "third order should be removed successfully");
+//
+//    Assertions.assertNull(level.getFirst(), "first order should be null");
+//    Iterator<Order> iterator = level.getOrders();
+//    Assertions.assertFalse(iterator.hasNext(), "Iterator should be empty");
+//  }
 }

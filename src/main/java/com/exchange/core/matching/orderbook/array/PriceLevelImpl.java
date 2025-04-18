@@ -3,13 +3,13 @@ package com.exchange.core.matching.orderbook.array;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class PriceLevelImpl implements PriceLevel{
   private final BigDecimal price;
   private final List<Order> orders;
+  private int index;
 
   public PriceLevelImpl(Order order){
     if (order == null){
@@ -42,12 +42,18 @@ public class PriceLevelImpl implements PriceLevel{
   }
 
   @Override
-  public Order getFirst() {
-    return !orders.isEmpty() ? orders.getFirst() : null;
+  public Order next() {
+    return orders.get(index++);
   }
 
   @Override
-  public Iterator<Order> getOrders() {
-    return orders.iterator();
+  public boolean hasNext() {
+    return orders.size() <= index;
   }
+
+  @Override
+  public void resetIterator() {
+    index = 0;
+  }
+
 }

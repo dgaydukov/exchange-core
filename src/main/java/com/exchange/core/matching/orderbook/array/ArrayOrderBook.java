@@ -71,9 +71,9 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
 
   private void matchLimit(Order taker, PriceLevel level, List<Trade> trades) {
     final BigDecimal tradePrice = level.getPrice();
-    Iterator<Order> iterator = level.getOrders();
-    while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-      Order maker = iterator.next();
+    level.resetIterator();
+    Order maker = level.next();
+    while (maker != null && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
       BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
       taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
@@ -88,11 +88,10 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
   private void matchMarket(Order taker, PriceLevel level, List<Trade> trades) {
-    Iterator<Order> iterator = level.getOrders();
+    level.resetIterator();
+    Order maker = level.next();
     BigDecimal tradePrice = level.getPrice();
-    while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-      Order maker = iterator.next();
-
+    while (maker != null && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal tradeQty, tradeAmount;
       if (taker.getSide() == OrderSide.BUY) {
         BigDecimal takerTradeAmount = taker.getLeavesQty();
@@ -199,7 +198,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     for (int i = 0; i < bidSize; i++) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
       PriceLevel level = this.bids[i];
-      Iterator<Order> iterator = level.getOrders();
+      level.resetIterator();
       while (iterator.hasNext()) {
         cumulativeQuantity = cumulativeQuantity.add(iterator.next().getLeavesQty());
       }
