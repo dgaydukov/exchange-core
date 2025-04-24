@@ -15,7 +15,7 @@ public class PriceLevelTest {
   @Test
   public void priceMismatchErrorTest() {
     Order buy = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevelImpl(buy);
+    PriceLevel level = new LinkedListPriceLevel(buy);
     buy.setPrice(new BigDecimal("200"));
     AppException lock = Assertions.assertThrows(AppException.class,
             () -> level.add(buy), "Exception should be thrown");
@@ -25,14 +25,14 @@ public class PriceLevelTest {
   @Test
   public void nullOrderConstructorErrorTest() {
     AppException lock = Assertions.assertThrows(AppException.class,
-            () -> new PriceLevelImpl(null), "Exception should be thrown");
+            () -> new LinkedListPriceLevel(null), "Exception should be thrown");
     Assertions.assertEquals("Fail to add order: order is null", lock.getMessage());
   }
 
   @Test
   public void nullOrderErrorTest() {
     Order buy = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevelImpl(buy);
+    PriceLevel level = new LinkedListPriceLevel(buy);
     AppException lock = Assertions.assertThrows(AppException.class,
             () -> level.add(null), "Exception should be thrown");
     Assertions.assertEquals("Fail to add order: order is null", lock.getMessage());
@@ -43,7 +43,7 @@ public class PriceLevelTest {
     List<Order> expected = new ArrayList<>();
     Order buy = MockData.getLimitBuy();
     expected.add(buy);
-    PriceLevel level = new PriceLevelImpl(buy);
+    PriceLevel level = new LinkedListPriceLevel(buy);
     for (int i = 0; i < 5; i++) {
       Order _buy = MockData.getLimitBuy();
       _buy.setQuoteOrderQty(new BigDecimal(i));
@@ -62,7 +62,7 @@ public class PriceLevelTest {
   @Test
   public void getNextTest() {
     Order first = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevelImpl(first);
+    PriceLevel level = new LinkedListPriceLevel(first);
     Order second = MockData.getLimitBuy();
     second.setQuoteOrderQty(new BigDecimal("20"));
     level.add(second);
@@ -92,7 +92,7 @@ public class PriceLevelTest {
   @Test
   public void getNextAndRemoveTest() {
     Order first = MockData.getLimitBuy();
-    PriceLevel level = new PriceLevelImpl(first);
+    PriceLevel level = new LinkedListPriceLevel(first);
     Order second = MockData.getLimitBuy();
     second.setOrderId(2);
     level.add(second);

@@ -4,6 +4,7 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import java.math.BigDecimal;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class Order implements Message {
@@ -20,7 +21,10 @@ public class Order implements Message {
 
   /**
    * These 2 fields used only for linked list iteration for PriceLevel
+   * To avoid infinite recursion we exclude these 2 fields from to string
    */
+  @ToString.Exclude
   public Order prev;
+  @ToString.Exclude
   public Order next;
 }

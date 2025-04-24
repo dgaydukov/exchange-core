@@ -39,11 +39,12 @@ public class LinkedListPriceLevel implements PriceLevel{
     // add to the last
     if (first == null){
       first = order;
-      last = order;
       resetIterator();
     } else {
-      
+      last.prev = last;
+      last.prev.next = order;
     }
+    last = order;
   }
 
   @Override
@@ -55,18 +56,22 @@ public class LinkedListPriceLevel implements PriceLevel{
       resetIterator();
     } else {
       prev.next = next;
+      if (next != null){
+        next.prev = prev;
+      }
     }
   }
 
   @Override
   public Order next() {
+    Order current = order;
     order = order.next;
-    return order;
+    return current;
   }
 
   @Override
   public boolean hasNext() {
-    return order.next != null;
+    return order != null;
   }
 
   @Override
