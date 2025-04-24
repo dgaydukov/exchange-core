@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class Order implements Message {
-
   private String symbol;
   private long orderId;
   private String clOrdId;
@@ -18,4 +17,10 @@ public class Order implements Message {
   private BigDecimal leavesQty;
   private BigDecimal quoteOrderQty;
   private BigDecimal price;
+
+  /**
+   * These 2 fields used only for linked list iteration for PriceLevel
+   */
+  public Order prev;
+  public Order next;
 }
