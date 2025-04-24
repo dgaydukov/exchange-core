@@ -14,7 +14,6 @@ import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class ArrayOrderBook implements OrderBook, Snapshotable {
@@ -127,7 +126,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = bids[i];
         if (level == null) {
-          bids[i] = new PriceLevelImpl(order);
+          bids[i] = new LinkedListPriceLevel(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
@@ -135,7 +134,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
-          moveLeft(i, new PriceLevelImpl(order), bids);
+          moveLeft(i, new LinkedListPriceLevel(order), bids);
           break;
         }
       }
@@ -143,7 +142,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = asks[i];
         if (level == null) {
-          asks[i] = new PriceLevelImpl(order);
+          asks[i] = new LinkedListPriceLevel(order);
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
@@ -151,7 +150,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           break;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
-          moveLeft(i, new PriceLevelImpl(order), asks);
+          moveLeft(i, new LinkedListPriceLevel(order), asks);
           break;
         }
       }
