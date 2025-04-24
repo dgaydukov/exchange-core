@@ -49,6 +49,9 @@ public class LinkedListPriceLevel implements PriceLevel{
 
   @Override
   public void remove() {
+    if (order == null){
+      return;
+    }
     Order prev = order.prev;
     Order next = order.next;
     if (prev == null){
