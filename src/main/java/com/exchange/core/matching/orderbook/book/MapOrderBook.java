@@ -138,12 +138,20 @@ public class MapOrderBook implements OrderBook, Snapshotable {
 
   @Override
   public boolean update(Order order) {
-    Order o = orderIdMap.get(order.getOrderId());
+    final long orderId = order.getOrderId();
+    Order o = orderIdMap.get(orderId);
     if (o == null){
       return false;
     }
-    // since we store only link to object inside Map and List, but actual objects stored in heap
-    // we can get this object here and update
+    // if we change price we need to move order into new price level
+    if (order.getPrice().compareTo(o.getPrice()) != 0){
+      // remove and add
+      remove(orderId);
+      add(order);
+    } else {
+      // if we change quantity, just change on order
+      order.setQuoteOrderQty(order.getQuoteOrderQty());
+    }
 
     return true;
   }
