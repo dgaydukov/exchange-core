@@ -28,6 +28,11 @@ public class MockData {
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);
     order.setPrice(new BigDecimal("100"));
+    /**
+     * setLeavesQty - happens on matching engine level
+     * If you test OrderBook, you have to manually set it
+     * But don't change it here, this mock is designed to be pure mock order without leavesQty
+     */
     order.setOrderQty(new BigDecimal("10"));
     order.setAccount(BUY_ACCOUNT);
     return order;

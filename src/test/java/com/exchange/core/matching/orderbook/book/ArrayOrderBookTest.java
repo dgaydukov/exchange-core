@@ -4,6 +4,7 @@ import com.exchange.core.MockData;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.Order;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,5 +87,29 @@ public class ArrayOrderBookTest {
             ob.add(sell);
         });
         Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: fail to move left");
+    }
+
+    @Test
+    public void orderBookMatchOverflowTest(){
+        for (int i = 1; i <= 1024; i++){
+            Order buy = MockData.getLimitBuy();
+            buy.setPrice(new BigDecimal(i));
+            buy.setLeavesQty(buy.getOrderQty());
+            Assertions.assertTrue(ob.add(buy), "order should be added successfully");
+        }
+        // match 1 sell order for all possible qty
+        Order sell = MockData.getLimitBuy();
+        sell.setSide(OrderSide.SELL);
+        sell.setType(OrderType.MARKET);
+        sell.setLeavesQty(new BigDecimal(10 * 1024));
+        ob.match(sell);
+
+        // now we should be able to add again 1024 price levels
+        for (int i = 1; i <= 1024; i++){
+            Order buy = MockData.getLimitBuy();
+            buy.setPrice(new BigDecimal(i));
+            buy.setLeavesQty(buy.getOrderQty());
+            Assertions.assertTrue(ob.add(buy), "order should be added successfully");
+        }
     }
 }
