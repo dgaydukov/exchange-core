@@ -25,7 +25,7 @@ import java.util.TreeMap;
 public class MapOrderBook implements OrderBook, Snapshotable {
 
   private final NavigableMap<BigDecimal, PriceLevel> bids = new TreeMap<>(
-      Comparator.reverseOrder());
+          Comparator.reverseOrder());
   private final NavigableMap<BigDecimal, PriceLevel> asks = new TreeMap<>();
   private final Map<Long, Order> orderIdMap = new HashMap<>();
   private final String symbol;
@@ -49,44 +49,45 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       final BigDecimal tradePrice = iterator.next();
       PriceLevel level = counterMap.get(tradePrice);
-      if (level == null){
-        break;
+      if (level == null) {
+        continue;
       }
-        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-          Order maker = level.next();
+      level.resetIterator();
+      while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+        Order maker = level.next();
 
-          BigDecimal tradeQty, tradeAmount;
-          if (taker.getSide() == OrderSide.BUY) {
-            BigDecimal takerTradeAmount = taker.getLeavesQty();
-            BigDecimal takerTradeQty = takerTradeAmount.divide(tradePrice,
-                AppConstants.ROUNDING_SCALE, RoundingMode.DOWN);
+        BigDecimal tradeQty, tradeAmount;
+        if (taker.getSide() == OrderSide.BUY) {
+          BigDecimal takerTradeAmount = taker.getLeavesQty();
+          BigDecimal takerTradeQty = takerTradeAmount.divide(tradePrice,
+                  AppConstants.ROUNDING_SCALE, RoundingMode.DOWN);
 
-            tradeQty = takerTradeQty.min(maker.getLeavesQty());
-            tradeAmount = tradeQty.multiply(tradePrice);
-            if (maker.getLeavesQty().compareTo(takerTradeQty) > 0) {
-              tradeAmount = takerTradeAmount;
-            }
-
-            taker.setLeavesQty(taker.getLeavesQty().subtract(tradeAmount));
-            maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
-
-          } else {
-            tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
-            tradeAmount = tradeQty.multiply(tradePrice);
-            taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
-            maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+          tradeQty = takerTradeQty.min(maker.getLeavesQty());
+          tradeAmount = tradeQty.multiply(tradePrice);
+          if (maker.getLeavesQty().compareTo(takerTradeQty) > 0) {
+            tradeAmount = takerTradeAmount;
           }
 
-          trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
-          if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-            level.remove();
-            orderIdMap.remove(maker.getOrderId());
-          }
+          taker.setLeavesQty(taker.getLeavesQty().subtract(tradeAmount));
+          maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+        } else {
+          tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+          tradeAmount = tradeQty.multiply(tradePrice);
+          taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+          maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
         }
-        if (!level.hasNext()) {
-          iterator.remove();
+
+        trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+        if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+          level.remove();
+          orderIdMap.remove(maker.getOrderId());
         }
       }
+      if (!level.hasNext()) {
+        iterator.remove();
+      }
+    }
     return trades;
   }
 
@@ -103,27 +104,28 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       final BigDecimal tradePrice = iterator.next();
       PriceLevel level = counterMap.get(tradePrice);
-      if (level == null){
-        break;
+      if (level == null) {
+        continue;
       }
-        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
-          Order maker = level.next();
-          BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
-          BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
-          taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
-          maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+      level.resetIterator();
+      while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+        Order maker = level.next();
+        BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+        BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
+        taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+        maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
 
-          trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+        trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
 
-          if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-            level.remove();
-            orderIdMap.remove(maker.getOrderId());
-          }
-        }
-        if (!level.hasNext()) {
-          iterator.remove();
+        if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+          level.remove();
+          orderIdMap.remove(maker.getOrderId());
         }
       }
+      if (!level.hasNext()) {
+        iterator.remove();
+      }
+    }
     return trades;
   }
 
@@ -142,11 +144,11 @@ public class MapOrderBook implements OrderBook, Snapshotable {
   public boolean update(Order order) {
     final long orderId = order.getOrderId();
     Order o = orderIdMap.get(orderId);
-    if (o == null){
+    if (o == null) {
       return false;
     }
     // if we change price we need to move order into new price level
-    if (order.getPrice().compareTo(o.getPrice()) != 0){
+    if (order.getPrice().compareTo(o.getPrice()) != 0) {
       // remove and add
       remove(orderId);
       add(order);
@@ -161,12 +163,12 @@ public class MapOrderBook implements OrderBook, Snapshotable {
   @Override
   public boolean remove(long orderId) {
     Order order = orderIdMap.remove(orderId);
-    if (order == null){
+    if (order == null) {
       return false;
     }
     Map<BigDecimal, PriceLevel> book = order.getSide() == OrderSide.BUY ? bids : asks;
     PriceLevel level = book.get(order.getPrice());
-    if (level == null){
+    if (level == null) {
       return false;
     }
     level.remove(order);
@@ -191,7 +193,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
       PriceLevel level = e.getValue();
       level.resetIterator();
-      while (level.hasNext()){
+      while (level.hasNext()) {
         cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
       }
       bids[bidIndex++] = new BigDecimal[]{e.getKey(), cumulativeQuantity};
@@ -226,13 +228,13 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     List<Order> orders = new ArrayList<>();
     bids.values().forEach(level -> {
       level.resetIterator();
-      while (level.hasNext()){
+      while (level.hasNext()) {
         orders.add(level.next());
       }
     });
     asks.values().forEach(level -> {
       level.resetIterator();
-      while (level.hasNext()){
+      while (level.hasNext()) {
         orders.add(level.next());
       }
     });
@@ -245,6 +247,6 @@ public class MapOrderBook implements OrderBook, Snapshotable {
   @Override
   public void load(SnapshotItem data) {
     ((List<Order>) data.getData())
-        .forEach(this::add);
+            .forEach(this::add);
   }
 }
