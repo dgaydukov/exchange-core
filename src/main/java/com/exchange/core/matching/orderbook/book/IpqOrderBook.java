@@ -7,7 +7,7 @@ import com.exchange.core.model.msg.Order;
 
 import java.util.List;
 
-public class IndexedPQOrderBook implements OrderBook {
+public class IpqOrderBook implements OrderBook {
     @Override
     public List<Trade> match(Order order) {
         return List.of();
