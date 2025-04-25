@@ -5,6 +5,7 @@ import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
   private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>(
       Comparator.reverseOrder());
   private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>();
+  private final Map<Long, Order> orderIdMap = new HashMap<>();
   private final String symbol;
 
   public MapOrderBook(String symbol) {
@@ -74,6 +77,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
           trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
           if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
             ordIterator.remove();
+            orderIdMap.remove(maker.getOrderId());
           }
         }
         if (orders.size() == 0) {
@@ -110,6 +114,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
 
           if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
             ordIterator.remove();
+            orderIdMap.remove(maker.getOrderId());
           }
         }
         if (orders.size() == 0) {
@@ -127,18 +132,36 @@ public class MapOrderBook implements OrderBook, Snapshotable {
       o.addAll(v);
       return o;
     });
+    orderIdMap.put(order.getOrderId(), order);
     return true;
   }
 
   @Override
   public boolean update(Order order) {
-    return false;
+    Order o = orderIdMap.get(order.getOrderId());
+    if (o == null){
+      return false;
+    }
+    // since we store only link to object inside Map and List, but actual objects stored in heap
+    // we can get this object here and update
+
+    return true;
   }
 
   @Override
-  public boolean cancel(long orderId) {
-    return false;
+  public boolean remove(long orderId) {
+    Order order = orderIdMap.remove(orderId);
+    if (order == null){
+      return false;
+    }
+    Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
+    List<Order> priceLevel = book.get(order.getPrice());
+    if (priceLevel == null){
+      return false;
+    }
+    return priceLevel.remove(order);
   }
+
 
   @Override
   public MarketData buildMarketData() {

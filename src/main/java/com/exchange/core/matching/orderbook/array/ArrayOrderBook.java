@@ -164,9 +164,10 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
   @Override
-  public boolean cancel(long orderId) {
+  public boolean remove(long orderId) {
     return false;
   }
+
 
   private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;

@@ -19,7 +19,7 @@ public interface OrderBook {
   List<Trade> match(Order order);
 
   /**
-   * Add new order: match against current order book and add remaining to order book
+   * Add order directly into order book
    * @param  order - order object
    * @return true if order was added, false - if order was rejected by the system
    */
@@ -33,11 +33,11 @@ public interface OrderBook {
   boolean update(Order order);
 
   /**
-   * Cancel order by orderId
+   * remove order by orderId from order book
    * @param orderId - unique system-generated ID of type long
    * @return true if order successfully cancelled, false - if order not found
    */
-  boolean cancel(long orderId);
+  boolean remove(long orderId);
 
   /**
    * Get current market data
