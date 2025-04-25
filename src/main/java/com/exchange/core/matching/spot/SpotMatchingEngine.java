@@ -133,17 +133,13 @@ public class SpotMatchingEngine implements MatchingEngine {
   }
 
   private void process(Message msg) {
-    if (msg instanceof InstrumentConfig symbol) {
-      addInstrument(symbol);
-    } else if (msg instanceof Order order) {
-      addOrder(order);
-    } else if (msg instanceof UserBalance ab) {
-      addBalance(ab);
-    } else if (msg instanceof SnapshotMessage) {
-      snapshotManager.makeSnapshot();
-    } else {
-      throw new AppException("Undefined message: msg=" + msg);
-    }
+      switch (msg) {
+          case InstrumentConfig symbol -> addInstrument(symbol);
+          case Order order -> addOrder(order);
+          case UserBalance userBalance -> addBalance(userBalance);
+          case SnapshotMessage snapshotMessage -> snapshotManager.makeSnapshot();
+          case null, default -> throw new AppException("Undefined message: msg=" + msg);
+      }
   }
 
   private void addInstrument(InstrumentConfig msg) {

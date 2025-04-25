@@ -22,6 +22,8 @@ public interface PriceLevel {
 
     /**
      * remove order with O(1)
+     * This should be used outside iteration to avoid ConcurrentModificationException
+     * Only use if you want to remove some order without any iteration
      */
     void remove(Order order);
 
