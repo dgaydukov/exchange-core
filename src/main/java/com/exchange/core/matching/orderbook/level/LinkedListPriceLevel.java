@@ -4,7 +4,14 @@ import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
 
 import java.math.BigDecimal;
+import java.util.ConcurrentModificationException;
 
+/**
+ * This class has 2 versions of use: List and Iterator
+ * As List you can remove item by object
+ * But if you are iterating over it, and remove by object, you may have broken iteration
+ * That's why we throw exception, just like Iterator in java
+ */
 public class LinkedListPriceLevel implements PriceLevel{
   private final BigDecimal price;
 
@@ -40,10 +47,10 @@ public class LinkedListPriceLevel implements PriceLevel{
     if (first == null){
       first = order;
       resetIterator();
-    } else {
-      last.prev = last;
-      last.prev.next = order;
+    } else{
+      last.next = order;
     }
+    order.prev = last;
     last = order;
   }
 
@@ -52,13 +59,21 @@ public class LinkedListPriceLevel implements PriceLevel{
     if (order == null){
       return;
     }
-    remove(order);
+    delete(order);
   }
 
   @Override
-  public void remove(Order order) {
-    Order prev = order.prev;
-    Order next = order.next;
+  public void remove(Order o) {
+    if (this.order != first){
+      throw new ConcurrentModificationException("You can't remove by object during iteration");
+    }
+    delete(o);
+  }
+
+  private void delete(Order o){
+    Order prev = o.prev;
+    Order next = o.next;
+
     if (prev == null){
       first = null;
       resetIterator();

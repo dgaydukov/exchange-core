@@ -5,6 +5,7 @@ import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -68,14 +69,40 @@ public class PriceLevelTest {
   }
 
   @Test
-  public void getNextTest() {
+  public void validateInsertionOrderTest() {
     Order first = MockData.getLimitBuy();
+    first.setOrderId(1);
     PriceLevel level = new LinkedListPriceLevel(first);
     Order second = MockData.getLimitBuy();
-    second.setQuoteOrderQty(new BigDecimal("20"));
+    second.setOrderId(2);
     level.add(second);
     Order third = MockData.getLimitBuy();
-    third.setQuoteOrderQty(new BigDecimal("30"));
+    third.setOrderId(3);
+    level.add(third);
+    Order fourth = MockData.getLimitBuy();
+    fourth.setOrderId(4);
+    level.add(fourth);
+
+    Assertions.assertNull(first.prev, "first.prev mismatch");
+    Assertions.assertEquals(second, first.next, "first.next mismatch");
+    Assertions.assertEquals(first, second.prev, "second.prev mismatch");
+    Assertions.assertEquals(third, second.next, "second.next mismatch");
+    Assertions.assertEquals(second, third.prev, "third.prev mismatch");
+    Assertions.assertEquals(fourth, third.next, "third.next mismatch");
+    Assertions.assertEquals(third, fourth.prev, "fourth.prev mismatch");
+    Assertions.assertNull(fourth.next, "fourth.next mismatch");
+  }
+
+  @Test
+  public void getNextTest() {
+    Order first = MockData.getLimitBuy();
+    first.setOrderId(1);
+    PriceLevel level = new LinkedListPriceLevel(first);
+    Order second = MockData.getLimitBuy();
+    second.setOrderId(2);
+    level.add(second);
+    Order third = MockData.getLimitBuy();
+    third.setOrderId(3);
     level.add(third);
 
     Assertions.assertTrue(level.hasNext(), "should have next");
@@ -100,6 +127,7 @@ public class PriceLevelTest {
   @Test
   public void getNextAndRemoveTest() {
     Order first = MockData.getLimitBuy();
+    first.setOrderId(1);
     PriceLevel level = new LinkedListPriceLevel(first);
     Order second = MockData.getLimitBuy();
     second.setOrderId(2);
@@ -123,6 +151,7 @@ public class PriceLevelTest {
   @Test
   public void removeRandomOrderTest(){
     Order first = MockData.getLimitBuy();
+    first.setOrderId(1);
     PriceLevel level = new LinkedListPriceLevel(first);
     Order second = MockData.getLimitBuy();
     second.setOrderId(2);
@@ -152,9 +181,10 @@ public class PriceLevelTest {
 
     level.resetIterator();
     Assertions.assertEquals(first, level.next(), "first order mismatch");
-    level.remove(second);
-    // since we remove second, now third should be second
-    Assertions.assertEquals(third, level.next(), "third order mismatch");
-    Assertions.assertFalse(level.hasNext(), "should not have next");
+    ConcurrentModificationException ex = Assertions.assertThrows(ConcurrentModificationException.class, () -> {
+      level.remove(second);
+    });
+    Assertions.assertEquals("You can't remove by object during iteration", ex.getMessage(), "error message mismatch");
+
   }
 }
