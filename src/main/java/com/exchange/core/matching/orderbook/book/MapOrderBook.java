@@ -1,11 +1,11 @@
-package com.exchange.core.matching.orderbook;
+package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
+import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
-import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.enums.SnapshotType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;

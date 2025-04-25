@@ -1,9 +1,9 @@
 package performance;
 
 import com.exchange.core.MockData;
-import com.exchange.core.matching.orderbook.MapOrderBook;
+import com.exchange.core.matching.orderbook.book.MapOrderBook;
 import com.exchange.core.matching.orderbook.OrderBook;
-import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
+import com.exchange.core.matching.orderbook.book.ArrayOrderBook;
 import com.exchange.core.model.Trade;
 import java.util.List;
 import java.util.concurrent.TimeUnit;

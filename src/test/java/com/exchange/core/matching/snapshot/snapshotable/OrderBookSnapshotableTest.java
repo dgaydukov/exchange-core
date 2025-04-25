@@ -1,7 +1,7 @@
 package com.exchange.core.matching.snapshot.snapshotable;
 
 import com.exchange.core.MockData;
-import com.exchange.core.matching.orderbook.MapOrderBook;
+import com.exchange.core.matching.orderbook.book.MapOrderBook;
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;

@@ -1,8 +1,10 @@
-package com.exchange.core.matching.orderbook.array;
+package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
+import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;

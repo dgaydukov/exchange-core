@@ -1,8 +1,8 @@
-package com.exchange.core.matching.orderbook;
+package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.MockData;
 import com.exchange.core.config.AppConstants;
-import com.exchange.core.matching.orderbook.array.ArrayOrderBook;
+import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
