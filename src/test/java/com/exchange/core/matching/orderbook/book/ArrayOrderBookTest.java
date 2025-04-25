@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
+/**
+ * Specific tests for only ArrayOrderBook
+ */
 public class ArrayOrderBookTest {
     private OrderBook ob;
 
@@ -20,7 +23,7 @@ public class ArrayOrderBookTest {
     }
 
     @Test
-    public void orderBookBidsArrayOverflowTest(){
+    public void orderBookBidsAscArrayOverflowTest(){
         for (int i = 1; i <= 1024; i++){
             Order buy = MockData.getLimitBuy();
             buy.setPrice(new BigDecimal(i));
@@ -31,11 +34,28 @@ public class ArrayOrderBookTest {
         AppException ex = Assertions.assertThrows(AppException.class, () -> {
             ob.add(buy);
         });
-        Assertions.assertEquals(ex.getMessage(), "PriceLevel Array Overflow.");
+        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: fail to move left");
     }
 
     @Test
-    public void orderBookAsksArrayOverflowTest(){
+    public void orderBookBidsDescArrayOverflowTest(){
+        for (int i = 1024; i > 0; i--){
+            Order buy = MockData.getLimitBuy();
+            buy.setPrice(new BigDecimal(i));
+            Assertions.assertTrue(ob.add(buy), "order should be added successfully");
+        }
+        Order buy = MockData.getLimitBuy();
+        buy.setPrice(new BigDecimal("0.5"));
+        AppException ex = Assertions.assertThrows(AppException.class, () -> {
+            ob.add(buy);
+        });
+        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: fail to add");
+    }
+
+
+
+    @Test
+    public void orderBookSellsAscArrayOverflowTest(){
         for (int i = 1; i <= 1024; i++){
             Order sell = MockData.getLimitBuy();
             sell.setSide(OrderSide.SELL);
@@ -43,10 +63,28 @@ public class ArrayOrderBookTest {
             Assertions.assertTrue(ob.add(sell), "order should be added successfully");
         }
         Order sell = MockData.getLimitBuy();
+        sell.setSide(OrderSide.SELL);
         sell.setPrice(new BigDecimal(1025));
         AppException ex = Assertions.assertThrows(AppException.class, () -> {
             ob.add(sell);
         });
-        Assertions.assertEquals(ex.getMessage(), "PriceLevel Array Overflow.");
+        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: fail to add");
+    }
+
+    @Test
+    public void orderBookSellsDescArrayOverflowTest(){
+        for (int i = 1024; i > 0; i--){
+            Order sell = MockData.getLimitBuy();
+            sell.setSide(OrderSide.SELL);
+            sell.setPrice(new BigDecimal(i));
+            Assertions.assertTrue(ob.add(sell), "order should be added successfully");
+        }
+        Order sell = MockData.getLimitBuy();
+        sell.setSide(OrderSide.SELL);
+        sell.setPrice(new BigDecimal("0.5"));
+        AppException ex = Assertions.assertThrows(AppException.class, () -> {
+            ob.add(sell);
+        });
+        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: fail to move left");
     }
 }

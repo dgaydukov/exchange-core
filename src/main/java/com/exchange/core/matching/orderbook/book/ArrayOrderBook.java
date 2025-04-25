@@ -137,15 +137,15 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         PriceLevel level = bids[i];
         if (level == null) {
           bids[i] = new LinkedListPriceLevel(order);
-          break;
+          return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
           level.add(order);
-          break;
+          return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
           moveLeft(i, new LinkedListPriceLevel(order), bids);
-          break;
+          return true;
         }
       }
     } else {
@@ -153,19 +153,19 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         PriceLevel level = asks[i];
         if (level == null) {
           asks[i] = new LinkedListPriceLevel(order);
-          break;
+          return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
           level.add(order);
-          break;
+          return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
           moveLeft(i, new LinkedListPriceLevel(order), asks);
-          break;
+          return true;
         }
       }
     }
-    return true;
+    throw new AppException("PriceLevel array overflow: fail to add");
   }
 
   @Override
@@ -182,7 +182,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;
     if (arr[len - 1] != null) {
-      throw new AppException("PriceLevel Array Overflow.");
+      throw new AppException("PriceLevel array overflow: fail to move left");
     }
     for (int i = len - 2; i >= index; i--) {
       arr[i + 1] = arr[i];
