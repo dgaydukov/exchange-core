@@ -7,6 +7,10 @@ import com.exchange.core.model.msg.Order;
 
 import java.util.List;
 
+/**
+ * Using custom data structures known as IndexedPriorityQueue to store bids/asks
+ * PriorityQueue is enough to store bids/asks, and indexed means we can fetch any PriceLevel by price as index
+ */
 public class IpqOrderBook implements OrderBook {
     @Override
     public List<Trade> match(Order order) {

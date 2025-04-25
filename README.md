@@ -2,7 +2,8 @@
 
 ### Content
 * [Description](#description)
-* [Matching engine architecture](#matching-engine-architecture)
+* [Matching engine design](#matching-engine-design)
+* [OrderBook design](#orderbook-design)
 * [Snapshot](#snapshot)
 * [Zero downtime](#zero-downtime)
 * [Test coverage](#test-coverage)
@@ -18,7 +19,7 @@ This is the public part of my [derivative-matching-engine](/derivative-matching-
 * backbone to your own matching-engine - you can take this project and work on top of it to create fully-operational exchange system
 This public part include only `spot matching-engine`. The full end-to-end project is private.
 
-### Matching engine architecture
+### Matching engine design
 Matching engine consist of following parts:
 * inbound queue - message queue by which clients can send messages to matching engine
 * outbound queue - message queue by which clients can receive responses from matching engine
@@ -28,8 +29,11 @@ Matching engine consist of following parts:
   * instrument management - before any matching can happen we should know what coins & pairs are available for us
   * user & balance management - again before any matching we should verify that users who submit orders do exist in our system and have enough corresponding balance to perform order execution
   * post-matching settlement - after we match the orders, we should settle user balances to ensure integrity of the system
-Since order book is the core part - it's implementation is very important, cause if matching is slow, the whole system would be slow. We have 2 implementation of order book:
-* [MapOrderBook](/src/main/java/com/exchange/core/matching/orderbook/OrderBook.java) - naive implementation, here we are using default JDK implementations `java.utils.TreeMap` to store internal state of order book like bids/asks. Since these JDK implementations are not designed for low latency, they won't perform well under high load due to: gc problems or primitive unboxing/auto-boxing. Such implementation is good for educational purpose, but completely useless for real-world apps.
+
+### OrderBook design
+Since order book is the core part - it's implementation is very important, cause if matching is slow, the whole system would be slow. We have several order book implementations. All of them implement [OrderBook interface](/src/main/java/com/exchange/core/matching/orderbook/OrderBook.java).
+Currently there are 4 implementations:
+* [MapOrderBook]() - naive implementation, here we are using default JDK implementations `java.utils.TreeMap` to store internal state of order book like bids/asks. Since these JDK implementations are not designed for low latency, they won't perform well under high load due to: gc problems or primitive unboxing/auto-boxing. Such implementation is good for educational purpose, but completely useless for real-world apps.
 * [ArrayOrderBook](/src/main/java/com/exchange/core/matching/orderbook/array/ArrayOrderBook.java) - advanced version of order book, compared to `MapOrderBook` order book, here we can achieve faster performance by directly manipulating the underlying array. In `TreeMap` there is also underlying array and each time we insert/remove, it's sorted internally/implicitly. But here we are adding/removing from order book explicitly
 
 ### Snapshot
