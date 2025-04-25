@@ -49,6 +49,10 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         } else {
           matchMarket(taker, level, trades);
         }
+        // check if level is empty and remove PriceLevel from array
+        if (!level.hasNext()){
+          asks[i] = null;
+        }
       }
     } else {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
@@ -63,6 +67,10 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           matchLimit(taker, level, trades);
         } else {
           matchMarket(taker, level, trades);
+        }
+        // check if level is empty and remove PriceLevel from array
+        if (!level.hasNext()){
+          bids[i] = null;
         }
       }
     }
@@ -174,7 +182,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;
     if (arr[len - 1] != null) {
-      throw new AppException("PriceLevel Overflow. Fail to move left");
+      throw new AppException("PriceLevel Array Overflow.");
     }
     for (int i = len - 2; i >= index; i--) {
       arr[i + 1] = arr[i];

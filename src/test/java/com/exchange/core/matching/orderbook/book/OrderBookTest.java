@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -335,6 +336,20 @@ public class OrderBookTest {
     Assertions.assertEquals(20, md.getBids().length, "bids size should be 20");
     Assertions.assertEquals(20, md.getAsks().length, "asks size should be 20");
   }
+
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void addManyLevelsTest(OrderBook ob){
+    for (int i = 1; i <= 1024; i++){
+      Order buy = getLimitBuy();
+      buy.setPrice(new BigDecimal(i));
+      Assertions.assertTrue(ob.add(buy), "order should be added successfully");
+    }
+    Order buy = getLimitBuy();
+    buy.setPrice(new BigDecimal(1025));
+    Assertions.assertTrue(ob.add(buy), "order should be added successfully");
+  }
+
 
   private void add3SellOrders(OrderBook ob) {
     Order sell = getLimitBuy();
