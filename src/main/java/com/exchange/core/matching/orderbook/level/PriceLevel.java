@@ -21,6 +21,11 @@ public interface PriceLevel {
     void remove();
 
     /**
+     * remove order with O(1)
+     */
+    void remove(Order order);
+
+    /**
      * Check if there is next order in the sequence
      * @return true - if next order exist in iteration
      */
