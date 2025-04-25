@@ -27,11 +27,13 @@ import com.exchange.core.repository.AccountRepository;
 import com.exchange.core.repository.AccountRepositoryImpl;
 import com.exchange.core.repository.InstrumentRepository;
 import com.exchange.core.repository.InstrumentRepositoryImpl;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.*;
 
+@Slf4j
 public class SpotMatchingEngine implements MatchingEngine {
 
   private final Map<String, OrderBook> orderBooks;
@@ -79,14 +81,14 @@ public class SpotMatchingEngine implements MatchingEngine {
 
   public void start() {
     loadSnapshot();
-    System.out.println("Starting matching engine...");
+    log.info("Starting matching engine...");
     new Thread(this::run, "MatchingThread").start();
   }
 
   private void loadSnapshot() {
     File file = new File(SNAPSHOT_BASE_DIR);
     if (!file.exists()) {
-      System.out.println("Creating snapshot directory: path=" + file);
+      log.info("Creating snapshot directory: path={}", file);
       if (!file.mkdir()){
         throw new AppException("Failed to create snapshot directory: path=" + file);
       }
@@ -94,21 +96,20 @@ public class SpotMatchingEngine implements MatchingEngine {
     String filename = storageWriter.getLastModifiedFilename(SNAPSHOT_BASE_DIR);
     if (filename != null) {
       // create order books
-      System.out.println("Loading snapshot: name=" + filename);
+      log.info("Loading snapshot: name={}", filename);
       snapshotManager.getSymbols(filename).forEach(symbol -> {
-        System.out.println("Adding order book: symbol=" + symbol);
+        log.info("Adding order book: symbol={}", symbol);
         addOrderBook(symbol);
       });
       // load snapshots
       snapshotManager.loadSnapshot(filename);
       // update counter for next orderId
       long lastOrderId = snapshotManager.getLastOrderId();
-      System.out.println("Updating counter: lastOrderId=" + lastOrderId);
+      log.info("Updating counter: lastOrderId={}", lastOrderId);
       while (lastOrderId != counter.getNextOrderId()) {
         waitStrategy.idle();
       }
-
-      System.out.println("Loaded snapshot: name=" + filename);
+      log.info("Loaded snapshot: name={}", filename);
     }
   }
 
@@ -121,7 +122,7 @@ public class SpotMatchingEngine implements MatchingEngine {
         continue;
       }
       if (printInboundMsg) {
-        System.out.println("inbound => " + msg);
+        log.info("Get inbound message: {}", msg);
       }
       try {
         process(msg);

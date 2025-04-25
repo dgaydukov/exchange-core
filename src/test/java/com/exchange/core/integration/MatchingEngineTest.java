@@ -31,7 +31,6 @@ public class MatchingEngineTest {
 
     Message msg;
 
-    InstrumentConfig inst = MockData.getInstrument();
     Order buy = MockData.getLimitBuy();
     buy.setSymbol(null);
 
