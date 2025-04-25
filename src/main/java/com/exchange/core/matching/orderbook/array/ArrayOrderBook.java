@@ -121,7 +121,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
   @Override
-  public void add(Order order) {
+  public boolean add(Order order) {
     if (order.getSide() == OrderSide.BUY) {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = bids[i];
@@ -155,6 +155,17 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         }
       }
     }
+    return true;
+  }
+
+  @Override
+  public boolean update(Order order) {
+    return false;
+  }
+
+  @Override
+  public boolean cancel(long orderId) {
+    return false;
   }
 
   private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {

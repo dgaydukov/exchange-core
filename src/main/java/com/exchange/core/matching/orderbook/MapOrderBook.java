@@ -121,12 +121,23 @@ public class MapOrderBook implements OrderBook, Snapshotable {
   }
 
   @Override
-  public void add(Order order) {
+  public boolean add(Order order) {
     Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
     book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
       o.addAll(v);
       return o;
     });
+    return true;
+  }
+
+  @Override
+  public boolean update(Order order) {
+    return false;
+  }
+
+  @Override
+  public boolean cancel(long orderId) {
+    return false;
   }
 
   @Override
