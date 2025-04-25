@@ -39,6 +39,14 @@ public class PriceLevelTest {
   }
 
   @Test
+  public void nextNLPException(){
+    Order buy = MockData.getLimitBuy();
+    PriceLevel level = new LinkedListPriceLevel(buy);
+    Assertions.assertEquals(buy, level.next(), "next mismatch");
+    Assertions.assertThrows(NullPointerException.class, level::next);
+  }
+
+  @Test
   public void addOrderTest() {
     List<Order> expected = new ArrayList<>();
     Order buy = MockData.getLimitBuy();

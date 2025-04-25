@@ -2,7 +2,6 @@ package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
-import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.matching.snapshot.Snapshotable;
 import com.exchange.core.model.SnapshotItem;
 import com.exchange.core.model.Trade;
@@ -23,9 +22,9 @@ import java.util.TreeMap;
 
 public class MapOrderBook implements OrderBook, Snapshotable {
 
-  private final NavigableMap<BigDecimal, PriceLevel> bids = new TreeMap<>(
+  private final NavigableMap<BigDecimal, List<Order>> bids = new TreeMap<>(
       Comparator.reverseOrder());
-  private final NavigableMap<BigDecimal, PriceLevel> asks = new TreeMap<>();
+  private final NavigableMap<BigDecimal, List<Order>> asks = new TreeMap<>();
   private final Map<Long, Order> orderIdMap = new HashMap<>();
   private final String symbol;
 
@@ -43,12 +42,12 @@ public class MapOrderBook implements OrderBook, Snapshotable {
 
   private List<Trade> matchMarket(Order taker) {
     List<Trade> trades = new ArrayList<>();
-    Map<BigDecimal, PriceLevel> counterMap = taker.getSide() == OrderSide.BUY ? asks : bids;
+    Map<BigDecimal, List<Order>> counterMap = taker.getSide() == OrderSide.BUY ? asks : bids;
     Iterator<BigDecimal> iterator = counterMap.keySet().iterator();
     while (iterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
       final BigDecimal tradePrice = iterator.next();
-      PriceLevel level = counterMap.get(tradePrice);
-      if (level != null) {
+      List<Order> orders = counterMap.get(tradePrice);
+      if (orders != null) {
         Iterator<Order> ordIterator = orders.iterator();
         while (ordIterator.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
           Order maker = ordIterator.next();
@@ -92,7 +91,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
 
   private List<Trade> matchLimit(Order taker) {
     List<Trade> trades = new ArrayList<>();
-    Map<BigDecimal, PriceLevel> counterMap;
+    Map<BigDecimal, List<Order>> counterMap;
     if (taker.getSide() == OrderSide.BUY) {
       counterMap = asks.headMap(taker.getPrice(), true);
     } else {
@@ -128,7 +127,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
 
   @Override
   public boolean add(Order order) {
-    Map<BigDecimal, PriceLevel> book = order.getSide() == OrderSide.BUY ? bids : asks;
+    Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
     book.merge(order.getPrice(), new ArrayList<>(List.of(order)), (o, v) -> {
       o.addAll(v);
       return o;
@@ -163,7 +162,7 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     if (order == null){
       return false;
     }
-    Map<BigDecimal, PriceLevel> book = order.getSide() == OrderSide.BUY ? bids : asks;
+    Map<BigDecimal, List<Order>> book = order.getSide() == OrderSide.BUY ? bids : asks;
     List<Order> priceLevel = book.get(order.getPrice());
     if (priceLevel == null){
       return false;
