@@ -36,6 +36,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   public List<Trade> match(Order taker) {
     List<Trade> trades = new ArrayList<>();
     if (taker.getSide() == OrderSide.BUY) {
+      int posShift = 0;
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = asks[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
@@ -52,9 +53,17 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         // check if level is empty and remove PriceLevel from array
         if (!level.hasNext()){
           asks[i] = null;
+          posShift++;
+        }
+      }
+      // shift array left for n positions
+      if (posShift > 0){
+        for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+          asks[i] = asks[i + posShift];
         }
       }
     } else {
+      int posShift = 0;
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = bids[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
@@ -71,6 +80,13 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         // check if level is empty and remove PriceLevel from array
         if (!level.hasNext()){
           bids[i] = null;
+          posShift++;
+        }
+      }
+      // shift array left for n positions
+      if (posShift > 0){
+        for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+          bids[i] = bids[i + posShift];
         }
       }
     }
