@@ -52,13 +52,15 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         }
         // check if level is empty and remove PriceLevel from array
         if (!level.hasNext()){
-          asks[i] = null;
           posShift++;
         }
       }
       // shift array left for n positions
       if (posShift > 0){
         for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+          if (asks[i + posShift] == null){
+            break;
+          }
           asks[i] = asks[i + posShift];
         }
       }
@@ -79,13 +81,15 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         }
         // check if level is empty and remove PriceLevel from array
         if (!level.hasNext()){
-          bids[i] = null;
           posShift++;
         }
       }
       // shift array left for n positions
       if (posShift > 0){
         for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+          if (bids[i + posShift] == null){
+            break;
+          }
           bids[i] = bids[i + posShift];
         }
       }
@@ -189,6 +193,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     return false;
   }
 
+  // remove order from PriceLevel
   @Override
   public boolean remove(long orderId) {
     return false;
