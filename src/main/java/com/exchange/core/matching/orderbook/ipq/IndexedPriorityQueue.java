@@ -1,13 +1,13 @@
 package com.exchange.core.matching.orderbook.ipq;
 
-public interface IndexedPriorityQueue<K, V> {
+public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
     void offer(K key, V value);
 
     V poll();
 
     int size();
 
-    V get(K key);
+    V getExact(K key);
 
-    V getNearest(K key);
+    V getNearestLeft(K key);
 }
