@@ -16,7 +16,9 @@ import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ArrayOrderBook implements OrderBook, Snapshotable {
 
@@ -26,6 +28,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   // sorted in ascending order => first ask is the lowest price
   private final PriceLevel[] asks = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
   private final String symbol;
+  private final Map<Long, Order> orderIdMap = new HashMap<>();
 
 
   public ArrayOrderBook(String symbol) {
@@ -160,7 +163,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.add(order);
+          addOrderToOrderBook(level, order);
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
@@ -176,7 +179,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.add(order);
+          addOrderToOrderBook(level, order);
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
@@ -188,15 +191,41 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     throw new AppException("PriceLevel array overflow: fail to add");
   }
 
+  private void addOrderToOrderBook(PriceLevel level, Order order){
+    order.level = level;
+    level.add(order);
+    orderIdMap.put(order.getOrderId(), order);
+  }
+
   @Override
   public boolean update(Order order) {
-    return false;
+    final long orderId = order.getOrderId();
+    Order o = orderIdMap.get(orderId);
+    if (o == null) {
+      return false;
+    }
+    // if we change price we need to move order into new price level
+    if (order.getPrice().compareTo(o.getPrice()) != 0) {
+      // remove and add
+      remove(orderId);
+      add(order);
+    } else {
+      // if we change quantity, just change on order
+      order.setQuoteOrderQty(order.getQuoteOrderQty());
+    }
+    return true;
   }
 
   // remove order from PriceLevel
   @Override
   public boolean remove(long orderId) {
-    return false;
+    Order order = orderIdMap.get(orderId);
+    if (order == null){
+      return false;
+    }
+    PriceLevel level = order.level;
+    level.remove(order);
+    return true;
   }
 
 

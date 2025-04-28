@@ -156,7 +156,6 @@ public class MapOrderBook implements OrderBook, Snapshotable {
       // if we change quantity, just change on order
       order.setQuoteOrderQty(order.getQuoteOrderQty());
     }
-
     return true;
   }
 

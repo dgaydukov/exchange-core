@@ -101,4 +101,10 @@ public class LinkedListPriceLevel implements PriceLevel{
   public void resetIterator() {
     order = first;
   }
+
+  /**
+   * These 2 fields used only in LinkedListOrderBook to iterate over the list of price levels
+   */
+  public PriceLevel prev;
+  public PriceLevel next;
 }
