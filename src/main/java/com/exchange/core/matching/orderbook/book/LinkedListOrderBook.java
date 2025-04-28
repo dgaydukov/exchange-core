@@ -7,6 +7,7 @@ import com.exchange.core.matching.orderbook.level.OrderBookLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 
@@ -34,9 +35,40 @@ public class LinkedListOrderBook implements OrderBook {
         List<Trade> trades = new ArrayList<>();
 
         if (taker.getSide() == OrderSide.BUY) {
-
+            OrderBookLevel level = bestAsk;
+            while (level != null){
+                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
+                    break;
+                }
+                if (taker.getType() == OrderType.LIMIT) {
+                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
+                        break;
+                    }
+                    matchLimit(taker, level, trades);
+                } else {
+                    matchMarket(taker, level, trades);
+                }
+                if (!level.hasNext()){
+                    // remove current level from asks
+                }
+                level = level.next;
+            }
         } else {
-
+            OrderBookLevel level = bestBid;
+            while (level != null){
+                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
+                    break;
+                }
+                if (taker.getType() == OrderType.LIMIT) {
+                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
+                        break;
+                    }
+                    matchLimit(taker, level, trades);
+                } else {
+                    matchMarket(taker, level, trades);
+                }
+                level = level.next;
+            }
         }
         return trades;
     }

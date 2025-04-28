@@ -12,6 +12,12 @@ import java.util.List;
  * PriorityQueue is enough to store bids/asks, and indexed means we can fetch any PriceLevel by price as index
  */
 public class IpqOrderBook implements OrderBook {
+    private final String symbol;
+
+    public IpqOrderBook(String symbol){
+        this.symbol = symbol;
+    }
+
     @Override
     public List<Trade> match(Order order) {
         return List.of();
