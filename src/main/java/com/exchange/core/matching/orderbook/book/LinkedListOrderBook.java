@@ -1,5 +1,6 @@
 package com.exchange.core.matching.orderbook.book;
 
+import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
 import com.exchange.core.matching.orderbook.level.OrderBookLevel;
@@ -9,6 +10,9 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +30,67 @@ public class LinkedListOrderBook implements OrderBook {
     }
 
     @Override
-    public List<Trade> match(Order order) {
-        return List.of();
+    public List<Trade> match(Order taker) {
+        List<Trade> trades = new ArrayList<>();
+
+        if (taker.getSide() == OrderSide.BUY) {
+
+        } else {
+
+        }
+        return trades;
+    }
+
+    private void matchLimit(Order taker, PriceLevel level, List<Trade> trades) {
+        final BigDecimal tradePrice = level.getPrice();
+        level.resetIterator();
+        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            Order maker = level.next();
+            BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+            BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
+            taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+            maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+            trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+
+            if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                level.remove();
+            }
+        }
+    }
+
+    private void matchMarket(Order taker, PriceLevel level, List<Trade> trades) {
+        level.resetIterator();
+        BigDecimal tradePrice = level.getPrice();
+        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            Order maker = level.next();
+            BigDecimal tradeQty, tradeAmount;
+            if (taker.getSide() == OrderSide.BUY) {
+                BigDecimal takerTradeAmount = taker.getLeavesQty();
+                BigDecimal takerTradeQty = takerTradeAmount.divide(tradePrice, AppConstants.ROUNDING_SCALE,
+                        RoundingMode.DOWN);
+
+                tradeQty = takerTradeQty.min(maker.getLeavesQty());
+                tradeAmount = tradeQty.multiply(tradePrice);
+                if (maker.getLeavesQty().compareTo(takerTradeQty) > 0) {
+                    tradeAmount = takerTradeAmount;
+                }
+
+                taker.setLeavesQty(taker.getLeavesQty().subtract(tradeAmount));
+                maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+            } else {
+                tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+                tradeAmount = tradeQty.multiply(tradePrice);
+                taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+                maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+            }
+
+            trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+            if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                level.remove();
+            }
+        }
     }
 
     @Override
@@ -47,14 +110,38 @@ public class LinkedListOrderBook implements OrderBook {
                     // insert new level
                     if (order.getPrice().compareTo(level.getPrice()) > 0) {
                         OrderBookLevel newLevel = new OrderBookLevel(order);
-                        
+                        OrderBookLevel next = level.next;
+                        level.next = newLevel;
+                        newLevel.prev = level;
+                        newLevel.next = next;
                         break;
                     }
                     level = level.next;
                 }
             }
         } else {
-
+            if (bestAsk == null){
+                bestAsk = new OrderBookLevel(order);
+            } else {
+                OrderBookLevel level = bestAsk;
+                while (level != null){
+                    // append order to existing level
+                    if (order.getPrice().compareTo(level.getPrice()) == 0) {
+                        level.add(order);
+                        break;
+                    }
+                    // insert new level
+                    if (order.getPrice().compareTo(level.getPrice()) < 0) {
+                        OrderBookLevel newLevel = new OrderBookLevel(order);
+                        OrderBookLevel next = level.next;
+                        level.next = newLevel;
+                        newLevel.prev = level;
+                        newLevel.next = next;
+                        break;
+                    }
+                    level = level.next;
+                }
+            }
         }
         return true;
     }
@@ -91,6 +178,53 @@ public class LinkedListOrderBook implements OrderBook {
 
     @Override
     public MarketData buildMarketData() {
-        return null;
+        // find number & bids & asks
+        int bidSize = 0, askSize = 0;
+
+        OrderBookLevel bidLvl = bestBid;
+        while (bidLvl != null){
+            bidSize++;
+            bidLvl = bidLvl.next;
+        }
+        OrderBookLevel askLvl = bestAsk;
+        while (askLvl != null){
+            askSize++;
+            askLvl = askLvl.next;
+        }
+        bidSize = Math.min(bidSize, AppConstants.DEFAULT_DEPTH);
+        askSize = Math.min(askSize, AppConstants.DEFAULT_DEPTH);
+        int depth = Math.max(bidSize, askSize);
+        MarketData md = new MarketData();
+        md.setDepth(depth);
+        md.setSymbol(symbol);
+        md.setTransactTime(System.currentTimeMillis());
+
+        BigDecimal[][] bids = new BigDecimal[bidSize][];
+        BigDecimal[][] asks = new BigDecimal[askSize][];
+        int bidIndex = 0, askIndex = 0;
+        bidLvl = bestBid;
+        while (bidLvl != null){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            bidLvl.resetIterator();
+            while (bidLvl.hasNext()) {
+                cumulativeQuantity = cumulativeQuantity.add(bidLvl.next().getLeavesQty());
+            }
+            bids[bidIndex++] = new BigDecimal[]{bidLvl.getPrice(), cumulativeQuantity};
+            bidLvl = bidLvl.next;
+        }
+        askLvl = bestAsk;
+        while (askLvl != null){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            askLvl.resetIterator();
+            while (askLvl.hasNext()) {
+                cumulativeQuantity = cumulativeQuantity.add(askLvl.next().getLeavesQty());
+            }
+            asks[askIndex++] = new BigDecimal[]{askLvl.getPrice(), cumulativeQuantity};
+            askLvl = askLvl.next;
+        }
+
+        md.setBids(bids);
+        md.setAsks(asks);
+        return md;
     }
 }
