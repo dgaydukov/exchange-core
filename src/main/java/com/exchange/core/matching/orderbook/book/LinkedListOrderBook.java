@@ -2,6 +2,7 @@ package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
+import com.exchange.core.matching.orderbook.level.OrderBookLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
@@ -13,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 public class LinkedListOrderBook implements OrderBook {
-    private PriceLevel bestBid;
-    private PriceLevel bestAsk;
+    private OrderBookLevel bestBid;
+    private OrderBookLevel bestAsk;
 
     private final String symbol;
     private final Map<Long, Order> orderIdMap;
@@ -33,9 +34,24 @@ public class LinkedListOrderBook implements OrderBook {
     public boolean add(Order order) {
         if (order.getSide() == OrderSide.BUY){
             // iterate over bids to add with specified price
-            PriceLevel level = bestBid;
-            while (level != null){
-
+            if (bestBid == null){
+                bestBid = new OrderBookLevel(order);
+            } else {
+                OrderBookLevel level = bestBid;
+                while (level != null){
+                    // append order to existing level
+                    if (order.getPrice().compareTo(level.getPrice()) == 0) {
+                        level.add(order);
+                        break;
+                    }
+                    // insert new level
+                    if (order.getPrice().compareTo(level.getPrice()) > 0) {
+                        OrderBookLevel newLevel = new OrderBookLevel(order);
+                        
+                        break;
+                    }
+                    level = level.next;
+                }
             }
         } else {
 
