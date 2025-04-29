@@ -1,9 +1,18 @@
 package com.exchange.core.matching.orderbook.ipq;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+/**
+ * This is Map-based implementation that underneath using TreeMap as primary data structure
+ * This would work from business logic (you can check tests), but it's not best for low-latency.
+ * Ideally you should rewrite to use raw array as underlying data structure for quick access
+ *
+ * @param <K> - key
+ * @param <V> - value
+ */
 public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements IndexedPriorityQueue<K, V> {
     private int size;
     private int capacity;
@@ -23,8 +32,9 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
     }
 
     @Override
-    public void offer(K key, V value) {
+    public boolean offer(K key, V value) {
         map.put(key, value);
+        return true;
     }
 
     @Override
@@ -47,14 +57,12 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
 
     @Override
     public V getNearestLeft(K key) {
-        return map.get(getNearestLeftKey(key));
-    }
-
-    private K getNearestLeftKey(K key){
-        K before = map.floorKey(key);
-        K after = map.ceilingKey(key);
-        if (before == null) return after;
-        if (after == null) return before;
-        return before.compareTo(after) > 0 ? before : after;
+        // avoid exact match
+        V value = getExact(key);
+        if (value != null){
+            throw new IllegalArgumentException("Value exists for key=" + key);
+        }
+        Map.Entry<K,V> entry = map.floorEntry(key);
+        return entry == null ? null : entry.getValue();
     }
 }

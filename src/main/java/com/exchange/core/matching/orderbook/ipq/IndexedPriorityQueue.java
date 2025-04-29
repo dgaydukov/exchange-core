@@ -13,8 +13,10 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * Add new element into queue, It would sort automatically
      * @param key - key
      * @param value - value
+     *
+     * @return true - if element added to queue, false - if failed to add
      */
-    void offer(K key, V value);
+    boolean offer(K key, V value);
 
     /**
      * Poll from the top of the queue
@@ -32,7 +34,7 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * Fetch exact value by key. Usually you fetch PriceLevel by price.
      * If PriceLevel doesn't exist for such price, null should be returned
      * @param key - key
-     * @return V - if PriceLevel exist, null if no entire for this key
+     * @return V - if value exists for key, null if no such value for key
      */
     V getExact(K key);
 
@@ -41,7 +43,8 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * For quick search you fetch the closest existing PriceLevel and create new one and attach to it
      *
      * @param key - key
-     * @return V - PriceLevel item
+     * @return V - closest value from the left, null - if key should become first
+     * throws Exception if key already exist
      */
     V getNearestLeft(K key);
 }
