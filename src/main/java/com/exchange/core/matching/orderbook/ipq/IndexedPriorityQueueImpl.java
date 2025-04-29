@@ -46,6 +46,14 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
     }
 
     @Override
+    public V peek() {
+        if (map.isEmpty()){
+            return null;
+        }
+        return map.firstEntry().getValue();
+    }
+
+    @Override
     public int size() {
         return map.size();
     }

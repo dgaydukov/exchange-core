@@ -77,6 +77,23 @@ public class IndexedPriorityQueueTest {
     }
 
     @Test
+    public void peekTest(){
+        Assertions.assertEquals(0, queue.size(), "size should be 0");
+        for (int i = 1; i <= 10 ; i++){
+            Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
+        }
+        Assertions.assertEquals(10, queue.size(), "size should be 10");
+
+        Assertions.assertEquals("msg_1", queue.peek(), "peek mismatch");
+        Assertions.assertEquals("msg_1", queue.peek(), "peek mismatch");
+        Assertions.assertEquals(10, queue.size(), "size should be 10");
+        Assertions.assertEquals("msg_1", queue.poll(), "poll mismatch");
+        Assertions.assertEquals("msg_2", queue.peek(), "peek mismatch");
+        Assertions.assertEquals("msg_2", queue.peek(), "peek mismatch");
+        Assertions.assertEquals(9, queue.size(), "size should be 10");
+    }
+
+    @Test
     public void getExactTest(){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 20 ; i++){

@@ -9,10 +9,13 @@ import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
+import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,24 +26,137 @@ import java.util.Map;
  */
 public class IpqOrderBook implements OrderBook {
     private final String symbol;
-    private final IndexedPriorityQueue<BigDecimal, PriceLevel> bids;
-    private final IndexedPriorityQueue<BigDecimal, PriceLevel> asks;
+    private final IndexedPriorityQueue<BigDecimal, PriceLevel> bidsQueue;
+    private final IndexedPriorityQueue<BigDecimal, PriceLevel> asksQueue;
     Map<Long, Order> orderIdMap = new HashMap<>();
 
     public IpqOrderBook(String symbol, int initialBookSize, int bookGrowSize){
         this.symbol = symbol;
-        bids = new IndexedPriorityQueueImpl<>(SortOrder.DESC, initialBookSize, bookGrowSize);
-        asks = new IndexedPriorityQueueImpl<>(SortOrder.ASC, initialBookSize, bookGrowSize);
+        bidsQueue = new IndexedPriorityQueueImpl<>(SortOrder.DESC, initialBookSize, bookGrowSize);
+        asksQueue = new IndexedPriorityQueueImpl<>(SortOrder.ASC, initialBookSize, bookGrowSize);
     }
 
     @Override
-    public List<Trade> match(Order order) {
-        return List.of();
+    public List<Trade> match(Order taker) {
+        List<Trade> trades = new ArrayList<>();
+//        if (taker.getSide() == OrderSide.BUY) {
+//            int posShift = 0;
+//            for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+//                PriceLevel level = asks[i];
+//                if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+//                    break;
+//                }
+//                if (taker.getType() == OrderType.LIMIT) {
+//                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
+//                        break;
+//                    }
+//                    matchLimit(taker, level, trades);
+//                } else {
+//                    matchMarket(taker, level, trades);
+//                }
+//                // check if level is empty and remove PriceLevel from array
+//                if (!level.hasNext()){
+//                    posShift++;
+//                }
+//            }
+//            // shift array left for n positions
+//            if (posShift > 0){
+//                for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+//                    if (asks[i + posShift] == null){
+//                        break;
+//                    }
+//                    asks[i] = asks[i + posShift];
+//                }
+//            }
+//        } else {
+//            int posShift = 0;
+//            for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+//                PriceLevel level = bids[i];
+//                if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+//                    break;
+//                }
+//                if (taker.getType() == OrderType.LIMIT) {
+//                    if (taker.getPrice().compareTo(level.getPrice()) > 0) {
+//                        break;
+//                    }
+//                    matchLimit(taker, level, trades);
+//                } else {
+//                    matchMarket(taker, level, trades);
+//                }
+//                // check if level is empty and remove PriceLevel from array
+//                if (!level.hasNext()){
+//                    posShift++;
+//                }
+//            }
+//            // shift array left for n positions
+//            if (posShift > 0){
+//                for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+//                    if (bids[i + posShift] == null){
+//                        break;
+//                    }
+//                    bids[i] = bids[i + posShift];
+//                }
+//            }
+//        }
+        return trades;
+    }
+
+
+    private void matchLimit(Order taker, PriceLevel level, List<Trade> trades) {
+        final BigDecimal tradePrice = level.getPrice();
+        level.resetIterator();
+        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            Order maker = level.next();
+            BigDecimal tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+            BigDecimal tradeAmount = tradeQty.multiply(tradePrice);
+            taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+            maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+            trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+
+            if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                level.remove();
+            }
+        }
+    }
+
+    private void matchMarket(Order taker, PriceLevel level, List<Trade> trades) {
+        level.resetIterator();
+        BigDecimal tradePrice = level.getPrice();
+        while (level.hasNext() && taker.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+            Order maker = level.next();
+            BigDecimal tradeQty, tradeAmount;
+            if (taker.getSide() == OrderSide.BUY) {
+                BigDecimal takerTradeAmount = taker.getLeavesQty();
+                BigDecimal takerTradeQty = takerTradeAmount.divide(tradePrice, AppConstants.ROUNDING_SCALE,
+                        RoundingMode.DOWN);
+
+                tradeQty = takerTradeQty.min(maker.getLeavesQty());
+                tradeAmount = tradeQty.multiply(tradePrice);
+                if (maker.getLeavesQty().compareTo(takerTradeQty) > 0) {
+                    tradeAmount = takerTradeAmount;
+                }
+
+                taker.setLeavesQty(taker.getLeavesQty().subtract(tradeAmount));
+                maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+
+            } else {
+                tradeQty = taker.getLeavesQty().min(maker.getLeavesQty());
+                tradeAmount = tradeQty.multiply(tradePrice);
+                taker.setLeavesQty(taker.getLeavesQty().subtract(tradeQty));
+                maker.setLeavesQty(maker.getLeavesQty().subtract(tradeQty));
+            }
+
+            trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
+            if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+                level.remove();
+            }
+        }
     }
 
     @Override
     public boolean add(Order order) {
-        IndexedPriorityQueue<BigDecimal, PriceLevel> pq = order.getSide() == OrderSide.BUY ? bids : asks;
+        IndexedPriorityQueue<BigDecimal, PriceLevel> pq = order.getSide() == OrderSide.BUY ? bidsQueue : asksQueue;
 
         PriceLevel level = pq.getExact(order.getPrice());
         if (level != null){
@@ -65,15 +181,15 @@ public class IpqOrderBook implements OrderBook {
             return false;
         }
         PriceLevel level = order.getSide() == OrderSide.BUY
-                ? bids.getExact(order.getPrice()) : asks.getExact(order.getPrice());
+                ? bidsQueue.getExact(order.getPrice()) : asksQueue.getExact(order.getPrice());
         level.remove(order);
         return true;
     }
 
     @Override
     public MarketData buildMarketData() {
-        int bidSize = Math.min(bids.size(), AppConstants.DEFAULT_DEPTH);
-        int askSize = Math.min(asks.size(), AppConstants.DEFAULT_DEPTH);
+        int bidSize = Math.min(bidsQueue.size(), AppConstants.DEFAULT_DEPTH);
+        int askSize = Math.min(asksQueue.size(), AppConstants.DEFAULT_DEPTH);
         int depth = Math.max(bidSize, askSize);
         MarketData md = new MarketData();
         md.setDepth(depth);
@@ -82,25 +198,29 @@ public class IpqOrderBook implements OrderBook {
 
         BigDecimal[][] bids = new BigDecimal[bidSize][];
         BigDecimal[][] asks = new BigDecimal[askSize][];
+        int bidsIndex = 0;
+        int asksIndex = 0;
 
-//        for (int i = 0; i < bidSize; i++) {
-//            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-//            PriceLevel level = this.bids[i];
-//            level.resetIterator();
-//            while (level.hasNext()) {
-//                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
-//            }
-//            bids[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
-//        }
-//        for (int i = 0; i < askSize; i++) {
-//            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-//            PriceLevel level = this.asks[i];
-//            level.resetIterator();
-//            while (level.hasNext()) {
-//                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
-//            }
-//            asks[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
-//        }
+        bidsQueue.resetIterator();
+        while (bidsQueue.hasNext()){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            PriceLevel level = bidsQueue.next();
+            level.resetIterator();
+            while (level.hasNext()) {
+                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
+            }
+            bids[bidsIndex++] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+        }
+        asksQueue.resetIterator();
+        while (asksQueue.hasNext()){
+            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+            PriceLevel level = asksQueue.next();
+            level.resetIterator();
+            while (level.hasNext()) {
+                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
+            }
+            asks[asksIndex++] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+        }
         md.setBids(bids);
         md.setAsks(asks);
         return md;

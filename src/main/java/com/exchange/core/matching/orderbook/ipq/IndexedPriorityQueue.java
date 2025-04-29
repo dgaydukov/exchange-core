@@ -25,6 +25,12 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
     V poll();
 
     /**
+     * View, but not remove first element from the queue
+     * @return V - value
+     */
+    V peek();
+
+    /**
      * Get current size of the queue
      * @return int size
      */
