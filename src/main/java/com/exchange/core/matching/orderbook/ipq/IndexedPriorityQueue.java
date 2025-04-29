@@ -1,13 +1,47 @@
 package com.exchange.core.matching.orderbook.ipq;
 
+/**
+ * Interface for indexed priority queue
+ * Designed to store a list of entries with format <Price, PriceLevel>, where we can fetch bestBid/bestAsk,
+ * because it's priority queue and the best values would be polled first. Also you can fetch the PriceLevel to which you append your order
+ *
+ * @param <K> - key value, would be stored price
+ * @param <V> - value, would store PriceLevel
+ */
 public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
+    /**
+     * Add new element into queue, It would sort automatically
+     * @param key - key
+     * @param value - value
+     */
     void offer(K key, V value);
 
+    /**
+     * Poll from the top of the queue
+     * @return V - value
+     */
     V poll();
 
+    /**
+     * Get current size of the queue
+     * @return int size
+     */
     int size();
 
+    /**
+     * Fetch exact value by key. Usually you fetch PriceLevel by price.
+     * If PriceLevel doesn't exist for such price, null should be returned
+     * @param key - key
+     * @return V - if PriceLevel exist, null if no entire for this key
+     */
     V getExact(K key);
 
+    /**
+     * Use if you add new price, and previous method returned null
+     * For quick search you fetch the closest existing PriceLevel and create new one and attach to it
+     *
+     * @param key - key
+     * @return V - PriceLevel item
+     */
     V getNearestLeft(K key);
 }
