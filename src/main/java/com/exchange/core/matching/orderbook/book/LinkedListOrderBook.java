@@ -2,7 +2,6 @@ package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
-import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
 import com.exchange.core.matching.orderbook.level.OrderBookLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.model.Trade;
@@ -25,7 +24,7 @@ public class LinkedListOrderBook implements OrderBook {
     private final String symbol;
     private final Map<Long, Order> orderIdMap;
 
-    public LinkedListOrderBook(String symbol){
+    public LinkedListOrderBook(String symbol) {
         this.symbol = symbol;
         orderIdMap = new HashMap<>();
     }
@@ -33,11 +32,10 @@ public class LinkedListOrderBook implements OrderBook {
     @Override
     public List<Trade> match(Order taker) {
         List<Trade> trades = new ArrayList<>();
-
         if (taker.getSide() == OrderSide.BUY) {
             OrderBookLevel level = bestAsk;
-            while (level != null){
-                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
+            while (level != null) {
+                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                     break;
                 }
                 if (taker.getType() == OrderType.LIMIT) {
@@ -48,15 +46,23 @@ public class LinkedListOrderBook implements OrderBook {
                 } else {
                     matchMarket(taker, level, trades);
                 }
-                if (!level.hasNext()){
-                    // remove current level from asks
+                // remove level if it fully matched
+                if (!level.hasNext()) {
+                    OrderBookLevel prev = level.prev;
+                    OrderBookLevel next = level.next;
+                    if (prev != null) {
+                        prev.next = next;
+                        if (next != null) {
+                            next.prev = prev;
+                        }
+                    }
                 }
                 level = level.next;
             }
         } else {
             OrderBookLevel level = bestBid;
-            while (level != null){
-                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0){
+            while (level != null) {
+                if (taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
                     break;
                 }
                 if (taker.getType() == OrderType.LIMIT) {
@@ -66,6 +72,17 @@ public class LinkedListOrderBook implements OrderBook {
                     matchLimit(taker, level, trades);
                 } else {
                     matchMarket(taker, level, trades);
+                }
+                // remove level if it fully matched
+                if (!level.hasNext()) {
+                    OrderBookLevel prev = level.prev;
+                    OrderBookLevel next = level.next;
+                    if (prev != null) {
+                        prev.next = next;
+                        if (next != null) {
+                            next.prev = prev;
+                        }
+                    }
                 }
                 level = level.next;
             }
@@ -127,52 +144,72 @@ public class LinkedListOrderBook implements OrderBook {
 
     @Override
     public boolean add(Order order) {
-        if (order.getSide() == OrderSide.BUY){
-            // iterate over bids to add with specified price
-            if (bestBid == null){
-                bestBid = new OrderBookLevel(order);
-            } else {
-                OrderBookLevel level = bestBid;
-                while (level != null){
-                    // append order to existing level
-                    if (order.getPrice().compareTo(level.getPrice()) == 0) {
-                        level.add(order);
-                        break;
-                    }
-                    // insert new level
-                    if (order.getPrice().compareTo(level.getPrice()) > 0) {
-                        OrderBookLevel newLevel = new OrderBookLevel(order);
-                        OrderBookLevel next = level.next;
-                        level.next = newLevel;
-                        newLevel.prev = level;
-                        newLevel.next = next;
-                        break;
-                    }
-                    level = level.next;
+        if (order.getSide() == OrderSide.BUY) {
+            OrderBookLevel level = bestBid;
+            OrderBookLevel last = null;
+            boolean addToLast = true;
+            while (level != null) {
+                // append order to existing level
+                if (order.getPrice().compareTo(level.getPrice()) == 0) {
+                    addToLast = false;
+                    level.add(order);
+                    break;
                 }
+                // insert new PriceLevel before current level, because price is better (bigger for bids)
+                if (order.getPrice().compareTo(level.getPrice()) > 0) {
+                    addToLast = false;
+                    OrderBookLevel newLevel = new OrderBookLevel(order);
+                    OrderBookLevel next = level.next;
+                    level.next = newLevel;
+                    newLevel.prev = level;
+                    newLevel.next = next;
+                    break;
+                }
+                if (level.next == null) {
+                    last = level;
+                }
+                level = level.next;
             }
+            if (bestBid == null) {
+                bestBid = new OrderBookLevel(order);
+            }
+            if (addToLast && last != null) {
+                OrderBookLevel newLevel = new OrderBookLevel(order);
+                last.next = newLevel;
+                newLevel.prev = last;
+            }
+
+
         } else {
-            if (bestAsk == null){
-                bestAsk = new OrderBookLevel(order);
-            } else {
-                OrderBookLevel level = bestAsk;
-                while (level != null){
-                    // append order to existing level
-                    if (order.getPrice().compareTo(level.getPrice()) == 0) {
-                        level.add(order);
-                        break;
-                    }
-                    // insert new level
-                    if (order.getPrice().compareTo(level.getPrice()) < 0) {
-                        OrderBookLevel newLevel = new OrderBookLevel(order);
-                        OrderBookLevel next = level.next;
-                        level.next = newLevel;
-                        newLevel.prev = level;
-                        newLevel.next = next;
-                        break;
-                    }
-                    level = level.next;
+            OrderBookLevel level = bestAsk;
+            OrderBookLevel last = null;
+            boolean addToLast = true;
+            while (level != null) {
+                // append order to existing level
+                if (order.getPrice().compareTo(level.getPrice()) == 0) {
+                    addToLast = false;
+                    level.add(order);
+                    break;
                 }
+                // insert new level
+                if (order.getPrice().compareTo(level.getPrice()) < 0) {
+                    addToLast = false;
+                    OrderBookLevel newLevel = new OrderBookLevel(order);
+                    OrderBookLevel next = level.next;
+                    level.next = newLevel;
+                    newLevel.prev = level;
+                    newLevel.next = next;
+                    break;
+                }
+                level = level.next;
+            }
+            if (bestAsk == null) {
+                bestAsk = new OrderBookLevel(order);
+            }
+            if (addToLast && last != null) {
+                OrderBookLevel newLevel = new OrderBookLevel(order);
+                last.next = newLevel;
+                newLevel.prev = last;
             }
         }
         return true;
@@ -200,7 +237,7 @@ public class LinkedListOrderBook implements OrderBook {
     @Override
     public boolean remove(long orderId) {
         Order order = orderIdMap.get(orderId);
-        if (order == null){
+        if (order == null) {
             return false;
         }
         PriceLevel level = order.level;
@@ -214,12 +251,12 @@ public class LinkedListOrderBook implements OrderBook {
         int bidSize = 0, askSize = 0;
 
         OrderBookLevel bidLvl = bestBid;
-        while (bidLvl != null){
+        while (bidLvl != null) {
             bidSize++;
             bidLvl = bidLvl.next;
         }
         OrderBookLevel askLvl = bestAsk;
-        while (askLvl != null){
+        while (askLvl != null) {
             askSize++;
             askLvl = askLvl.next;
         }
@@ -235,7 +272,7 @@ public class LinkedListOrderBook implements OrderBook {
         BigDecimal[][] asks = new BigDecimal[askSize][];
         int bidIndex = 0, askIndex = 0;
         bidLvl = bestBid;
-        while (bidLvl != null){
+        while (bidLvl != null) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             bidLvl.resetIterator();
             while (bidLvl.hasNext()) {
@@ -245,7 +282,7 @@ public class LinkedListOrderBook implements OrderBook {
             bidLvl = bidLvl.next;
         }
         askLvl = bestAsk;
-        while (askLvl != null){
+        while (askLvl != null) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             askLvl.resetIterator();
             while (askLvl.hasNext()) {
