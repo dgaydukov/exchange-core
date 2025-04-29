@@ -1,6 +1,9 @@
 package com.exchange.core.matching.orderbook.ipq;
 
+import com.exchange.core.exceptions.AppException;
+
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -63,18 +66,22 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
         return entry == null ? null : entry.getValue();
     }
 
+    private Iterator<V> iterator;
     @Override
     public void resetIterator() {
-        
+        iterator = map.values().iterator();
     }
 
     @Override
     public boolean hasNext() {
-        return false;
+        return iterator.hasNext();
     }
 
     @Override
     public V next() {
-        return null;
+        if (!iterator.hasNext()){
+            return null;
+        }
+        return iterator.next();
     }
 }

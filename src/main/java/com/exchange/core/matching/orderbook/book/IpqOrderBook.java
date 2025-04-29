@@ -83,24 +83,24 @@ public class IpqOrderBook implements OrderBook {
         BigDecimal[][] bids = new BigDecimal[bidSize][];
         BigDecimal[][] asks = new BigDecimal[askSize][];
 
-        for (int i = 0; i < bidSize; i++) {
-            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-            PriceLevel level = this.bids[i];
-            level.resetIterator();
-            while (level.hasNext()) {
-                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
-            }
-            bids[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
-        }
-        for (int i = 0; i < askSize; i++) {
-            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-            PriceLevel level = this.asks[i];
-            level.resetIterator();
-            while (level.hasNext()) {
-                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
-            }
-            asks[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
-        }
+//        for (int i = 0; i < bidSize; i++) {
+//            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+//            PriceLevel level = this.bids[i];
+//            level.resetIterator();
+//            while (level.hasNext()) {
+//                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
+//            }
+//            bids[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+//        }
+//        for (int i = 0; i < askSize; i++) {
+//            BigDecimal cumulativeQuantity = BigDecimal.ZERO;
+//            PriceLevel level = this.asks[i];
+//            level.resetIterator();
+//            while (level.hasNext()) {
+//                cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
+//            }
+//            asks[i] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
+//        }
         md.setBids(bids);
         md.setAsks(asks);
         return md;

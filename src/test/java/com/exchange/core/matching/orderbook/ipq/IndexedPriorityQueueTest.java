@@ -119,4 +119,22 @@ public class IndexedPriorityQueueTest {
         });
         Assertions.assertEquals("Value exists for key=2", ex.getMessage(), "exception text mismatch");
     }
+
+    @Test
+    public void iterationTest(){
+        Assertions.assertEquals(0, queue.size(), "size should be 0");
+        for (int i = 1; i <= 10 ; i++){
+            Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
+        }
+        Assertions.assertEquals(10, queue.size(), "size should be 10");
+
+        queue.resetIterator();
+        for (int i = 1; i <= 10; i++){
+            Assertions.assertTrue(queue.hasNext(), "hasNext should return true");
+            Assertions.assertEquals("msg_"+i, queue.next(), "next mismatch");
+        }
+        Assertions.assertFalse(queue.hasNext(), "hasNext should return false");
+        Assertions.assertNull(queue.next(), "next should return null");
+
+    }
 }
