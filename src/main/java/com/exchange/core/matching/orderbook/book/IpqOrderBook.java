@@ -30,6 +30,11 @@ public class IpqOrderBook implements OrderBook {
     private final IndexedPriorityQueue<BigDecimal, PriceLevel> asksQueue;
     Map<Long, Order> orderIdMap = new HashMap<>();
 
+
+    public IpqOrderBook(String symbol){
+        this(symbol, 1024, 256);
+    }
+
     public IpqOrderBook(String symbol, int initialBookSize, int bookGrowSize){
         this.symbol = symbol;
         bidsQueue = new IndexedPriorityQueueImpl<>(SortOrder.DESC, initialBookSize, bookGrowSize);
