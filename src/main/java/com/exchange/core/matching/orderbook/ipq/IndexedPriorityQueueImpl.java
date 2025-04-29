@@ -20,9 +20,6 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
     private final SortOrder sortOrder;
     private final NavigableMap<K, V> map;
 
-    public IndexedPriorityQueueImpl (SortOrder sortOrder){
-        this(sortOrder, 1000, 100);
-    }
     public IndexedPriorityQueueImpl(SortOrder sortOrder, int capacity, int growSize){
         this.capacity = capacity;
         this.growSize = growSize;
@@ -39,7 +36,7 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
 
     @Override
     public V poll() {
-        if (map.size() == 0){
+        if (map.isEmpty()){
             return null;
         }
         return map.pollFirstEntry().getValue();
@@ -64,5 +61,20 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
         }
         Map.Entry<K,V> entry = map.floorEntry(key);
         return entry == null ? null : entry.getValue();
+    }
+
+    @Override
+    public void resetIterator() {
+        
+    }
+
+    @Override
+    public boolean hasNext() {
+        return false;
+    }
+
+    @Override
+    public V next() {
+        return null;
     }
 }

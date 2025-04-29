@@ -47,4 +47,19 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * throws Exception if key already exist
      */
     V getNearestLeft(K key);
+
+
+    /**
+     * Reset iterator sequence and start iterating from the first element
+     */
+    void resetIterator();
+
+    // check if next element exist
+    boolean hasNext();
+
+    /**
+     * Get next element in iteration sequence
+     * @return value
+     */
+    V next();
 }
