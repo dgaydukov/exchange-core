@@ -39,65 +39,38 @@ public class IpqOrderBook implements OrderBook {
     @Override
     public List<Trade> match(Order taker) {
         List<Trade> trades = new ArrayList<>();
-//        if (taker.getSide() == OrderSide.BUY) {
-//            int posShift = 0;
-//            for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-//                PriceLevel level = asks[i];
-//                if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-//                    break;
-//                }
-//                if (taker.getType() == OrderType.LIMIT) {
-//                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
-//                        break;
-//                    }
-//                    matchLimit(taker, level, trades);
-//                } else {
-//                    matchMarket(taker, level, trades);
-//                }
-//                // check if level is empty and remove PriceLevel from array
-//                if (!level.hasNext()){
-//                    posShift++;
-//                }
-//            }
-//            // shift array left for n positions
-//            if (posShift > 0){
-//                for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
-//                    if (asks[i + posShift] == null){
-//                        break;
-//                    }
-//                    asks[i] = asks[i + posShift];
-//                }
-//            }
-//        } else {
-//            int posShift = 0;
-//            for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
-//                PriceLevel level = bids[i];
-//                if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
-//                    break;
-//                }
-//                if (taker.getType() == OrderType.LIMIT) {
-//                    if (taker.getPrice().compareTo(level.getPrice()) > 0) {
-//                        break;
-//                    }
-//                    matchLimit(taker, level, trades);
-//                } else {
-//                    matchMarket(taker, level, trades);
-//                }
-//                // check if level is empty and remove PriceLevel from array
-//                if (!level.hasNext()){
-//                    posShift++;
-//                }
-//            }
-//            // shift array left for n positions
-//            if (posShift > 0){
-//                for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
-//                    if (bids[i + posShift] == null){
-//                        break;
-//                    }
-//                    bids[i] = bids[i + posShift];
-//                }
-//            }
-//        }
+        if (taker.getSide() == OrderSide.BUY) {
+            while (asksQueue.size() > 0 && taker.getLeavesQty().compareTo(BigDecimal.ZERO) != 0){
+                PriceLevel level = asksQueue.peek();
+                if (taker.getType() == OrderType.LIMIT) {
+                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
+                        break;
+                    }
+                    matchLimit(taker, level, trades);
+                } else {
+                    matchMarket(taker, level, trades);
+                }
+                if (!level.hasNext()){
+                    asksQueue.poll();
+                }
+            }
+        } else {
+            while (bidsQueue.size() > 0 && taker.getLeavesQty().compareTo(BigDecimal.ZERO) != 0){
+                PriceLevel level = bidsQueue.peek();
+                if (taker.getType() == OrderType.LIMIT) {
+                    if (taker.getPrice().compareTo(level.getPrice()) > 0) {
+                        break;
+                    }
+                    matchLimit(taker, level, trades);
+                } else {
+                    matchMarket(taker, level, trades);
+                }
+                // check if level is empty and remove PriceLevel from array
+                if (!level.hasNext()){
+                    bidsQueue.poll();
+                }
+            }
+        }
         return trades;
     }
 
