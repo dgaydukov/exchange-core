@@ -87,6 +87,9 @@ public class LinkedListPriceLevel implements PriceLevel{
 
   @Override
   public Order next() {
+    if (!hasNext()){
+      return null;
+    }
     Order current = order;
     order = order.next;
     return current;

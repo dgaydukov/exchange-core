@@ -36,7 +36,7 @@ public interface PriceLevel {
     /**
      * Get current order inside current iteration
      * Can throw NPE, so make sure to check if next element exists before calling it
-     * @return order - current iteration order
+     * @return next value in iteration, null if no next value
      */
     Order next();
 

@@ -59,7 +59,7 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
 
     /**
      * Get next element in iteration sequence
-     * @return value
+     * @return next value in iteration, null if no next value
      */
     V next();
 }
