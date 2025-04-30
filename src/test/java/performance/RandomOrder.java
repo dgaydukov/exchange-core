@@ -31,12 +31,12 @@ public class RandomOrder {
   }
 
   private static BigDecimal getPrice() {
-    int next = random.nextInt(100, 1000);
+    int next = random.nextInt(100, 10_000);
     return new BigDecimal(next);
   }
 
   private static BigDecimal getQuantity() {
-    int next = random.nextInt(1, 10);
+    int next = random.nextInt(100, 10_000);
     return new BigDecimal(next);
   }
 }
