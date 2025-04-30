@@ -41,7 +41,7 @@ public class OrderBookPerformanceTest {
   @Setup(Level.Iteration)
   public void setUp() {
     // set big array as 100k, to have enough space for different price levels
-    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL, 5_000);
+    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL);
     ipqOrderBook = new IpqOrderBook(MockData.SYMBOL);
     linkedListOrderBook = new LinkedListOrderBook(MockData.SYMBOL);
     mapOrderBook = new MapOrderBook(MockData.SYMBOL);
@@ -116,18 +116,18 @@ public class OrderBookPerformanceTest {
     orderBookTest(arrayOrderBook, blackhole);
   }
 
-//  @Benchmark
-//  public void measureIpqOrderBook(Blackhole blackhole) {
-//    orderBookTest(ipqOrderBook, blackhole);
-//  }
-//
-//  @Benchmark
-//  public void measureLinkedListOrderBook(Blackhole blackhole) {
-//    orderBookTest(linkedListOrderBook, blackhole);
-//  }
-//
-//  @Benchmark
-//  public void measureMapOrderBook(Blackhole blackhole) {
-//    orderBookTest(mapOrderBook, blackhole);
-//  }
+  @Benchmark
+  public void measureIpqOrderBook(Blackhole blackhole) {
+    orderBookTest(ipqOrderBook, blackhole);
+  }
+
+  @Benchmark
+  public void measureLinkedListOrderBook(Blackhole blackhole) {
+    orderBookTest(linkedListOrderBook, blackhole);
+  }
+
+  @Benchmark
+  public void measureMapOrderBook(Blackhole blackhole) {
+    orderBookTest(mapOrderBook, blackhole);
+  }
 }

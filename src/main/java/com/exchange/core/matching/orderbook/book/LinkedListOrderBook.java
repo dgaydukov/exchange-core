@@ -77,7 +77,10 @@ public class LinkedListOrderBook implements OrderBook {
                 if (!level.hasNext()) {
                     OrderBookLevel prev = level.prev;
                     OrderBookLevel next = level.next;
-                    if (prev != null) {
+                    if (prev == null) {
+                        // remove bestBid
+
+                    } else {
                         prev.next = next;
                         if (next != null) {
                             next.prev = prev;

@@ -67,13 +67,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        for (int i = 0; i < priceLevelArrayDepth - posShift; i++) {
-          if (asks[i + posShift] == null){
-            break;
-          }
-          asks[i] = asks[i + posShift];
-          asks[i+posShift] = null;
-        }
+        moveLeft(0, posShift, asks);
       }
     } else {
       int posShift = 0;
@@ -97,13 +91,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        for (int i = 0; i < priceLevelArrayDepth - posShift; i++) {
-          if (bids[i + posShift] == null){
-            break;
-          }
-          bids[i] = bids[i + posShift];
-          bids[i+posShift] = null;
-        }
+        moveLeft(0, posShift, bids);
       }
     }
     return trades;
@@ -253,6 +241,15 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     return orderIdMap.get(orderId);
   }
 
+  private void moveLeft(int start, int shift, PriceLevel[] arr){
+    for (int i = start; i < priceLevelArrayDepth - shift; i++) {
+      if (arr[i + shift] == null){
+        break;
+      }
+      arr[i] = arr[i + shift];
+      arr[i+shift] = null;
+    }
+  }
 
   private void moveRight(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;
