@@ -13,6 +13,7 @@ public class RandomOrder {
 
   public static Order buyLimitUser1() {
     Order order = new Order();
+    order.setOrderId(random.nextLong());
     order.setSymbol(MockData.SYMBOL);
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);

@@ -147,14 +147,12 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     if (o == null) {
       return false;
     }
-    // if we change price we need to move order into new price level
+    // update quantity
+    o.setQuoteOrderQty(order.getQuoteOrderQty());
+    // if price changed, we need to move order into new PriceLevel
     if (order.getPrice().compareTo(o.getPrice()) != 0) {
-      // remove and add
       remove(orderId);
       add(order);
-    } else {
-      // if we change quantity, just change on order
-      order.setQuoteOrderQty(order.getQuoteOrderQty());
     }
     return true;
   }

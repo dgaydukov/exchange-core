@@ -47,35 +47,39 @@ public class OrderBookPerformanceTest {
     mapOrderBook = new MapOrderBook(MockData.SYMBOL);
   }
 
+  /**
+   * List of actions:
+   * 1. add 2 buy orders
+   * 2. match against sell
+   * 3. build market data
+   * 4. remove second order
+   * 5. update first order
+   * 6. build market data
+   */
+  private void orderBookTest(OrderBook ob, Blackhole blackhole){
+    ob.add(RandomOrder.buyLimitUser1());
+    List<Trade> trades = ob.match(RandomOrder.sellLimitUser2());
+    blackhole.consume(trades);
+    blackhole.consume(ob.buildMarketData());
+  }
+
   @Benchmark
   public void measureArrayOrderBook(Blackhole blackhole) {
-    arrayOrderBook.add(RandomOrder.buyLimitUser1());
-    List<Trade> trades = arrayOrderBook.match(RandomOrder.sellLimitUser2());
-    blackhole.consume(trades);
-    blackhole.consume(arrayOrderBook.buildMarketData());
+    orderBookTest(arrayOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureIpqOrderBook(Blackhole blackhole) {
-    ipqOrderBook.add(RandomOrder.buyLimitUser1());
-    List<Trade> trades = ipqOrderBook.match(RandomOrder.sellLimitUser2());
-    blackhole.consume(trades);
-    blackhole.consume(ipqOrderBook.buildMarketData());
+    orderBookTest(ipqOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureLinkedListOrderBook(Blackhole blackhole) {
-    linkedListOrderBook.add(RandomOrder.buyLimitUser1());
-    List<Trade> trades = linkedListOrderBook.match(RandomOrder.sellLimitUser2());
-    blackhole.consume(trades);
-    blackhole.consume(linkedListOrderBook.buildMarketData());
+    orderBookTest(linkedListOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureMapOrderBook(Blackhole blackhole) {
-    mapOrderBook.add(RandomOrder.buyLimitUser1());
-    List<Trade> trades = mapOrderBook.match(RandomOrder.sellLimitUser2());
-    blackhole.consume(trades);
-    blackhole.consume(mapOrderBook.buildMarketData());
+    orderBookTest(mapOrderBook, blackhole);
   }
 }
