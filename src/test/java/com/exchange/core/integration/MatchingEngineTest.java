@@ -1,8 +1,8 @@
 package com.exchange.core.integration;
 
 import com.exchange.core.MockData;
-import com.exchange.core.matching.MatchingEngine;
-import com.exchange.core.matching.spot.SpotMatchingEngine;
+import com.exchange.core.matching.engine.MatchingEngine;
+import com.exchange.core.matching.engine.SpotMatchingEngine;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderStatus;
 import com.exchange.core.model.msg.ErrorMessage;

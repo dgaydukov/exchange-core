@@ -1,4 +1,4 @@
-package com.exchange.core.matching;
+package com.exchange.core.matching.engine;
 
 
 public interface MatchingEngine {

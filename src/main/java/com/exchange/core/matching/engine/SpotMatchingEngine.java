@@ -1,7 +1,6 @@
-package com.exchange.core.matching.spot;
+package com.exchange.core.matching.engine;
 
 import com.exchange.core.exceptions.AppException;
-import com.exchange.core.matching.MatchingEngine;
 import com.exchange.core.matching.counter.GlobalCounter;
 import com.exchange.core.matching.counter.SimpleGlobalCounter;
 import com.exchange.core.matching.orderbook.book.MapOrderBook;

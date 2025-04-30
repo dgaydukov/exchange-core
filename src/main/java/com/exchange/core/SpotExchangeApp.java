@@ -1,7 +1,7 @@
 package com.exchange.core;
 
-import com.exchange.core.matching.MatchingEngine;
-import com.exchange.core.matching.spot.SpotMatchingEngine;
+import com.exchange.core.matching.engine.MatchingEngine;
+import com.exchange.core.matching.engine.SpotMatchingEngine;
 import com.exchange.core.matching.waitstrategy.SleepWaitStrategy;
 import com.exchange.core.matching.waitstrategy.WaitStrategy;
 import com.exchange.core.model.enums.OrderSide;

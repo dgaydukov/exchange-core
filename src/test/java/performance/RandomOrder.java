@@ -30,6 +30,14 @@ public class RandomOrder {
     order.setSide(OrderSide.SELL);
     return order;
   }
+  public static Order sellMarkettUser2() {
+    Order order = buyLimitUser1();
+    order.setAccount(2);
+    order.setSide(OrderSide.SELL);
+    order.setType(OrderType.MARKET);
+    order.setPrice(null);
+    return order;
+  }
 
   private static BigDecimal getPrice() {
     int next = random.nextInt(100, 10_000);

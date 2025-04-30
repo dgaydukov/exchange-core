@@ -6,7 +6,6 @@ import com.exchange.core.matching.orderbook.book.ArrayOrderBook;
 import com.exchange.core.matching.orderbook.book.IpqOrderBook;
 import com.exchange.core.matching.orderbook.book.LinkedListOrderBook;
 import com.exchange.core.matching.orderbook.book.MapOrderBook;
-import com.exchange.core.model.Trade;
 import com.exchange.core.model.msg.Order;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -16,7 +15,6 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -60,16 +58,17 @@ public class OrderBookPerformanceTest {
    */
 
   private void __orderBookTest(OrderBook ob, Blackhole blackhole){
-    Order buy1 = RandomOrder.buyLimitUser1();
-    Order buy2 = RandomOrder.buyLimitUser1();
-    ob.add(buy1);
-    ob.add(buy2);
-    List<Trade> trades = ob.match(RandomOrder.sellLimitUser2());
-    blackhole.consume(trades);
+    Order buy = RandomOrder.buyLimitUser1();
+    Order sell = RandomOrder.buyLimitUser1();
+    ob.match(buy);
+    if
+    blackhole.consume(ob.match(RandomOrder.sellLimitUser2()));
+    blackhole.consume(ob.match(RandomOrder.sellMarkettUser2()));
     blackhole.consume(ob.buildMarketData());
     Order fetch1 = ob.getOrder(buy1.getOrderId());
     if (fetch1 != null){
       blackhole.consume(ob.remove(fetch1.getOrderId()));
+      blackhole.consume(ob.buildMarketData());
     }
     Order fetch2 = ob.getOrder(buy2.getOrderId());
     if (fetch2 != null){
