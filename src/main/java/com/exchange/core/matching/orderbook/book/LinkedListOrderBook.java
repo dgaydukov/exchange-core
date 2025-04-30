@@ -238,14 +238,12 @@ public class LinkedListOrderBook implements OrderBook {
         if (o == null) {
             return false;
         }
-        // if we change price we need to move order into new price level
+        // update quantity
+        o.setQuoteOrderQty(order.getQuoteOrderQty());
+        // if price changed, we need to move order into new PriceLevel
         if (order.getPrice().compareTo(o.getPrice()) != 0) {
-            // remove and add
             remove(orderId);
             add(order);
-        } else {
-            // if we change quantity, just change on order
-            order.setQuoteOrderQty(order.getQuoteOrderQty());
         }
         return true;
     }
@@ -256,8 +254,22 @@ public class LinkedListOrderBook implements OrderBook {
         if (order == null) {
             return false;
         }
-        PriceLevel level = order.level;
+        OrderBookLevel level = (OrderBookLevel) order.level;
+        level.resetIterator();
         level.remove(order);
+        if (!level.hasNext()){
+            // remove current level
+            if (level.next == null){
+                if (order.getSide() == OrderSide.BUY){
+                    bestBid = null;
+                } else {
+                    bestAsk = null;
+                }
+            } else {
+                level.prev.next = level.next;
+                level.next.prev = level.prev;
+            }
+        }
         return true;
     }
 

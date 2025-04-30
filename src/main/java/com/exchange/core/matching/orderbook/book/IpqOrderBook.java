@@ -151,7 +151,19 @@ public class IpqOrderBook implements OrderBook {
 
     @Override
     public boolean update(Order order) {
-        return false;
+        final long orderId = order.getOrderId();
+        Order o = orderIdMap.get(orderId);
+        if (o == null) {
+            return false;
+        }
+        // update quantity
+        o.setQuoteOrderQty(order.getQuoteOrderQty());
+        // if price changed, we need to move order into new PriceLevel
+        if (order.getPrice().compareTo(o.getPrice()) != 0) {
+            remove(orderId);
+            add(order);
+        }
+        return true;
     }
 
     @Override
@@ -160,9 +172,18 @@ public class IpqOrderBook implements OrderBook {
         if (order == null){
             return false;
         }
-        PriceLevel level = order.getSide() == OrderSide.BUY
-                ? bidsQueue.getExact(order.getPrice()) : asksQueue.getExact(order.getPrice());
+        IndexedPriorityQueue<BigDecimal, PriceLevel> queue = order.getSide() == OrderSide.BUY ? bidsQueue : asksQueue;
+        PriceLevel level = queue.getExact(order.getPrice());
+        level.resetIterator();
         level.remove(order);
+        if (!level.hasNext()){
+            queue.resetIterator();
+            while (queue.hasNext()){
+                if (level == queue.next()){
+                    queue.poll();
+                }
+            }
+        }
         return true;
     }
 

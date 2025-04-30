@@ -16,6 +16,7 @@ import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,14 +202,12 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     if (o == null) {
       return false;
     }
-    // if we change price we need to move order into new price level
+    // update quantity
+    o.setQuoteOrderQty(order.getQuoteOrderQty());
+    // if price changed, we need to move order into new PriceLevel
     if (order.getPrice().compareTo(o.getPrice()) != 0) {
-      // remove and add
       remove(orderId);
       add(order);
-    } else {
-      // if we change quantity, just change on order
-      order.setQuoteOrderQty(order.getQuoteOrderQty());
     }
     return true;
   }
@@ -221,7 +220,20 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       return false;
     }
     PriceLevel level = order.level;
+    level.resetIterator();
     level.remove(order);
+    // if level has no orders, remove it
+    if (!level.hasNext()){
+      PriceLevel[] arr = order.getSide() == OrderSide.BUY ? bids : asks;
+      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+        if (level == arr[i]){
+          // find desired level, remove it from order book
+          for (int j = i; j < DEFAULT_PRICE_LEVEL_SIZE-1; j++){
+            arr[j] = arr[j+1];
+          }
+        }
+      }
+    }
     return true;
   }
 

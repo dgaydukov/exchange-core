@@ -10,6 +10,7 @@ import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
@@ -392,6 +393,32 @@ public class OrderBookTest {
     ob.match(sell);
     Assertions.assertNull(ob.getOrder(buyOrderId), "order should be null");
     Assertions.assertNull(ob.getOrder(sellOrderId), "order should be null");
+  }
+
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void updateOrderTest(OrderBook ob){
+    long buyOrderId = 1001;
+    Assertions.assertNull(ob.getOrder(buyOrderId), "order should be null");
+    Order buy = getLimitBuy();
+    BigDecimal price = new BigDecimal(100);
+    BigDecimal qty = new BigDecimal(10);
+    buy.setPrice(price);
+    buy.setLeavesQty(qty);
+    buy.setOrderId(buyOrderId);
+    ob.add(buy);
+    Assertions.assertEquals(buy, ob.getOrder(buyOrderId), "getOrder mismatch");
+    Assertions.assertArrayEquals(new BigDecimal[][]{{price, qty}}, ob.buildMarketData().getBids(), "bids mismatch");
+    // update order
+    Order buy2 = getLimitBuy();
+    buy2.setOrderId(buyOrderId);
+    price = new BigDecimal(200);
+    qty = new BigDecimal(20);
+    buy2.setPrice(price);
+    buy2.setLeavesQty(qty);
+    ob.update(buy2);
+    Assertions.assertEquals(buy2, ob.getOrder(buyOrderId), "getOrder mismatch");
+    Assertions.assertArrayEquals(new BigDecimal[][]{{price, qty}}, ob.buildMarketData().getBids(), "bids mismatch");
   }
 
   private void add3SellOrders(OrderBook ob) {
