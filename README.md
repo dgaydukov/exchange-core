@@ -32,6 +32,7 @@ Matching engine consist of following parts:
 
 ### OrderBook design
 Since order book is the core part - it's implementation is very important, cause if matching is slow, the whole system would be slow. We have several order book implementations. All of them implement [OrderBook Interface](/src/main/java/com/exchange/core/matching/orderbook/OrderBook.java). Implementations use different underlying data structures to store bids/asks, such as map, array, linked list, priority queue. But `PriceLevel` is the same everywhere.
+There is no ideal data structure, as you will see from below. But what you should try to achieve is that any operation like `add/update/remove/match` should take O(1) time. If you do iteration over large array or linked list for any of such operation, you should reconsider your design. Sometimes 2 data structures can be combined to achieve O(1) for any type of access.
 Currently, there are 4 implementations:
 * [MapOrderBook](/src/main/java/com/exchange/core/matching/orderbook/book/MapOrderBook.java) - naive implementation, here we are using default JDK implementations `java.utils.TreeMap` to store internal state of order book like bids/asks. Since these JDK implementations are not designed for low latency, they won't perform well under high load due to: gc problems or primitive unboxing/auto-boxing. Such implementation is good for educational purpose, but completely useless for real-world apps.
 * [ArrayOrderBook](/src/main/java/com/exchange/core/matching/orderbook/book/ArrayOrderBook.java) - advanced version of order book, compared to `MapOrderBook` order book, here we can achieve faster performance by directly manipulating the underlying array. In `TreeMap` there is also underlying array and each time we insert/remove, it's sorted internally/implicitly. But here we are adding/removing from order book explicitly
@@ -143,9 +144,11 @@ There are 2 ways you can write performance test:
 To avoid all such problems, it's better to use some framework for such testing.
 * advanced way - using some kind of framework that specifically designed to handle all problems from naive approach. Once of such frameworks is [Java Microbenchmark Harness](https://github.com/openjdk/jmh). This tool was developed by the team who works on JVM, so developers utilized all their knowledge on JVM internals to create a tool that can take into account all JVM nuances. You can utilize it and measure your code performance. JHM should only be used for code performance. It's own name `micro-benchmark` suggest this. If we are talking about end-to-end performance with apiServer=>matchingEngine=>webSocket, we have to use other tools, cause in such cases we are not care about code performance, but rather end-to-end performance. Yet for code performance measurement JHM is the best thing available. So we have custom example to test matching-engine and JMH to test order books. There is no point to test matching-engine with JMH, cause under-the-hood JMH would run your code hundreds of times, if not thousands on each iteration, but matching-engine class is supposed to be start once, and then just handle messages. So JMH - only for code testing, not end-to-end running app. Having said this if you run [OrderBookPerformanceTest](/src/test/java/performance/OrderBookPerformanceTest.java), you can see results:
 ```
-Benchmark                                       Mode  Cnt  Score   Error  Units
-OrderBookPerformanceTest.measureArrayOrderBook  avgt    5  0.004 ± 0.001  ms/op
-OrderBookPerformanceTest.measureMapOrderBook    avgt    5  0.015 ± 0.002  ms/op
+Benchmark                                               Mode  Cnt  Score   Error  Units
+OrderBookPerformanceTest.measureArrayOrderBook          avgt    5  0.004 ± 0.001  ms/op
+OrderBookPerformanceTest.measureIpqOrderBook            avgt    5  ≈ 10⁻³         ms/op
+OrderBookPerformanceTest.measureLinkedListOrderBook     avgt    5  0.075 ± 0.002  ms/op
+OrderBookPerformanceTest.measureMapOrderBook            avgt    5  0.015 ± 0.002  ms/op
 ```
 
 #### Architectural test

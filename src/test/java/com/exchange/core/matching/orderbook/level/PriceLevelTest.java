@@ -3,13 +3,13 @@ package com.exchange.core.matching.orderbook.level;
 import com.exchange.core.MockData;
 import com.exchange.core.exceptions.AppException;
 import com.exchange.core.model.msg.Order;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 public class PriceLevelTest {
 
@@ -185,6 +185,5 @@ public class PriceLevelTest {
       level.remove(second);
     });
     Assertions.assertEquals("You can't remove by object during iteration", ex.getMessage(), "error message mismatch");
-
   }
 }

@@ -40,7 +40,7 @@ public class OrderBookPerformanceTest {
 
   @Setup(Level.Iteration)
   public void setUp() {
-    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL);
+    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL, 100_000);
     ipqOrderBook = new IpqOrderBook(MockData.SYMBOL);
     linkedListOrderBook = new LinkedListOrderBook(MockData.SYMBOL);
     mapOrderBook = new MapOrderBook(MockData.SYMBOL);

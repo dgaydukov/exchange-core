@@ -22,18 +22,24 @@ import java.util.List;
 import java.util.Map;
 
 public class ArrayOrderBook implements OrderBook, Snapshotable {
-
-  private final int DEFAULT_PRICE_LEVEL_SIZE = 1024;
   // sorted in descending order => first bid is the highest price
-  private final PriceLevel[] bids = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
+  private final PriceLevel[] bids;
   // sorted in ascending order => first ask is the lowest price
-  private final PriceLevel[] asks = new PriceLevel[DEFAULT_PRICE_LEVEL_SIZE];
+  private final PriceLevel[] asks;
   private final String symbol;
+  private final int priceLevelArrayDepth;
   private final Map<Long, Order> orderIdMap = new HashMap<>();
 
 
-  public ArrayOrderBook(String symbol) {
+  public ArrayOrderBook(String symbol, int priceLevelArrayDepth) {
     this.symbol = symbol;
+    this.priceLevelArrayDepth = priceLevelArrayDepth;
+    bids = new PriceLevel[priceLevelArrayDepth];
+    asks = new PriceLevel[priceLevelArrayDepth];
+  }
+
+  public ArrayOrderBook(String symbol) {
+    this(symbol, 1024);
   }
 
   @Override
@@ -41,7 +47,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     List<Trade> trades = new ArrayList<>();
     if (taker.getSide() == OrderSide.BUY) {
       int posShift = 0;
-      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+      for (int i = 0; i < priceLevelArrayDepth; i++) {
         PriceLevel level = asks[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
@@ -61,7 +67,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+        for (int i = 0; i < priceLevelArrayDepth - posShift; i++) {
           if (asks[i + posShift] == null){
             break;
           }
@@ -70,7 +76,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
     } else {
       int posShift = 0;
-      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+      for (int i = 0; i < priceLevelArrayDepth; i++) {
         PriceLevel level = bids[i];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
@@ -90,7 +96,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE - posShift; i++) {
+        for (int i = 0; i < priceLevelArrayDepth - posShift; i++) {
           if (bids[i + posShift] == null){
             break;
           }
@@ -160,7 +166,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   public boolean add(Order order) {
     orderIdMap.put(order.getOrderId(), order);
     if (order.getSide() == OrderSide.BUY) {
-      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+      for (int i = 0; i < priceLevelArrayDepth; i++) {
         PriceLevel level = bids[i];
         if (level == null) {
           bids[i] = new LinkedListPriceLevel(order);
@@ -176,7 +182,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         }
       }
     } else {
-      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+      for (int i = 0; i < priceLevelArrayDepth; i++) {
         PriceLevel level = asks[i];
         if (level == null) {
           asks[i] = new LinkedListPriceLevel(order);
@@ -225,10 +231,10 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     // if level has no orders, remove it
     if (!level.hasNext()){
       PriceLevel[] arr = order.getSide() == OrderSide.BUY ? bids : asks;
-      for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
+      for (int i = 0; i < priceLevelArrayDepth; i++) {
         if (level == arr[i]){
           // find desired level, remove it from order book
-          for (int j = i; j < DEFAULT_PRICE_LEVEL_SIZE-1; j++){
+          for (int j = i; j < priceLevelArrayDepth-1; j++){
             arr[j] = arr[j+1];
           }
         }
