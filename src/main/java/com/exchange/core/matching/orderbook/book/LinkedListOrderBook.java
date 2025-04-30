@@ -259,6 +259,11 @@ public class LinkedListOrderBook implements OrderBook {
     }
 
     @Override
+    public Order getOrder(long orderId) {
+        return orderIdMap.get(orderId);
+    }
+
+    @Override
     public MarketData buildMarketData() {
         // find number & bids & asks
         int bidSize = 0, askSize = 0;

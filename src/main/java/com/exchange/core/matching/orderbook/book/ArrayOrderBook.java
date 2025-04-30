@@ -228,6 +228,11 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     return true;
   }
 
+  @Override
+  public Order getOrder(long orderId) {
+    return orderIdMap.get(orderId);
+  }
+
 
   private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;

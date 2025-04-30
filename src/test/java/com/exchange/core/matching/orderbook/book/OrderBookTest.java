@@ -338,6 +338,12 @@ public class OrderBookTest {
     Assertions.assertEquals(20, md.getAsks().length, "asks size should be 20");
   }
 
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void removeOrderTest(){
+
+  }
+
   private void add3SellOrders(OrderBook ob) {
     Order sell = getLimitBuy();
     sell.setSide(OrderSide.SELL);

@@ -165,6 +165,11 @@ public class IpqOrderBook implements OrderBook {
     }
 
     @Override
+    public Order getOrder(long orderId) {
+        return orderIdMap.get(orderId);
+    }
+
+    @Override
     public MarketData buildMarketData() {
         int bidSize = Math.min(bidsQueue.size(), AppConstants.DEFAULT_DEPTH);
         int askSize = Math.min(asksQueue.size(), AppConstants.DEFAULT_DEPTH);

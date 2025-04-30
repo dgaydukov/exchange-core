@@ -174,6 +174,11 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     return true;
   }
 
+  @Override
+  public Order getOrder(long orderId) {
+    return orderIdMap.get(orderId);
+  }
+
 
   @Override
   public MarketData buildMarketData() {
