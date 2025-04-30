@@ -177,7 +177,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
-          moveLeft(i, new LinkedListPriceLevel(order), bids);
+          moveRight(i, new LinkedListPriceLevel(order), bids);
           return true;
         }
       }
@@ -193,12 +193,12 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
-          moveLeft(i, new LinkedListPriceLevel(order), asks);
+          moveRight(i, new LinkedListPriceLevel(order), asks);
           return true;
         }
       }
     }
-    throw new AppException("PriceLevel array overflow: fail to add");
+    throw new AppException("PriceLevel array overflow: failed to add");
   }
 
   @Override
@@ -249,13 +249,21 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
 
-  private void moveLeft(int index, PriceLevel level, PriceLevel[] arr) {
+  private void moveRight(int index, PriceLevel level, PriceLevel[] arr) {
     int len = arr.length;
     if (arr[len - 1] != null) {
-      throw new AppException("PriceLevel array overflow: fail to move left");
+      throw new AppException("PriceLevel array overflow: failed to move right");
     }
-    for (int i = len - 2; i >= index; i--) {
-      arr[i + 1] = arr[i];
+    int pos = 0;
+    for (int i = index; i < len; i++) {
+      if (arr[i] == null){
+        pos = i;
+        break;
+      }
+    }
+    System.out.println(index+" => "+pos+" => "+level.getPrice());
+    for (int i = pos; i > index; i--) {
+      arr[i] = arr[i-1];
     }
     arr[index] = level;
   }
