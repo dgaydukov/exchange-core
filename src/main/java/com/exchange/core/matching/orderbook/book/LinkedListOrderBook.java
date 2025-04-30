@@ -66,7 +66,7 @@ public class LinkedListOrderBook implements OrderBook {
                     break;
                 }
                 if (taker.getType() == OrderType.LIMIT) {
-                    if (taker.getPrice().compareTo(level.getPrice()) < 0) {
+                    if (taker.getPrice().compareTo(level.getPrice()) > 0) {
                         break;
                     }
                     matchLimit(taker, level, trades);
@@ -158,11 +158,17 @@ public class LinkedListOrderBook implements OrderBook {
                 // insert new PriceLevel before current level, because price is better (bigger for bids)
                 if (order.getPrice().compareTo(level.getPrice()) > 0) {
                     addToLast = false;
-                    OrderBookLevel newLevel = new OrderBookLevel(order);
-                    OrderBookLevel next = level.next;
-                    level.next = newLevel;
-                    newLevel.prev = level;
-                    newLevel.next = next;
+                    OrderBookLevel newLvl = new OrderBookLevel(order);
+                    if (level.prev == null){
+                        newLvl.next = bestBid;
+                        bestBid.prev = newLvl;
+                        bestBid = newLvl;
+                    } else {
+                        OrderBookLevel next = level.next;
+                        level.next = newLvl;
+                        newLvl.prev = level;
+                        newLvl.next = next;
+                    }
                     break;
                 }
                 if (level.next == null) {
@@ -178,8 +184,6 @@ public class LinkedListOrderBook implements OrderBook {
                 last.next = newLevel;
                 newLevel.prev = last;
             }
-
-
         } else {
             OrderBookLevel level = bestAsk;
             OrderBookLevel last = null;
@@ -194,12 +198,21 @@ public class LinkedListOrderBook implements OrderBook {
                 // insert new level
                 if (order.getPrice().compareTo(level.getPrice()) < 0) {
                     addToLast = false;
-                    OrderBookLevel newLevel = new OrderBookLevel(order);
-                    OrderBookLevel next = level.next;
-                    level.next = newLevel;
-                    newLevel.prev = level;
-                    newLevel.next = next;
+                    OrderBookLevel newLvl = new OrderBookLevel(order);
+                    if (level.prev == null){
+                        newLvl.next = bestAsk;
+                        bestAsk.prev = newLvl;
+                        bestAsk = newLvl;
+                    } else {
+                        OrderBookLevel next = level.next;
+                        level.next = newLvl;
+                        newLvl.prev = level;
+                        newLvl.next = next;
+                    }
                     break;
+                }
+                if (level.next == null) {
+                    last = level;
                 }
                 level = level.next;
             }
@@ -272,7 +285,7 @@ public class LinkedListOrderBook implements OrderBook {
         BigDecimal[][] asks = new BigDecimal[askSize][];
         int bidIndex = 0, askIndex = 0;
         bidLvl = bestBid;
-        while (bidLvl != null) {
+        while (bidLvl != null && bidIndex < bidSize) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             bidLvl.resetIterator();
             while (bidLvl.hasNext()) {
@@ -282,7 +295,7 @@ public class LinkedListOrderBook implements OrderBook {
             bidLvl = bidLvl.next;
         }
         askLvl = bestAsk;
-        while (askLvl != null) {
+        while (askLvl != null && askIndex < askSize) {
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             askLvl.resetIterator();
             while (askLvl.hasNext()) {
