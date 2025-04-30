@@ -24,28 +24,34 @@ public class RandomOrder {
     return order;
   }
 
+  public static Order buyMarketUser1() {
+    Order order = buyLimitUser1();
+    order.setType(OrderType.MARKET);
+    order.setPrice(null);
+    return order;
+  }
+
   public static Order sellLimitUser2() {
     Order order = buyLimitUser1();
     order.setAccount(2);
     order.setSide(OrderSide.SELL);
     return order;
   }
-  public static Order sellMarkettUser2() {
-    Order order = buyLimitUser1();
-    order.setAccount(2);
-    order.setSide(OrderSide.SELL);
+
+  public static Order sellMarketUser1() {
+    Order order = sellLimitUser2();
     order.setType(OrderType.MARKET);
     order.setPrice(null);
     return order;
   }
 
   private static BigDecimal getPrice() {
-    int next = random.nextInt(100, 10_000);
+    int next = random.nextInt(100, 100_000);
     return new BigDecimal(next);
   }
 
   private static BigDecimal getQuantity() {
-    int next = random.nextInt(100, 10_000);
+    int next = random.nextInt(1, 10_000);
     return new BigDecimal(next);
   }
 }

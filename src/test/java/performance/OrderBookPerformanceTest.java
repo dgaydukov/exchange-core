@@ -49,32 +49,58 @@ public class OrderBookPerformanceTest {
 
   /**
    * List of actions:
-   * 1. add 2 buy orders
-   * 2. match against sell
-   * 3. build market data
-   * 4. remove second order
-   * 5. update first order
-   * 6. build market data
+   * 1. match & add buy limit order
+   * 2. match & add sell limit order
+   * 3. match buy market (we don't add market orders to OrderBook)
+   * 4. match sell market (we don't add market orders to OrderBook)
+   * 5. fetch & update buy limit order
+   * 6. fetch & remove sell limit order
    */
-
   private void __orderBookTest(OrderBook ob, Blackhole blackhole){
-    Order buy = RandomOrder.buyLimitUser1();
-    Order sell = RandomOrder.buyLimitUser1();
-    ob.match(buy);
-    if
-    blackhole.consume(ob.match(RandomOrder.sellLimitUser2()));
-    blackhole.consume(ob.match(RandomOrder.sellMarkettUser2()));
-    blackhole.consume(ob.buildMarketData());
-    Order fetch1 = ob.getOrder(buy1.getOrderId());
-    if (fetch1 != null){
-      blackhole.consume(ob.remove(fetch1.getOrderId()));
+    Order buy, sell;
+
+    buy = RandomOrder.buyLimitUser1();
+    blackhole.consume(ob.match(buy));
+    if (buy.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+      blackhole.consume(ob.add(buy));
       blackhole.consume(ob.buildMarketData());
     }
-    Order fetch2 = ob.getOrder(buy2.getOrderId());
-    if (fetch2 != null){
-      fetch2.setLeavesQty(fetch2.getLeavesQty().subtract(new BigDecimal(1)));
-      fetch2.setPrice(fetch2.getLeavesQty().subtract(new BigDecimal(1)));
-      blackhole.consume(ob.update(fetch2));
+    sell = RandomOrder.sellLimitUser2();
+    blackhole.consume(ob.match(sell));
+    if (sell.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+      blackhole.consume(ob.add(sell));
+      blackhole.consume(ob.buildMarketData());
+    }
+
+    blackhole.consume(ob.match(RandomOrder.buyMarketUser1()));
+    blackhole.consume(ob.buildMarketData());
+    blackhole.consume(ob.match(RandomOrder.sellMarketUser1()));
+    blackhole.consume(ob.buildMarketData());
+
+    buy = RandomOrder.buyLimitUser1();
+    blackhole.consume(ob.match(buy));
+    if (buy.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+      blackhole.consume(ob.add(buy));
+      blackhole.consume(ob.buildMarketData());
+    }
+    sell = RandomOrder.sellLimitUser2();
+    blackhole.consume(ob.match(sell));
+    if (sell.getLeavesQty().compareTo(BigDecimal.ZERO) > 0) {
+      blackhole.consume(ob.add(sell));
+      blackhole.consume(ob.buildMarketData());
+    }
+
+    Order fetchBuy = ob.getOrder(buy.getOrderId());
+    if (fetchBuy != null){
+      blackhole.consume(ob.remove(fetchBuy.getOrderId()));
+      blackhole.consume(ob.buildMarketData());
+    }
+
+    Order fetchSell = ob.getOrder(sell.getOrderId());
+    if (fetchSell != null){
+      fetchSell.setLeavesQty(fetchSell.getLeavesQty().subtract(new BigDecimal(1)));
+      fetchSell.setPrice(fetchSell.getLeavesQty().subtract(new BigDecimal(1)));
+      blackhole.consume(ob.update(fetchSell));
       blackhole.consume(ob.buildMarketData());
     }
   }
