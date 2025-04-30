@@ -155,6 +155,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
 
   @Override
   public boolean add(Order order) {
+    orderIdMap.put(order.getOrderId(), order);
     if (order.getSide() == OrderSide.BUY) {
       for (int i = 0; i < DEFAULT_PRICE_LEVEL_SIZE; i++) {
         PriceLevel level = bids[i];
@@ -163,7 +164,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          addOrderToOrderBook(level, order);
+          level.add(order);
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
@@ -179,7 +180,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          addOrderToOrderBook(level, order);
+          level.add(order);
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
@@ -189,12 +190,6 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
     }
     throw new AppException("PriceLevel array overflow: fail to add");
-  }
-
-  private void addOrderToOrderBook(PriceLevel level, Order order){
-    order.level = level;
-    level.add(order);
-    orderIdMap.put(order.getOrderId(), order);
   }
 
   @Override

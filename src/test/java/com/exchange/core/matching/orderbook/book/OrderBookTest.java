@@ -340,7 +340,40 @@ public class OrderBookTest {
 
   @ParameterizedTest
   @MethodSource("getOrderBooks")
-  public void removeOrderTest(){
+  public void getOrderTest(OrderBook ob){
+    for (int i = 1; i <= 1000; i++) {
+      Order buy = getLimitBuy();
+      buy.setOrderId(i);
+      buy.setPrice(new BigDecimal(i));
+      ob.add(buy);
+    }
+    for (int i = 1; i <= 1000; i++) {
+      Order order = ob.getOrder(i);
+      Assertions.assertNotNull(order, "order should not be null");
+      Assertions.assertEquals(i, order.getOrderId(), "orderId mismatch");
+      Assertions.assertEquals(new BigDecimal(i), order.getPrice(), "orderId mismatch");
+    }
+
+    Assertions.assertNull(ob.getOrder(0), "order should not be null");
+    Assertions.assertNull(ob.getOrder(1001), "order should not be null");
+    Assertions.assertNull(ob.getOrder(2000), "order should not be null");
+  }
+
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void getOrderAndRemoveTest(OrderBook ob){
+    long orderId = 999;
+    Assertions.assertNull(ob.getOrder(orderId), "order should not be null");
+
+    Order buy = getLimitBuy();
+    buy.setOrderId(orderId);
+    ob.add(buy);
+
+    Assertions.assertEquals(buy, ob.getOrder(orderId), "getOrder mismatch");
+    Assertions.assertTrue(ob.remove(orderId), "remove should return true");
+    Assertions.assertFalse(ob.remove(orderId), "remove non-existing order should return false");
+    Assertions.assertNull(ob.getOrder(orderId), "order should not be null");
+
 
   }
 

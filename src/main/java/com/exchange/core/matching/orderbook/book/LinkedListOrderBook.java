@@ -144,6 +144,7 @@ public class LinkedListOrderBook implements OrderBook {
 
     @Override
     public boolean add(Order order) {
+        orderIdMap.put(order.getOrderId(), order);
         if (order.getSide() == OrderSide.BUY) {
             OrderBookLevel level = bestBid;
             OrderBookLevel last = null;
