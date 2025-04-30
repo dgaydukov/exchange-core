@@ -114,6 +114,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
 
       if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+        orderIdMap.remove(maker.getOrderId());
         level.remove();
       }
     }
@@ -148,6 +149,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
 
       trades.add(new Trade(taker, maker, tradeQty, tradePrice, tradeAmount));
       if (maker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
+        orderIdMap.remove(maker.getOrderId());
         level.remove();
       }
     }

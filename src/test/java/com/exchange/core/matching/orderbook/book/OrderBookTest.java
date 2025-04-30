@@ -375,6 +375,25 @@ public class OrderBookTest {
     Assertions.assertNull(ob.getOrder(orderId), "order should not be null");
   }
 
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void matchAndRemoveTest(OrderBook ob){
+    long buyOrderId = 1001;
+    long sellOrderId = 1002;
+    Assertions.assertNull(ob.getOrder(buyOrderId), "order should be null");
+    Order buy = getLimitBuy();
+    buy.setOrderId(buyOrderId);
+    ob.add(buy);
+    Assertions.assertEquals(buy, ob.getOrder(buyOrderId), "getOrder mismatch");
+    // match against same sell order
+    Order sell = getLimitBuy();
+    sell.setSide(OrderSide.SELL);
+    sell.setOrderId(sellOrderId);
+    ob.match(sell);
+    Assertions.assertNull(ob.getOrder(buyOrderId), "order should be null");
+    Assertions.assertNull(ob.getOrder(sellOrderId), "order should be null");
+  }
+
   private void add3SellOrders(OrderBook ob) {
     Order sell = getLimitBuy();
     sell.setSide(OrderSide.SELL);
