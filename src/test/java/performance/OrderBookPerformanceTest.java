@@ -56,7 +56,7 @@ public class OrderBookPerformanceTest {
    * 5. fetch & update buy limit order
    * 6. fetch & remove sell limit order
    */
-  private void __orderBookTest(OrderBook ob, Blackhole blackhole){
+  private void orderBookTest(OrderBook ob, Blackhole blackhole){
     Order buy, sell;
 
     buy = RandomOrder.buyLimitUser1();
@@ -103,11 +103,6 @@ public class OrderBookPerformanceTest {
       blackhole.consume(ob.update(fetchSell));
       blackhole.consume(ob.buildMarketData());
     }
-  }
-  private void orderBookTest(OrderBook ob, Blackhole blackhole){
-    try{
-      __orderBookTest(ob, blackhole);
-    } catch (Exception ex){}
   }
 
   @Benchmark

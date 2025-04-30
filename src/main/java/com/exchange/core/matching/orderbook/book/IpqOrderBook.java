@@ -174,13 +174,15 @@ public class IpqOrderBook implements OrderBook {
         }
         IndexedPriorityQueue<BigDecimal, PriceLevel> queue = order.getSide() == OrderSide.BUY ? bidsQueue : asksQueue;
         PriceLevel level = queue.getExact(order.getPrice());
-        level.resetIterator();
-        level.remove(order);
-        if (!level.hasNext()){
-            queue.resetIterator();
-            while (queue.hasNext()){
-                if (level == queue.next()){
-                    queue.poll();
+        if (level != null){
+            level.resetIterator();
+            level.remove(order);
+            if (!level.hasNext()){
+                queue.resetIterator();
+                while (queue.hasNext()){
+                    if (level == queue.next()){
+                        queue.poll();
+                    }
                 }
             }
         }

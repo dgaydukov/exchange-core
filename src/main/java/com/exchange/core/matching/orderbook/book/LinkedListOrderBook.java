@@ -266,8 +266,10 @@ public class LinkedListOrderBook implements OrderBook {
                     bestAsk = null;
                 }
             } else {
-                level.prev.next = level.next;
                 level.next.prev = level.prev;
+                if (level.prev != null){
+                    level.prev.next = level.next;
+                }
             }
         }
         return true;
