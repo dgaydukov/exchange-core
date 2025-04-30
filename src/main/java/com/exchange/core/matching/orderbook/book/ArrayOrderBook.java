@@ -72,6 +72,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
             break;
           }
           asks[i] = asks[i + posShift];
+          asks[i+posShift] = null;
         }
       }
     } else {
@@ -101,6 +102,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
             break;
           }
           bids[i] = bids[i + posShift];
+          bids[i+posShift] = null;
         }
       }
     }

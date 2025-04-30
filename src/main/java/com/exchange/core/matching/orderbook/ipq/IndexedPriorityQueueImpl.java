@@ -90,4 +90,9 @@ public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements Ind
         }
         return iterator.next();
     }
+
+    @Override
+    public void remove() {
+        iterator.remove();
+    }
 }

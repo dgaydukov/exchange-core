@@ -181,7 +181,7 @@ public class IpqOrderBook implements OrderBook {
                 queue.resetIterator();
                 while (queue.hasNext()){
                     if (level == queue.next()){
-                        queue.poll();
+                        queue.remove();
                     }
                 }
             }

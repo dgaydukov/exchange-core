@@ -32,16 +32,16 @@ public class OrderBookPerformanceTest {
 
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()
-        .include(OrderBookPerformanceTest.class.getSimpleName())
-        .forks(1)
-        .build();
+            .include(OrderBookPerformanceTest.class.getSimpleName())
+            .forks(1)
+            .build();
     new Runner(opt).run();
   }
 
   @Setup(Level.Iteration)
   public void setUp() {
     // set big array as 100k, to have enough space for different price levels
-    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL, 100_000);
+    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL, 5_000);
     ipqOrderBook = new IpqOrderBook(MockData.SYMBOL);
     linkedListOrderBook = new LinkedListOrderBook(MockData.SYMBOL);
     mapOrderBook = new MapOrderBook(MockData.SYMBOL);
@@ -56,7 +56,7 @@ public class OrderBookPerformanceTest {
    * 5. fetch & update buy limit order
    * 6. fetch & remove sell limit order
    */
-  private void orderBookTest(OrderBook ob, Blackhole blackhole){
+  private void orderBookTest(OrderBook ob, Blackhole blackhole) {
     Order buy, sell;
 
     buy = RandomOrder.buyLimitUser1();
@@ -91,16 +91,22 @@ public class OrderBookPerformanceTest {
     }
 
     Order fetchBuy = ob.getOrder(buy.getOrderId());
-    if (fetchBuy != null){
+    if (fetchBuy != null) {
+      fetchBuy.setLeavesQty(fetchBuy.getLeavesQty().subtract(new BigDecimal(1)));
+      fetchBuy.setPrice(fetchBuy.getLeavesQty().subtract(new BigDecimal(1)));
+      blackhole.consume(ob.update(fetchBuy));
+      blackhole.consume(ob.buildMarketData());
       blackhole.consume(ob.remove(fetchBuy.getOrderId()));
       blackhole.consume(ob.buildMarketData());
     }
 
     Order fetchSell = ob.getOrder(sell.getOrderId());
-    if (fetchSell != null){
+    if (fetchSell != null) {
       fetchSell.setLeavesQty(fetchSell.getLeavesQty().subtract(new BigDecimal(1)));
       fetchSell.setPrice(fetchSell.getLeavesQty().subtract(new BigDecimal(1)));
       blackhole.consume(ob.update(fetchSell));
+      blackhole.consume(ob.buildMarketData());
+      blackhole.consume(ob.remove(fetchSell.getOrderId()));
       blackhole.consume(ob.buildMarketData());
     }
   }
@@ -110,18 +116,18 @@ public class OrderBookPerformanceTest {
     orderBookTest(arrayOrderBook, blackhole);
   }
 
-  @Benchmark
-  public void measureIpqOrderBook(Blackhole blackhole) {
-    orderBookTest(ipqOrderBook, blackhole);
-  }
-
-  @Benchmark
-  public void measureLinkedListOrderBook(Blackhole blackhole) {
-    orderBookTest(linkedListOrderBook, blackhole);
-  }
-
-  @Benchmark
-  public void measureMapOrderBook(Blackhole blackhole) {
-    orderBookTest(mapOrderBook, blackhole);
-  }
+//  @Benchmark
+//  public void measureIpqOrderBook(Blackhole blackhole) {
+//    orderBookTest(ipqOrderBook, blackhole);
+//  }
+//
+//  @Benchmark
+//  public void measureLinkedListOrderBook(Blackhole blackhole) {
+//    orderBookTest(linkedListOrderBook, blackhole);
+//  }
+//
+//  @Benchmark
+//  public void measureMapOrderBook(Blackhole blackhole) {
+//    orderBookTest(mapOrderBook, blackhole);
+//  }
 }

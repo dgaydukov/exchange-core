@@ -421,6 +421,34 @@ public class OrderBookTest {
     Assertions.assertArrayEquals(new BigDecimal[][]{{price, qty}}, ob.buildMarketData().getBids(), "bids mismatch");
   }
 
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void multipleMatchTest(OrderBook ob){
+    for (int i = 1; i <= 10; i++){
+      Order buy = getLimitBuy();
+      buy.setPrice(new BigDecimal(i * 10));
+      buy.setLeavesQty(new BigDecimal(1));
+      ob.add(buy);
+    }
+    Order sell = getLimitBuy();
+    sell.setSide(OrderSide.SELL);
+    sell.setLeavesQty(new BigDecimal(5));
+    sell.setPrice(new BigDecimal(50));
+    ob.match(sell);
+
+    System.out.println(ob.getClass()+" => "+ob.buildMarketData());
+
+    Assertions.assertEquals(5, ob.buildMarketData().getDepth(), "depth mismatch");
+    BigDecimal[][] bids = new BigDecimal[][]{
+            {new BigDecimal(50), new BigDecimal(1)},
+            {new BigDecimal(40), new BigDecimal(1)},
+            {new BigDecimal(30), new BigDecimal(1)},
+            {new BigDecimal(20), new BigDecimal(1)},
+            {new BigDecimal(10), new BigDecimal(1)},
+    };
+    Assertions.assertArrayEquals(bids, ob.buildMarketData().getBids(), "bids mismatch");
+  }
+
   private void add3SellOrders(OrderBook ob) {
     Order sell = getLimitBuy();
     sell.setSide(OrderSide.SELL);

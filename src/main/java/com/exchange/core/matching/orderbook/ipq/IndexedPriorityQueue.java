@@ -68,4 +68,6 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * @return next value in iteration, null if no next value
      */
     V next();
+
+    void remove();
 }

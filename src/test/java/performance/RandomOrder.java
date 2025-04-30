@@ -19,8 +19,7 @@ public class RandomOrder {
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);
     order.setAccount(1);
-    order.setOrderQty(getQuantity());
-    order.setLeavesQty(order.getOrderQty());
+    order.setLeavesQty(getQuantity());
     order.setPrice(getPrice());
     return order;
   }
@@ -52,7 +51,7 @@ public class RandomOrder {
   }
 
   private static BigDecimal getQuantity() {
-    int next = random.nextInt(1, 10_000);
+    int next = random.nextInt(1, 1_000);
     return new BigDecimal(next);
   }
 }
