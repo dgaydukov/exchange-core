@@ -8,15 +8,15 @@ import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
 import com.exchange.core.model.msg.MarketData;
 import com.exchange.core.model.msg.Order;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class OrderBookTest {
 
