@@ -1,5 +1,8 @@
 package com.exchange.core.matching.orderbook.ipq;
 
+import com.exchange.core.matching.orderbook.book.ipq.queue.IndexedPriorityQueue;
+import com.exchange.core.matching.orderbook.book.ipq.queue.IndexedPriorityQueueImpl;
+import com.exchange.core.matching.orderbook.book.ipq.queue.SortOrder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -3,6 +3,8 @@ package com.exchange.core.matching.orderbook.book;
 import com.exchange.core.MockData;
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
+import com.exchange.core.matching.orderbook.book.ipq.IpqOrderBook;
+import com.exchange.core.matching.orderbook.book.linkedlist.LinkedListOrderBook;
 import com.exchange.core.model.Trade;
 import com.exchange.core.model.enums.OrderSide;
 import com.exchange.core.model.enums.OrderType;
@@ -373,8 +375,6 @@ public class OrderBookTest {
     Assertions.assertTrue(ob.remove(orderId), "remove should return true");
     Assertions.assertFalse(ob.remove(orderId), "remove non-existing order should return false");
     Assertions.assertNull(ob.getOrder(orderId), "order should not be null");
-
-
   }
 
   private void add3SellOrders(OrderBook ob) {

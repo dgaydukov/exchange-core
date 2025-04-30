@@ -214,7 +214,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   // remove order from PriceLevel
   @Override
   public boolean remove(long orderId) {
-    Order order = orderIdMap.get(orderId);
+    Order order = orderIdMap.remove(orderId);
     if (order == null){
       return false;
     }

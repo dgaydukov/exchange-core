@@ -1,4 +1,4 @@
-package com.exchange.core.matching.orderbook.ipq;
+package com.exchange.core.matching.orderbook.book.ipq.queue;
 
 /**
  * Interface for indexed priority queue

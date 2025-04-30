@@ -1,4 +1,4 @@
-package com.exchange.core.matching.orderbook.book;
+package com.exchange.core.matching.orderbook.book.linkedlist;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
@@ -250,7 +250,7 @@ public class LinkedListOrderBook implements OrderBook {
 
     @Override
     public boolean remove(long orderId) {
-        Order order = orderIdMap.get(orderId);
+        Order order = orderIdMap.remove(orderId);
         if (order == null) {
             return false;
         }
