@@ -21,14 +21,11 @@ public class OrderBookTest {
 
   private static Stream<Arguments> getOrderBooks() {
     return Stream.of(
-            Arguments.of(new LinkedListOrderBook(MockData.SYMBOL))
+            Arguments.of(new MapOrderBook(MockData.SYMBOL)),
+            Arguments.of(new ArrayOrderBook(MockData.SYMBOL)),
+            Arguments.of(new LinkedListOrderBook(MockData.SYMBOL)),
+            Arguments.of(new IpqOrderBook(MockData.SYMBOL))
     );
-//    return Stream.of(
-//            Arguments.of(new MapOrderBook(MockData.SYMBOL)),
-//            Arguments.of(new ArrayOrderBook(MockData.SYMBOL)),
-//            Arguments.of(new LinkedListOrderBook(MockData.SYMBOL)),
-//            Arguments.of(new IpqOrderBook(MockData.SYMBOL))
-//    );
   }
 
   @ParameterizedTest

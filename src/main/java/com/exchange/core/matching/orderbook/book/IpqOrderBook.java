@@ -180,7 +180,7 @@ public class IpqOrderBook implements OrderBook {
         int asksIndex = 0;
 
         bidsQueue.resetIterator();
-        while (bidsQueue.hasNext()){
+        while (bidsQueue.hasNext() && bidsIndex < bidSize){
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             PriceLevel level = bidsQueue.next();
             level.resetIterator();
@@ -190,7 +190,7 @@ public class IpqOrderBook implements OrderBook {
             bids[bidsIndex++] = new BigDecimal[]{level.getPrice(), cumulativeQuantity};
         }
         asksQueue.resetIterator();
-        while (asksQueue.hasNext()){
+        while (asksQueue.hasNext() && asksIndex < askSize){
             BigDecimal cumulativeQuantity = BigDecimal.ZERO;
             PriceLevel level = asksQueue.next();
             level.resetIterator();
