@@ -10,10 +10,11 @@ import java.util.Random;
 public class RandomOrder {
 
   private final static Random random = new Random();
+  private static long orderId;
 
   public static Order buyLimitUser1() {
     Order order = new Order();
-    order.setOrderId(random.nextLong());
+    order.setOrderId(orderId++);
     order.setSymbol(MockData.SYMBOL);
     order.setType(OrderType.LIMIT);
     order.setSide(OrderSide.BUY);

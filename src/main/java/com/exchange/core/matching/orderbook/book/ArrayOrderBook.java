@@ -236,6 +236,9 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           // find desired level, remove it from order book
           for (int j = i; j < priceLevelArrayDepth-1; j++){
             arr[j] = arr[j+1];
+            if (arr[j] == null){
+              break;
+            }
           }
         }
       }
@@ -261,7 +264,6 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
         break;
       }
     }
-    System.out.println(index+" => "+pos+" => "+level.getPrice());
     for (int i = pos; i > index; i--) {
       arr[i] = arr[i-1];
     }
