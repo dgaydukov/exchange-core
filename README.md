@@ -144,11 +144,11 @@ There are 2 ways you can write performance test:
 To avoid all such problems, it's better to use some framework for such testing.
 * advanced way - using some kind of framework that specifically designed to handle all problems from naive approach. Once of such frameworks is [Java Microbenchmark Harness](https://github.com/openjdk/jmh). This tool was developed by the team who works on JVM, so developers utilized all their knowledge on JVM internals to create a tool that can take into account all JVM nuances. You can utilize it and measure your code performance. JHM should only be used for code performance. It's own name `micro-benchmark` suggest this. If we are talking about end-to-end performance with apiServer=>matchingEngine=>webSocket, we have to use other tools, cause in such cases we are not care about code performance, but rather end-to-end performance. Yet for code performance measurement JHM is the best thing available. So we have custom example to test matching-engine and JMH to test order books. There is no point to test matching-engine with JMH, cause under-the-hood JMH would run your code hundreds of times, if not thousands on each iteration, but matching-engine class is supposed to be start once, and then just handle messages. So JMH - only for code testing, not end-to-end running app. Having said this if you run [OrderBookPerformanceTest](/src/test/java/performance/OrderBookPerformanceTest.java), you can see results:
 ```
-Benchmark                                            Mode  Cnt   Score    Error  Units
-OrderBookPerformanceTest.measureArrayOrderBook       avgt    5   0.095 ±  0.022  ms/op
-OrderBookPerformanceTest.measureIpqOrderBook         avgt    5  ≈ 10⁻³           ms/op
-OrderBookPerformanceTest.measureLinkedListOrderBook  avgt    5   0.081 ±  0.003  ms/op
-OrderBookPerformanceTest.measureMapOrderBook         avgt    5   0.001 ±  0.001  ms/op
+Benchmark                                            Mode  Cnt  Score    Error  Units
+OrderBookPerformanceTest.measureArrayOrderBook       avgt    5  0.224 ±  0.003  ms/op
+OrderBookPerformanceTest.measureIpqOrderBook         avgt    5  0.003 ±  0.001  ms/op
+OrderBookPerformanceTest.measureLinkedListOrderBook  avgt    5  0.054 ±  0.030  ms/op
+OrderBookPerformanceTest.measureMapOrderBook         avgt    5  0.001 ±  0.001  ms/op
 ```
 
 #### Architectural test
