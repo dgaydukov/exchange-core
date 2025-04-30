@@ -1,4 +1,4 @@
-package com.exchange.core.matching.orderbook.book.ipq.queue;
+package com.exchange.core.matching.orderbook.ipq;
 
 import java.util.Comparator;
 import java.util.Iterator;

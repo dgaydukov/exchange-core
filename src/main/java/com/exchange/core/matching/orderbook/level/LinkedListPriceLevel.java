@@ -52,6 +52,7 @@ public class LinkedListPriceLevel implements PriceLevel{
     }
     order.prev = last;
     last = order;
+    order.level = this;
   }
 
   @Override

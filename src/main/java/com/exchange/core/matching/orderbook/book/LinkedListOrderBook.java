@@ -1,4 +1,4 @@
-package com.exchange.core.matching.orderbook.book.linkedlist;
+package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;

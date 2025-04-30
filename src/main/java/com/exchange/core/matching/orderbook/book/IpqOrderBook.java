@@ -1,10 +1,10 @@
-package com.exchange.core.matching.orderbook.book.ipq;
+package com.exchange.core.matching.orderbook.book;
 
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
-import com.exchange.core.matching.orderbook.book.ipq.queue.IndexedPriorityQueue;
-import com.exchange.core.matching.orderbook.book.ipq.queue.IndexedPriorityQueueImpl;
-import com.exchange.core.matching.orderbook.book.ipq.queue.SortOrder;
+import com.exchange.core.matching.orderbook.ipq.IndexedPriorityQueue;
+import com.exchange.core.matching.orderbook.ipq.IndexedPriorityQueueImpl;
+import com.exchange.core.matching.orderbook.ipq.SortOrder;
 import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
 import com.exchange.core.model.Trade;
