@@ -201,7 +201,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       return false;
     }
     // update quantity
-    o.setQuoteOrderQty(order.getQuoteOrderQty());
+    o.setLeavesQty(order.getLeavesQty());
     // if price changed, we need to move order into new PriceLevel
     if (order.getPrice().compareTo(o.getPrice()) != 0) {
       remove(orderId);
@@ -219,6 +219,9 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     }
     int price = order.getPrice().intValue();
     PriceLevel level = book[price];
+    if (level == null){
+      System.exit(0);
+    }
     level.resetIterator();
     level.remove(order);
     // if level has no orders, remove it

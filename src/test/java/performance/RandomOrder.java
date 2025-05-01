@@ -12,6 +12,18 @@ public class RandomOrder {
   private final static Random random = new Random();
   private static long orderId;
 
+  public static Order clone(Order o){
+    Order order = new Order();
+    order.setOrderId(o.getOrderId());
+    order.setSymbol(o.getSymbol());
+    order.setType(o.getType());
+    order.setSide(o.getSide());
+    order.setAccount(o.getAccount());
+    order.setLeavesQty(o.getLeavesQty());
+    order.setPrice(o.getPrice());
+    return order;
+  }
+
   public static Order buyLimitUser1() {
     Order order = new Order();
     order.setOrderId(orderId++);

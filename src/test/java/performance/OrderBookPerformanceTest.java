@@ -88,9 +88,11 @@ public class OrderBookPerformanceTest {
       if (order.getLeavesQty().compareTo(qty) > 0){
         qty = order.getLeavesQty().subtract(qty);
       }
-      order.setLeavesQty(price);
-      order.setPrice(qty);
-      blackhole.consume(ob.update(order));
+      // use clone to make sure update works correctly on 2 different objects
+      Order clone = RandomOrder.clone(order);
+      clone.setLeavesQty(qty);
+      clone.setPrice(price);
+      blackhole.consume(ob.update(clone));
       blackhole.consume(ob.buildMarketData());
       blackhole.consume(ob.remove(orderId));
       blackhole.consume(ob.buildMarketData());
