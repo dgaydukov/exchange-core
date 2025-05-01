@@ -23,23 +23,26 @@ import java.util.Map;
 
 public class ArrayOrderBook implements OrderBook, Snapshotable {
   // sorted in descending order => first bid is the highest price
-  private final PriceLevel[] bids;
+  private final int[] bids;
   // sorted in ascending order => first ask is the lowest price
-  private final PriceLevel[] asks;
+  private final int[] asks;
+  private final PriceLevel[] book;
+
   private final String symbol;
   private final int priceLevelArrayDepth;
   private final Map<Long, Order> orderIdMap = new HashMap<>();
 
 
-  public ArrayOrderBook(String symbol, int priceLevelArrayDepth) {
+  public ArrayOrderBook(String symbol, int priceLevelArrayDepth, int maxPrice) {
     this.symbol = symbol;
     this.priceLevelArrayDepth = priceLevelArrayDepth;
-    bids = new PriceLevel[priceLevelArrayDepth];
-    asks = new PriceLevel[priceLevelArrayDepth];
+    bids = new int[priceLevelArrayDepth];
+    asks = new int[priceLevelArrayDepth];
+    book = new PriceLevel[maxPrice+1];
   }
 
   public ArrayOrderBook(String symbol) {
-    this(symbol, 1024);
+    this(symbol, 1_000, 1_000_000);
   }
 
   @Override
@@ -48,7 +51,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     if (taker.getSide() == OrderSide.BUY) {
       int posShift = 0;
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        PriceLevel level = asks[i];
+        PriceLevel level = book[asks[i]];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
         }
@@ -67,12 +70,12 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        moveLeft(0, posShift, asks);
+        moveLeft(0, posShift, asks, book);
       }
     } else {
       int posShift = 0;
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        PriceLevel level = bids[i];
+        PriceLevel level = book[bids[i]];
         if (level == null || taker.getLeavesQty().compareTo(BigDecimal.ZERO) == 0) {
           break;
         }
@@ -91,7 +94,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
       }
       // shift array left for n positions
       if (posShift > 0){
-        moveLeft(0, posShift, bids);
+        moveLeft(0, posShift, bids, book);
       }
     }
     return trades;
@@ -155,35 +158,34 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   @Override
   public boolean add(Order order) {
     orderIdMap.put(order.getOrderId(), order);
+    int orderPrice = order.getPrice().intValue();
+    if (book[orderPrice] != null){
+      book[orderPrice].add(order);
+      return true;
+    }
     if (order.getSide() == OrderSide.BUY) {
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        PriceLevel level = bids[i];
-        if (level == null) {
-          bids[i] = new LinkedListPriceLevel(order);
+        int price = bids[i];
+        if (price == 0) {
+          bids[i] = price;
+          book[price] = new LinkedListPriceLevel(order);
           return true;
         }
-        if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.add(order);
-          return true;
-        }
-        if (order.getPrice().compareTo(level.getPrice()) > 0) {
-          moveRight(i, new LinkedListPriceLevel(order), bids, OrderSide.BUY);
+        if (order.getPrice().intValue() > price) {
+          moveRight(i, new LinkedListPriceLevel(order), price, bids, book, OrderSide.BUY);
           return true;
         }
       }
     } else {
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        PriceLevel level = asks[i];
-        if (level == null) {
-          asks[i] = new LinkedListPriceLevel(order);
+        int price = asks[i];
+        if (price == 0) {
+          asks[i] = price;
+          book[price] = new LinkedListPriceLevel(order);
           return true;
         }
-        if (order.getPrice().compareTo(level.getPrice()) == 0) {
-          level.add(order);
-          return true;
-        }
-        if (order.getPrice().compareTo(level.getPrice()) < 0) {
-          moveRight(i, new LinkedListPriceLevel(order), asks, OrderSide.SELL);
+        if (order.getPrice().intValue() < price) {
+          moveRight(i, new LinkedListPriceLevel(order), price, asks, book, OrderSide.SELL);
           return true;
         }
       }
@@ -215,18 +217,19 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     if (order == null){
       return false;
     }
-    PriceLevel level = order.level;
+    int price = order.getPrice().intValue();
+    PriceLevel level = book[price];
     level.resetIterator();
     level.remove(order);
     // if level has no orders, remove it
     if (!level.hasNext()){
-      PriceLevel[] arr = order.getSide() == OrderSide.BUY ? bids : asks;
+      book[price] = null;
+      int[] arr = order.getSide() == OrderSide.BUY ? bids : asks;
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        if (level == arr[i]){
-          // find desired level, remove it from order book
+        if (price == arr[i]){
           for (int j = i; j < priceLevelArrayDepth-1; j++){
             arr[j] = arr[j+1];
-            if (arr[j] == null){
+            if (arr[j] == 0){
               break;
             }
           }
@@ -241,25 +244,26 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     return orderIdMap.get(orderId);
   }
 
-  private void moveLeft(int start, int shift, PriceLevel[] arr){
+  private void moveLeft(int start, int shift, int[] arr, PriceLevel[] bookArr){
     for (int i = start; i < priceLevelArrayDepth - shift; i++) {
-      if (arr[i + shift] == null){
+      if (arr[i + shift] == 0){
         break;
       }
+      bookArr[arr[i]] = null;
       arr[i] = arr[i + shift];
-      arr[i+shift] = null;
+      arr[i+shift] = 0;
     }
   }
 
-  private void moveRight(int index, PriceLevel level, PriceLevel[] arr, OrderSide side) {
+  private void moveRight(int index, PriceLevel level, int price, int[] arr, PriceLevel[] bookArr, OrderSide side) {
     int len = arr.length;
-    if (arr[len - 1] != null) {
+    if (arr[len - 1] != 0) {
       throw new AppException((side == OrderSide.BUY ? "Bids" : "Asks") +
               " PriceLevel array overflow: failed to move right");
     }
     int pos = 0;
     for (int i = index; i < len; i++) {
-      if (arr[i] == null){
+      if (arr[i] == 0){
         pos = i;
         break;
       }
@@ -267,7 +271,8 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     for (int i = pos; i > index; i--) {
       arr[i] = arr[i-1];
     }
-    arr[index] = level;
+    arr[index] = price;
+    bookArr[price] = level;
   }
 
   @Override
@@ -275,13 +280,13 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     // find number & bids & asks
     int bidSize = 0, askSize = 0;
     for (int i = 0; i < bids.length; i++) {
-      if (bids[i] == null) {
+      if (bids[i] == 0) {
         break;
       }
       bidSize++;
     }
     for (int i = 0; i < asks.length; i++) {
-      if (asks[i] == null) {
+      if (asks[i] == 0) {
         break;
       }
       askSize++;
@@ -298,7 +303,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     BigDecimal[][] asks = new BigDecimal[askSize][];
     for (int i = 0; i < bidSize; i++) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-      PriceLevel level = this.bids[i];
+      PriceLevel level = book[this.bids[i]];
       level.resetIterator();
       while (level.hasNext()) {
         cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
@@ -307,7 +312,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     }
     for (int i = 0; i < askSize; i++) {
       BigDecimal cumulativeQuantity = BigDecimal.ZERO;
-      PriceLevel level = this.asks[i];
+      PriceLevel level = book[this.asks[i]];
       level.resetIterator();
       while (level.hasNext()) {
         cumulativeQuantity = cumulativeQuantity.add(level.next().getLeavesQty());
@@ -327,13 +332,15 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   @Override
   public SnapshotItem create() {
     List<Order> orders = new ArrayList<>();
-    for (PriceLevel level : bids) {
+    for (int price: bids) {
+      PriceLevel level = book[price];
       level.resetIterator();
       while (level.hasNext()) {
         orders.add(level.next());
       }
     }
-    for (PriceLevel level : asks) {
+    for (int price: asks) {
+      PriceLevel level = book[price];
       level.resetIterator();
       while (level.hasNext()) {
         orders.add(level.next());
