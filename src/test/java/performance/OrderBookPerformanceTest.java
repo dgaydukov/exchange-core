@@ -42,7 +42,7 @@ public class OrderBookPerformanceTest {
   @Setup(Level.Iteration)
   public void setUp() {
     // set big array as 100k, to have enough space for different price levels
-    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL);
+    arrayOrderBook = new ArrayOrderBook(MockData.SYMBOL, 256, 100_000);
     ipqOrderBook = new IpqOrderBook(MockData.SYMBOL);
     linkedListOrderBook = new LinkedListOrderBook(MockData.SYMBOL);
     mapOrderBook = new MapOrderBook(MockData.SYMBOL);

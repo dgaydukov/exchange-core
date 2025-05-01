@@ -165,12 +165,10 @@ public class MapOrderBook implements OrderBook, Snapshotable {
     }
     Map<BigDecimal, PriceLevel> book = order.getSide() == OrderSide.BUY ? bids : asks;
     PriceLevel level = book.get(order.getPrice());
-    if (level != null){
-      level.resetIterator();
-      level.remove(order);
-      if (!level.hasNext()){
-        book.remove(level.getPrice());
-      }
+    level.resetIterator();
+    level.remove(order);
+    if (!level.hasNext()){
+      book.remove(level.getPrice());
     }
     return true;
   }
