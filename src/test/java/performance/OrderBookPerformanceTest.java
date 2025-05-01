@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@State(Scope.Benchmark)
+@State(Scope.Thread)
 @Fork(value = 2, jvmArgs = {"-Xms2G", "-Xmx4G"})
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
