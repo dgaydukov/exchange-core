@@ -35,7 +35,7 @@ public class ArrayOrderBookTest {
         AppException ex = Assertions.assertThrows(AppException.class, () -> {
             ob.add(buy);
         });
-        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: failed to move right");
+        Assertions.assertEquals(ex.getMessage(), "Bids PriceLevel array overflow: failed to move right");
     }
 
     @Test
@@ -86,7 +86,7 @@ public class ArrayOrderBookTest {
         AppException ex = Assertions.assertThrows(AppException.class, () -> {
             ob.add(sell);
         });
-        Assertions.assertEquals(ex.getMessage(), "PriceLevel array overflow: failed to move right");
+        Assertions.assertEquals(ex.getMessage(), "Asks PriceLevel array overflow: failed to move right");
     }
 
     @Test

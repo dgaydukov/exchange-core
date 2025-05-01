@@ -167,7 +167,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) > 0) {
-          moveRight(i, new LinkedListPriceLevel(order), bids);
+          moveRight(i, new LinkedListPriceLevel(order), bids, OrderSide.BUY);
           return true;
         }
       }
@@ -183,7 +183,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
           return true;
         }
         if (order.getPrice().compareTo(level.getPrice()) < 0) {
-          moveRight(i, new LinkedListPriceLevel(order), asks);
+          moveRight(i, new LinkedListPriceLevel(order), asks, OrderSide.SELL);
           return true;
         }
       }
@@ -251,10 +251,11 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
     }
   }
 
-  private void moveRight(int index, PriceLevel level, PriceLevel[] arr) {
+  private void moveRight(int index, PriceLevel level, PriceLevel[] arr, OrderSide side) {
     int len = arr.length;
     if (arr[len - 1] != null) {
-      throw new AppException("PriceLevel array overflow: failed to move right");
+      throw new AppException((side == OrderSide.BUY ? "Bids" : "Asks") +
+              " PriceLevel array overflow: failed to move right");
     }
     int pos = 0;
     for (int i = index; i < len; i++) {
