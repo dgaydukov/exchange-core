@@ -147,8 +147,8 @@ To avoid all such problems, it's better to use some framework for such testing.
 Benchmark                                            Mode  Cnt  Score    Error  Units
 OrderBookPerformanceTest.measureArrayOrderBook       avgt    5  0.003 ±  0.001  ms/op
 OrderBookPerformanceTest.measureIpqOrderBook         avgt    5  0.001 ±  0.001  ms/op
-OrderBookPerformanceTest.measureLinkedListOrderBook  avgt    5  0.002 ±  0.006  ms/op
-OrderBookPerformanceTest.measureMapOrderBook         avgt    5  0.004 ±  0.002  ms/op
+OrderBookPerformanceTest.measureLinkedListOrderBook  avgt    5  0.001 ±  0.001  ms/op
+OrderBookPerformanceTest.measureMapOrderBook         avgt    5  0.005 ±  0.003  ms/op
 ```
 
 #### Architectural test

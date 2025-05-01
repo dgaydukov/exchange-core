@@ -48,13 +48,9 @@ public class LinkedListOrderBook implements OrderBook {
                 }
                 // remove level if it fully matched
                 if (!level.hasNext()) {
-                    OrderBookLevel prev = level.prev;
-                    OrderBookLevel next = level.next;
-                    if (prev != null) {
-                        prev.next = next;
-                        if (next != null) {
-                            next.prev = prev;
-                        }
+                    bestAsk = level.next;
+                    if (bestAsk != null){
+                        bestAsk.prev = null;
                     }
                 }
                 level = level.next;
@@ -75,16 +71,9 @@ public class LinkedListOrderBook implements OrderBook {
                 }
                 // remove level if it fully matched
                 if (!level.hasNext()) {
-                    OrderBookLevel prev = level.prev;
-                    OrderBookLevel next = level.next;
-                    if (prev == null) {
-                        // remove bestBid
-
-                    } else {
-                        prev.next = next;
-                        if (next != null) {
-                            next.prev = prev;
-                        }
+                    bestBid = level.next;
+                    if (bestBid != null){
+                        bestBid.prev = null;
                     }
                 }
                 level = level.next;

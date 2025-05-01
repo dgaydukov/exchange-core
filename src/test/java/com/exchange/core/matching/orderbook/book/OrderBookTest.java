@@ -423,7 +423,7 @@ public class OrderBookTest {
 
   @ParameterizedTest
   @MethodSource("getOrderBooks")
-  public void multipleMatchTest(OrderBook ob){
+  public void multipleBuyMatchTest(OrderBook ob){
     for (int i = 1; i <= 10; i++){
       Order buy = getLimitBuy();
       buy.setPrice(new BigDecimal(i * 10));
@@ -436,8 +436,6 @@ public class OrderBookTest {
     sell.setPrice(new BigDecimal(50));
     ob.match(sell);
 
-    System.out.println(ob.getClass()+" => "+ob.buildMarketData());
-
     Assertions.assertEquals(5, ob.buildMarketData().getDepth(), "depth mismatch");
     BigDecimal[][] bids = new BigDecimal[][]{
             {new BigDecimal(50), new BigDecimal(1)},
@@ -447,6 +445,32 @@ public class OrderBookTest {
             {new BigDecimal(10), new BigDecimal(1)},
     };
     Assertions.assertArrayEquals(bids, ob.buildMarketData().getBids(), "bids mismatch");
+  }
+
+  @ParameterizedTest
+  @MethodSource("getOrderBooks")
+  public void multipleSellMatchTest(OrderBook ob){
+    for (int i = 1; i <= 10; i++){
+      Order sell = getLimitBuy();
+      sell.setSide(OrderSide.SELL);
+      sell.setPrice(new BigDecimal(i * 10));
+      sell.setLeavesQty(new BigDecimal(1));
+      ob.add(sell);
+    }
+    Order buy = getLimitBuy();
+    buy.setLeavesQty(new BigDecimal(5));
+    buy.setPrice(new BigDecimal(50));
+    ob.match(buy);
+
+    Assertions.assertEquals(5, ob.buildMarketData().getDepth(), "depth mismatch");
+    BigDecimal[][] bids = new BigDecimal[][]{
+            {new BigDecimal(60), new BigDecimal(1)},
+            {new BigDecimal(70), new BigDecimal(1)},
+            {new BigDecimal(80), new BigDecimal(1)},
+            {new BigDecimal(90), new BigDecimal(1)},
+            {new BigDecimal(100), new BigDecimal(1)},
+    };
+    Assertions.assertArrayEquals(bids, ob.buildMarketData().getAsks(), "bids mismatch");
   }
 
   private void add3SellOrders(OrderBook ob) {
