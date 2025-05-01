@@ -323,14 +323,15 @@ public class OrderBookTest {
   @ParameterizedTest
   @MethodSource("getOrderBooks")
   public void maxMarketDataTest(OrderBook ob) {
-    for (int i = 0; i < 1000; i++) {
-      BigDecimal price = new BigDecimal(i);
+    for (int i = 1; i <= 1000; i++) {
       Order buy = getLimitBuy();
-      buy.setPrice(price);
+      buy.setPrice(new BigDecimal(i));
+      ob.add(buy);
+    }
+    for (int i = 1001; i <= 2000; i++){
       Order sell = getLimitBuy();
       sell.setSide(OrderSide.SELL);
-      sell.setPrice(price);
-      ob.add(buy);
+      sell.setPrice(new BigDecimal(i));
       ob.add(sell);
     }
     MarketData md = ob.buildMarketData();

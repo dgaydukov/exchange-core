@@ -42,7 +42,7 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   }
 
   public ArrayOrderBook(String symbol) {
-    this(symbol, 1_000, 1_000_000);
+    this(symbol, 1024, 1_000_000);
   }
 
   @Override
@@ -158,33 +158,33 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   @Override
   public boolean add(Order order) {
     orderIdMap.put(order.getOrderId(), order);
-    int orderPrice = order.getPrice().intValue();
-    if (book[orderPrice] != null){
-      book[orderPrice].add(order);
+    int price = order.getPrice().intValue();
+    if (book[price] != null){
+      book[price].add(order);
       return true;
     }
     if (order.getSide() == OrderSide.BUY) {
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        int price = bids[i];
-        if (price == 0) {
+        int bidPrice = bids[i];
+        if (bidPrice == 0) {
           bids[i] = price;
           book[price] = new LinkedListPriceLevel(order);
           return true;
         }
-        if (order.getPrice().intValue() > price) {
+        if (price > bidPrice) {
           moveRight(i, new LinkedListPriceLevel(order), price, bids, book, OrderSide.BUY);
           return true;
         }
       }
     } else {
       for (int i = 0; i < priceLevelArrayDepth; i++) {
-        int price = asks[i];
-        if (price == 0) {
+        int askPrice = asks[i];
+        if (askPrice == 0) {
           asks[i] = price;
           book[price] = new LinkedListPriceLevel(order);
           return true;
         }
-        if (order.getPrice().intValue() < price) {
+        if (price < askPrice) {
           moveRight(i, new LinkedListPriceLevel(order), price, asks, book, OrderSide.SELL);
           return true;
         }
@@ -279,17 +279,17 @@ public class ArrayOrderBook implements OrderBook, Snapshotable {
   public MarketData buildMarketData() {
     // find number & bids & asks
     int bidSize = 0, askSize = 0;
-    for (int i = 0; i < bids.length; i++) {
-      if (bids[i] == 0) {
-        break;
-      }
-      bidSize++;
+    for (int bid : bids) {
+        if (bid == 0) {
+            break;
+        }
+        bidSize++;
     }
-    for (int i = 0; i < asks.length; i++) {
-      if (asks[i] == 0) {
-        break;
-      }
-      askSize++;
+    for (int ask : asks) {
+        if (ask == 0) {
+            break;
+        }
+        askSize++;
     }
     bidSize = Math.min(bidSize, AppConstants.DEFAULT_DEPTH);
     askSize = Math.min(askSize, AppConstants.DEFAULT_DEPTH);
