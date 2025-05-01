@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 @State(Scope.Benchmark)
 @Fork(value = 2, jvmArgs = {"-Xms2G", "-Xmx4G"})
 @Warmup(iterations = 5, time = 5)
@@ -59,7 +59,7 @@ public class OrderBookPerformanceTest {
    * 7. match & add sell limit order
    * 8. get/update/remove sell limit order
    */
-  private void orderBookTest(OrderBook ob, Blackhole blackhole) {
+  private void orderBookBatchTest(OrderBook ob, Blackhole blackhole) {
     matchAndAdd(RandomOrder.buyLimitUser1(), ob, blackhole);
     matchAndAdd(RandomOrder.sellLimitUser2(), ob, blackhole);
     matchAndAdd(RandomOrder.buyMarketUser1(), ob, blackhole);
@@ -99,21 +99,21 @@ public class OrderBookPerformanceTest {
 
   @Benchmark
   public void measureArrayOrderBook(Blackhole blackhole) {
-    orderBookTest(arrayOrderBook, blackhole);
+    orderBookBatchTest(arrayOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureIpqOrderBook(Blackhole blackhole) {
-    orderBookTest(ipqOrderBook, blackhole);
+    orderBookBatchTest(ipqOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureLinkedListOrderBook(Blackhole blackhole) {
-    orderBookTest(linkedListOrderBook, blackhole);
+    orderBookBatchTest(linkedListOrderBook, blackhole);
   }
 
   @Benchmark
   public void measureMapOrderBook(Blackhole blackhole) {
-    orderBookTest(mapOrderBook, blackhole);
+    orderBookBatchTest(mapOrderBook, blackhole);
   }
 }
