@@ -3,7 +3,7 @@ package com.exchange.core.matching.orderbook.book;
 import com.exchange.core.config.AppConstants;
 import com.exchange.core.matching.orderbook.OrderBook;
 import com.exchange.core.matching.orderbook.ipq.IndexedPriorityQueue;
-import com.exchange.core.matching.orderbook.ipq.IndexedPriorityQueueImpl;
+import com.exchange.core.matching.orderbook.ipq.MapIndexedPriorityQueue;
 import com.exchange.core.matching.orderbook.ipq.SortOrder;
 import com.exchange.core.matching.orderbook.level.LinkedListPriceLevel;
 import com.exchange.core.matching.orderbook.level.PriceLevel;
@@ -37,8 +37,8 @@ public class IpqOrderBook implements OrderBook {
 
     public IpqOrderBook(String symbol, int initialBookSize, int bookGrowSize){
         this.symbol = symbol;
-        bidsQueue = new IndexedPriorityQueueImpl<>(SortOrder.DESC, initialBookSize, bookGrowSize);
-        asksQueue = new IndexedPriorityQueueImpl<>(SortOrder.ASC, initialBookSize, bookGrowSize);
+        bidsQueue = new MapIndexedPriorityQueue<>(SortOrder.DESC, initialBookSize, bookGrowSize);
+        asksQueue = new MapIndexedPriorityQueue<>(SortOrder.ASC, initialBookSize, bookGrowSize);
     }
 
     @Override

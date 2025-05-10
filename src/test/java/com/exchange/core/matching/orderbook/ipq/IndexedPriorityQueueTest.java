@@ -9,7 +9,7 @@ public class IndexedPriorityQueueTest {
 
     @BeforeEach
     public void beforeEach(){
-        queue = new IndexedPriorityQueueImpl<>(SortOrder.ASC, 10, 5);
+        queue = new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5);
     }
 
     @Test
@@ -31,7 +31,7 @@ public class IndexedPriorityQueueTest {
 
     @Test
     public void offerAndPollTest(){
-        queue = new IndexedPriorityQueueImpl<>(SortOrder.DESC, 10, 5);
+        queue = new MapIndexedPriorityQueue<>(SortOrder.DESC, 10, 5);
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){
             Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");

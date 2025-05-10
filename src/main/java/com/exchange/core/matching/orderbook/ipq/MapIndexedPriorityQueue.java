@@ -14,14 +14,14 @@ import java.util.TreeMap;
  * @param <K> - key
  * @param <V> - value
  */
-public class IndexedPriorityQueueImpl<K extends Comparable<K>, V> implements IndexedPriorityQueue<K, V> {
+public class MapIndexedPriorityQueue<K extends Comparable<K>, V> implements IndexedPriorityQueue<K, V> {
     private int size;
     private int capacity;
     private final int growSize;
     private final SortOrder sortOrder;
     private final NavigableMap<K, V> map;
 
-    public IndexedPriorityQueueImpl(SortOrder sortOrder, int capacity, int growSize){
+    public MapIndexedPriorityQueue(SortOrder sortOrder, int capacity, int growSize){
         this.capacity = capacity;
         this.growSize = growSize;
         this.sortOrder = sortOrder;
