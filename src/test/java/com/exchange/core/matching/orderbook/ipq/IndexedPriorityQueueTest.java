@@ -119,25 +119,6 @@ public class IndexedPriorityQueueTest {
     }
 
     @Test
-    public void getNearestTest(){
-        Assertions.assertEquals(0, queue.size(), "size should be 0");
-        for (int i = 2; i <= 20 ; i = i + 2){
-            Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
-        }
-        Assertions.assertNull(queue.getNearestLeft(1), "getNearestLeft mismatch");
-        Assertions.assertEquals("msg_2", queue.getNearestLeft(3), "getNearestLeft mismatch");
-        Assertions.assertEquals("msg_10", queue.getNearestLeft(11), "getNearestLeft mismatch");
-        Assertions.assertEquals("msg_18", queue.getNearestLeft(19), "getNearestLeft mismatch");
-        Assertions.assertEquals("msg_20", queue.getNearestLeft(21), "getNearestLeft mismatch");
-        Assertions.assertEquals("msg_20", queue.getNearestLeft(100), "getNearestLeft mismatch");
-
-        IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            queue.getNearestLeft(2);
-        });
-        Assertions.assertEquals("Value exists for key=2", ex.getMessage(), "exception text mismatch");
-    }
-
-    @Test
     public void iterationTest(){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){

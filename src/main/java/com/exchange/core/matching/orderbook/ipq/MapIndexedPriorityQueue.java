@@ -2,7 +2,6 @@ package com.exchange.core.matching.orderbook.ipq;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -59,17 +58,6 @@ public class MapIndexedPriorityQueue<K extends Comparable<K>, V> implements Inde
     @Override
     public V getExact(K key) {
         return map.get(key);
-    }
-
-    @Override
-    public V getNearestLeft(K key) {
-        // avoid exact match
-        V value = getExact(key);
-        if (value != null){
-            throw new IllegalArgumentException("Value exists for key=" + key);
-        }
-        Map.Entry<K,V> entry = map.floorEntry(key);
-        return entry == null ? null : entry.getValue();
     }
 
     private Iterator<V> iterator;
