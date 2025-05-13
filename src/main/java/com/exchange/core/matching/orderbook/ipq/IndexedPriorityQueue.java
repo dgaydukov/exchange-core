@@ -43,7 +43,7 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * @return V - if value exists for key, null if no such value for key
      */
     V getExact(K key);
-    
+
 
     /*
      * *****************************ITERATOR**********************************************

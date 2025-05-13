@@ -9,6 +9,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private V[] pq;
     private V[] map;
     private int size;
+    private int iterationIndex;
 
     public IntIndexedPriorityQueue(SortOrder sortOrder, int maxPrice){
         this(sortOrder, 1000, 100, maxPrice);
@@ -28,17 +29,17 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
 
     private void swim(int k) {
         while (k > 1 && less(k/2, k)) {
-            exch(k/2, k);
+            swap(k/2, k);
             k = k/2;
         }
     }
 
     private void sink(int k) {
-        while (2*k <= n) {
+        while (2*k <= size) {
             int j = 2*k;
-            if (j < n && less(j, j+1)) j++;
+            if (j < size && less(j, j+1)) j++;
             if (!less(k, j)) break;
-            exch(k, j);
+            swap(k, j);
             k = j;
         }
     }
@@ -50,7 +51,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
         return i < j;
     }
 
-    private void exch(int i, int j) {
+    private void swap(int i, int j) {
         V swap = pq[i];
         pq[i] = pq[j];
         pq[j] = swap;
@@ -63,17 +64,27 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
             throw new RuntimeException("MaxPrice exceeded");
         }
         map[maxPrice] = value;
-        return false;
+        // add to PQ
+        pq[++size] = value;
+        swim(size);
+        return true;
     }
 
     @Override
     public V poll() {
-        return null;
+        if (size == 0){
+            throw new RuntimeException("Queue is empty");
+        }
+        V max = pq[1];
+        swap(1, size--);
+        sink(1);
+        pq[size+1] = null;
+        return max;
     }
 
     @Override
     public V peek() {
-        return null;
+        return pq[1];
     }
 
     @Override
@@ -83,31 +94,28 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
 
     @Override
     public V getExact(Integer key) {
-        return null;
+        return map[key];
     }
 
-    @Override
-    public V getNearestLeft(Integer key) {
-        return null;
-    }
 
     @Override
     public void resetIterator() {
-
+        iterationIndex = 1;
     }
 
     @Override
     public boolean hasNext() {
-        return false;
+        return iterationIndex < size;
     }
 
     @Override
     public V next() {
-        return null;
+        return pq[iterationIndex++];
     }
 
     @Override
     public void remove() {
-
+        size--;
+        sink(iterationIndex);
     }
 }
