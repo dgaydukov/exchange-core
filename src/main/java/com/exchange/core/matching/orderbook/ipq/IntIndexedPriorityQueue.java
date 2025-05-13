@@ -11,9 +11,6 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private int size;
     private int iterationIndex;
 
-    public IntIndexedPriorityQueue(SortOrder sortOrder, int maxPrice){
-        this(sortOrder, 1000, 100, maxPrice);
-    }
 
     public IntIndexedPriorityQueue(SortOrder sortOrder, int capacity, int growSize, int maxPrice){
         pq = (V[]) new Object[capacity];

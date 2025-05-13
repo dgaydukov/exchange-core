@@ -1,19 +1,23 @@
 package com.exchange.core.matching.orderbook.ipq;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 public class IndexedPriorityQueueTest {
-    private IndexedPriorityQueue<Integer, String> queue;
-
-    @BeforeEach
-    public void beforeEach(){
-        queue = new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5);
+    private static Stream<Arguments> getQueueList() {
+        return Stream.of(
+                Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
+                Arguments.of(new IntIndexedPriorityQueue<>(SortOrder.ASC, 10, 5, 10_000))
+        );
     }
 
-    @Test
-    public void unlimitedGrowthTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void unlimitedGrowthTest(IndexedPriorityQueue<Integer, String> queue){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 0; i < 10 ; i++){
             Assertions.assertTrue(queue.offer(i, "a"), "should add successfully");
@@ -29,8 +33,9 @@ public class IndexedPriorityQueueTest {
         Assertions.assertEquals(1110, queue.size(), "size should be 1110");
     }
 
-    @Test
-    public void offerAndPollTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void offerAndPollTest(IndexedPriorityQueue<Integer, String> queue){
         queue = new MapIndexedPriorityQueue<>(SortOrder.DESC, 10, 5);
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){
@@ -53,8 +58,9 @@ public class IndexedPriorityQueueTest {
         Assertions.assertEquals(0, queue.size(), "size should be 0");
     }
 
-    @Test
-    public void reverseOfferAndPollTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void reverseOfferAndPollTest(IndexedPriorityQueue<Integer, String> queue){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){
             Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
@@ -76,8 +82,9 @@ public class IndexedPriorityQueueTest {
         Assertions.assertEquals(0, queue.size(), "size should be 0");
     }
 
-    @Test
-    public void peekTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void peekTest(IndexedPriorityQueue<Integer, String> queue){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){
             Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
@@ -93,8 +100,9 @@ public class IndexedPriorityQueueTest {
         Assertions.assertEquals(9, queue.size(), "size should be 10");
     }
 
-    @Test
-    public void getExactTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void getExactTest(IndexedPriorityQueue<Integer, String> queue){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 20 ; i++){
             Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
@@ -118,8 +126,9 @@ public class IndexedPriorityQueueTest {
         Assertions.assertEquals(18, queue.size(), "size should be 18");
     }
 
-    @Test
-    public void iterationTest(){
+    @ParameterizedTest
+    @MethodSource("getQueueList")
+    public void iterationTest(IndexedPriorityQueue<Integer, String> queue){
         Assertions.assertEquals(0, queue.size(), "size should be 0");
         for (int i = 1; i <= 10 ; i++){
             Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
@@ -133,6 +142,5 @@ public class IndexedPriorityQueueTest {
         }
         Assertions.assertFalse(queue.hasNext(), "hasNext should return false");
         Assertions.assertNull(queue.next(), "next should return null");
-
     }
 }
