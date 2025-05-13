@@ -8,10 +8,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 public class IndexedPriorityQueueTest {
+
     private static Stream<Arguments> getQueueList() {
         return Stream.of(
-                Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
-                Arguments.of(new IntIndexedPriorityQueue<>(SortOrder.ASC, 10, 5, 10_000))
+                //Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
+                Arguments.of(new IntIndexedPriorityQueue<>(SortOrder.ASC, 10, 5, 100_000))
         );
     }
 

@@ -25,7 +25,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     }
 
     private void swim(int k) {
-        while (k > 1 && less(k/2, k)) {
+        while (k > 1 && compare(k/2, k)) {
             swap(k/2, k);
             k = k/2;
         }
@@ -34,18 +34,18 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private void sink(int k) {
         while (2*k <= size) {
             int j = 2*k;
-            if (j < size && less(j, j+1)) j++;
-            if (!less(k, j)) break;
+            if (j < size && compare(j, j+1)) j++;
+            if (!compare(k, j)) break;
             swap(k, j);
             k = j;
         }
     }
 
-    private boolean less(int i, int j) {
+    private boolean compare(int i, int j) {
         if (sortOrder == SortOrder.ASC){
-            return i > j;
+            return i < j;
         }
-        return i < j;
+        return i > j;
     }
 
     private void swap(int i, int j) {
@@ -60,8 +60,11 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
         if (key > maxPrice){
             throw new RuntimeException("MaxPrice exceeded");
         }
-        map[maxPrice] = value;
+        map[key] = value;
         // add to PQ
+        if (pq.length - 1 == size){
+            grow();
+        }
         pq[++size] = value;
         swim(size);
         return true;
