@@ -43,24 +43,21 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      * @return V - if value exists for key, null if no such value for key
      */
     V getExact(K key);
+    
 
-    /**
-     * Use if you add new price, and previous method returned null
-     * For quick search you fetch the closest existing PriceLevel and create new one and attach to it
-     *
-     * @param key - key
-     * @return V - closest value from the left, null - if key should become first
-     * throws Exception if key already exist
+    /*
+     * *****************************ITERATOR**********************************************
      */
-    V getNearestLeft(K key);
-
 
     /**
      * Reset iterator sequence and start iterating from the first element
      */
     void resetIterator();
 
-    // check if next element exist
+    /**
+     *
+     * @return true - if next element exists, false - if iteration is over and no new elements
+     */
     boolean hasNext();
 
     /**
@@ -69,5 +66,8 @@ public interface IndexedPriorityQueue<K extends Comparable<K>, V> {
      */
     V next();
 
+    /**
+     * remove currently iterating element
+     */
     void remove();
 }

@@ -141,6 +141,7 @@ public class IpqOrderBook implements OrderBook {
         PriceLevel level = pq.getExact(order.getPrice());
         if (level != null){
             level.add(order);
+            return true;
         }
         level = new LinkedListPriceLevel(order);
         pq.offer(level.getPrice(), level);
