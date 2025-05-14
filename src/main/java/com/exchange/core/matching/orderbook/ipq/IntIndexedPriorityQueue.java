@@ -2,19 +2,25 @@ package com.exchange.core.matching.orderbook.ipq;
 
 import java.util.Arrays;
 
+/**
+ * https://algs4.cs.princeton.edu/24pq/
+ */
 public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer, V> {
     private final int maxPrice;
     private final int growSize;
     private final SortOrder sortOrder;
-    private V[] pq;
+    private int[] pq;
+    private int[] qp;
     private V[] map;
+
     private int size;
     private int iterationIndex;
 
 
     public IntIndexedPriorityQueue(SortOrder sortOrder, int capacity, int growSize, int maxPrice){
-        pq = (V[]) new Object[capacity];
-        map = (V[]) new Object[maxPrice];
+        map = (V[]) new Object[maxPrice + 1];
+        pq = new int[capacity];
+        qp = new int[maxPrice + 1];
         this.growSize = growSize;
         this.maxPrice = maxPrice;
         this.sortOrder = sortOrder;
@@ -34,6 +40,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private void sink(int k) {
         while (2*k <= size) {
             int j = 2*k;
+            System.out.println(k + " => "+j);
             if (j < size && compare(j, j+1)) j++;
             if (!compare(k, j)) break;
             swap(k, j);
@@ -42,16 +49,15 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     }
 
     private boolean compare(int i, int j) {
-        if (sortOrder == SortOrder.ASC){
-            return i < j;
-        }
-        return i > j;
+        return sortOrder == SortOrder.ASC ? i > j : i < j;
     }
 
     private void swap(int i, int j) {
-        V swap = pq[i];
+        int swap = pq[i];
         pq[i] = pq[j];
         pq[j] = swap;
+        qp[pq[i]] = i;
+        qp[pq[j]] = j;
     }
 
 
@@ -65,26 +71,32 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
         if (pq.length - 1 == size){
             grow();
         }
-        pq[++size] = value;
+        size++;
+        qp[key] = size;
+        pq[size] = key;
         swim(size);
         return true;
     }
 
     @Override
     public V poll() {
+        System.out.println("before => "+Arrays.toString(pq));
         if (size == 0){
             throw new RuntimeException("Queue is empty");
         }
-        V max = pq[1];
+        int max = pq[1];
+        V value = map[max];
         swap(1, size--);
         sink(1);
-        pq[size+1] = null;
-        return max;
+        pq[size+1] = -1;
+        qp[max] = -1;
+        map[max] = null;
+        return value;
     }
 
     @Override
     public V peek() {
-        return pq[1];
+        return map[pq[1]];
     }
 
     @Override
@@ -110,7 +122,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
 
     @Override
     public V next() {
-        return pq[iterationIndex++];
+        return map[pq[iterationIndex++]];
     }
 
     @Override
