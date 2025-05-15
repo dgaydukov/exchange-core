@@ -11,7 +11,7 @@ public class IndexedPriorityQueueTest {
 
     private static Stream<Arguments> getQueueList() {
         return Stream.of(
-                //Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
+                Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
                 Arguments.of(new IntIndexedPriorityQueue<>(SortOrder.ASC, 10, 5, 100_000))
         );
     }
@@ -68,7 +68,7 @@ public class IndexedPriorityQueueTest {
         }
         Assertions.assertEquals(10, queue.size(), "size should be 10");
         for (int i = 1; i <= 10 ; i++){
-            Assertions.assertEquals("msg_"+i, queue.poll(), "should add successfully");
+            Assertions.assertEquals("msg_"+i, queue.poll(), "poll mismatch");
         }
         Assertions.assertEquals(0, queue.size(), "size should be 0");
 
@@ -78,7 +78,7 @@ public class IndexedPriorityQueueTest {
         }
         Assertions.assertEquals(10, queue.size(), "size should be 10");
         for (int i = 1; i <= 10 ; i++){
-            Assertions.assertEquals("msg_"+i, queue.poll(), "should add successfully");
+            Assertions.assertEquals("msg_"+i, queue.poll(), "poll mismatch");
         }
         Assertions.assertEquals(0, queue.size(), "size should be 0");
     }

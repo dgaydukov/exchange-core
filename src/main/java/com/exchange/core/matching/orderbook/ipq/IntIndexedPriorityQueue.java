@@ -10,7 +10,6 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private final int growSize;
     private final SortOrder sortOrder;
     private int[] pq;
-    private int[] qp;
     private V[] map;
 
     private int size;
@@ -20,7 +19,6 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     public IntIndexedPriorityQueue(SortOrder sortOrder, int capacity, int growSize, int maxPrice){
         map = (V[]) new Object[maxPrice + 1];
         pq = new int[capacity];
-        qp = new int[maxPrice + 1];
         this.growSize = growSize;
         this.maxPrice = maxPrice;
         this.sortOrder = sortOrder;
@@ -40,7 +38,6 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     private void sink(int k) {
         while (2*k <= size) {
             int j = 2*k;
-            System.out.println(k + " => "+j);
             if (j < size && compare(j, j+1)) j++;
             if (!compare(k, j)) break;
             swap(k, j);
@@ -49,15 +46,13 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
     }
 
     private boolean compare(int i, int j) {
-        return sortOrder == SortOrder.ASC ? i > j : i < j;
+        return sortOrder == SortOrder.ASC ? pq[i] > pq[j] : pq[i] < pq[j];
     }
 
     private void swap(int i, int j) {
         int swap = pq[i];
         pq[i] = pq[j];
         pq[j] = swap;
-        qp[pq[i]] = i;
-        qp[pq[j]] = j;
     }
 
 
@@ -71,16 +66,13 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
         if (pq.length - 1 == size){
             grow();
         }
-        size++;
-        qp[key] = size;
-        pq[size] = key;
+        pq[++size] = key;
         swim(size);
         return true;
     }
 
     @Override
     public V poll() {
-        System.out.println("before => "+Arrays.toString(pq));
         if (size == 0){
             throw new RuntimeException("Queue is empty");
         }
@@ -88,10 +80,10 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
         V value = map[max];
         swap(1, size--);
         sink(1);
-        pq[size+1] = -1;
-        qp[max] = -1;
+        pq[size+1] = 0;
         map[max] = null;
         return value;
+
     }
 
     @Override
@@ -117,7 +109,7 @@ public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer,
 
     @Override
     public boolean hasNext() {
-        return iterationIndex < size;
+        return iterationIndex <= size;
     }
 
     @Override
