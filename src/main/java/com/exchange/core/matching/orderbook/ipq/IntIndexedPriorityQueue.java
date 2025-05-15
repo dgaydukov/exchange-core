@@ -3,6 +3,7 @@ package com.exchange.core.matching.orderbook.ipq;
 import java.util.Arrays;
 
 /**
+ * Use this as base case for IndexedPriorityQueue
  * https://algs4.cs.princeton.edu/24pq/
  */
 public class IntIndexedPriorityQueue<V> implements IndexedPriorityQueue<Integer, V> {

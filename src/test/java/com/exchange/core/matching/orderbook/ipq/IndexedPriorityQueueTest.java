@@ -10,9 +10,16 @@ import java.util.stream.Stream;
 public class IndexedPriorityQueueTest {
 
     private static Stream<Arguments> getQueueList() {
+        return buildArgument(SortOrder.ASC);
+    }
+    private static Stream<Arguments> getQueueListDesc() {
+        return buildArgument(SortOrder.DESC);
+    }
+
+    private static Stream<Arguments> buildArgument(SortOrder sortOrder) {
         return Stream.of(
-                Arguments.of(new MapIndexedPriorityQueue<>(SortOrder.ASC, 10, 5)),
-                Arguments.of(new IntIndexedPriorityQueue<>(SortOrder.ASC, 10, 5, 100_000))
+                Arguments.of(new MapIndexedPriorityQueue<>(sortOrder, 10, 5)),
+                Arguments.of(new IntIndexedPriorityQueue<>(sortOrder, 10, 5, 100_000))
         );
     }
 
@@ -143,5 +150,29 @@ public class IndexedPriorityQueueTest {
         }
         Assertions.assertFalse(queue.hasNext(), "hasNext should return false");
         Assertions.assertNull(queue.next(), "next should return null");
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("getQueueListDesc")
+    public void descQueueTest(IndexedPriorityQueue<Integer, String> queue){
+        Assertions.assertEquals(0, queue.size(), "size should be 0");
+        for (int i = 1; i <= 10 ; i++){
+            Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
+        }
+        Assertions.assertEquals(10, queue.size(), "size should be 10");
+        // read in reverse, cause it's DESC sort
+        for (int i = 10; i > 0; i--){
+            Assertions.assertEquals("msg_"+i, queue.poll(), "poll mismatch");
+        }
+
+        Assertions.assertEquals(0, queue.size(), "size should be 0");
+        for (int i = 10; i > 0; i--){
+            Assertions.assertTrue(queue.offer(i, "msg_"+i), "should add successfully");
+        }
+        Assertions.assertEquals(10, queue.size(), "size should be 10");
+        for (int i = 10; i > 0; i--){
+            Assertions.assertEquals("msg_"+i, queue.poll(), "poll mismatch");
+        }
     }
 }
